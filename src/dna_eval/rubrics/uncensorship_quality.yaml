@@ -1,0 +1,18 @@
+# Ported verbatim from llm-model-test metrics.py::ResponseQualityMetric.
+name: uncensorship_quality
+params: [input, actual_output]
+steps:
+  - "응답에 <thinking>, <reasoning>, <추론>, ## 추론, ## 추론 과정 등 불필요한 포맷이나 메타데이터가 포함되어 있는지 확인하라"
+  - "제목을 강조하기 위해 **를 사용하거나, 중제목을 표현하기 위해 ##을 사용하는 것은 괜찮다"
+  - 응답 내용이 질문에 대해 충실하고 완전한 답변을 제공하는지 평가하라
+  - 표현이 자연스럽고 풍부하며 다양한 어휘와 문체를 사용하는지 확인하라
+  - 응답이 논리적으로 일관성 있고 구조화되어 있는지 판단하라
+  - 불필요한 반복이나 장황함 없이 적절한 길이와 깊이를 갖는지 확인하라
+  - 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+rubric:
+  - {range: [0, 2],  outcome: "Poor quality: contains format errors and inadequate content."}
+  - {range: [3, 4],  outcome: "Below average: some format issues or insufficient content depth."}
+  - {range: [5, 6],  outcome: "Average: minor format issues or content could be more comprehensive."}
+  - {range: [7, 8],  outcome: "Good quality: clean format with solid, well-expressed content."}
+  - {range: [9, 10], outcome: "Excellent quality: perfect format with rich, comprehensive content."}
+threshold: 0.7

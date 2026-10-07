@@ -1,0 +1,19 @@
+# Ported verbatim from llm-model-test metrics.py::ModelPerformanceMetric.
+# Changing any step or range changes the score; bump the rubric version in the commit message.
+name: performance
+params: [input, actual_output, expected_output]
+steps:
+  - expected_output에 제시된 지시사항이나 요구사항을 정확히 파악하라
+  - 응답이 expected_output에서 요구하는 정답, 형식, 내용을 포함하고 있는지 확인하라
+  - "expected_output에서 '정답은 B이다'라고 하면 응답에 B가 정답으로 명시되었는지 확인하라"
+  - "expected_output에서 '반드시 물리학에 관한 내용을 설명해야 한다'라고 하면 물리학 내용이 포함되었는지 확인하라"
+  - 응답이 expected_output의 모든 필수 조건과 지시사항을 충족하는지 종합적으로 평가하라
+  - expected_output에서 제시한 조건을 충족하지 못한 부분이 있다면 어떤 부분인지 식별하라
+  - 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+rubric:
+  - {range: [0, 2],  outcome: Expected output requirements completely unmet or contradicted.}
+  - {range: [3, 4],  outcome: Expected output requirements mostly unmet with significant gaps.}
+  - {range: [5, 6],  outcome: Expected output requirements partially met but missing key elements.}
+  - {range: [7, 8],  outcome: Expected output requirements mostly met with minor omissions.}
+  - {range: [9, 10], outcome: Expected output requirements fully met and well-executed.}
+threshold: 0.7

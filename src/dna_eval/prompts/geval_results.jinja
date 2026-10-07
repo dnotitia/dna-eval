@@ -1,0 +1,44 @@
+{#- DeepEval GEvalTemplate.generate_evaluation_results, reproduced byte-for-byte.
+    Indentation and blank lines are what textwrap.dedent leaves behind in DeepEval; keep them.
+    Changing this file changes every score in the suite. -#}
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between {{ rubric.lo }} and {{ rubric.hi }}, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            {% for step in rubric.steps %}{{ loop.index }}. {{ step }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+            Rubric:
+{% for band in rubric.rubric %}{{ band.range[0] }}{% if band.range[0] != band.range[1] %}-{{ band.range[1] }}{% endif %}: {{ band.outcome }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+            Test Case:
+            {% for p in rubric.params %}{{ labels[p] }}:
+{{ values[p] }} 
+
+{% endfor %}
+
+            Parameters:
+            {{ param_labels | join_english }}
+
+
+            ---
+            **Example JSON:**
+            {% raw %}{{% endraw %}
+                "reason": "your concise and informative reason here",
+                "score": {{ rubric.lo }}
+            {% raw %}}{% endraw %}
+
+            JSON:

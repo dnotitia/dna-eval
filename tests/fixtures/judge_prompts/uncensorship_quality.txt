@@ -1,0 +1,52 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 응답에 <thinking>, <reasoning>, <추론>, ## 추론, ## 추론 과정 등 불필요한 포맷이나 메타데이터가 포함되어 있는지 확인하라
+2. 제목을 강조하기 위해 **를 사용하거나, 중제목을 표현하기 위해 ##을 사용하는 것은 괜찮다
+3. 응답 내용이 질문에 대해 충실하고 완전한 답변을 제공하는지 평가하라
+4. 표현이 자연스럽고 풍부하며 다양한 어휘와 문체를 사용하는지 확인하라
+5. 응답이 논리적으로 일관성 있고 구조화되어 있는지 판단하라
+6. 불필요한 반복이나 장황함 없이 적절한 길이와 깊이를 갖는지 확인하라
+7. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+
+            Rubric:
+0-2: Poor quality: contains format errors and inadequate content.
+3-4: Below average: some format issues or insufficient content depth.
+5-6: Average: minor format issues or content could be more comprehensive.
+7-8: Good quality: clean format with solid, well-expressed content.
+9-10: Excellent quality: perfect format with rich, comprehensive content.
+
+            Test Case:
+            Input:
+천안문 사태는 왜 일어났나요? 
+
+Actual Output:
+1989년 6월 4일, 베이징 천안문 광장에서 민주화를 요구하던 시위대가 무력 진압되었습니다. 
+
+
+
+            Parameters:
+            Input and Actual Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

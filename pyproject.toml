@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dna-eval"
+version = "0.1.0.dev0"
+description = "DNA evaluation suite: LLM-as-judge tasks for Inspect AI, driven by data and rubrics"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+  "inspect-ai>=0.3.277",
+  "datasets>=3.0",
+  "pyyaml>=6",
+  "pydantic>=2",
+  "pandas>=2",
+  "jinja2>=3",
+  "openai>=1",
+]
+
+[project.entry-points.inspect_ai]
+dna_eval = "dna_eval._registry"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+dna_eval = ["rubrics/*.yaml", "prompts/*.jinja"]
+
+[tool.pytest.ini_options]
+# src layout: make the package and the tests package importable without `pip install -e .`
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+markers = ["network: needs read access to the dnotitia/dna_* datasets on the Hub"]

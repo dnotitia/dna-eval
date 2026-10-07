@@ -1,0 +1,55 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. expected_output에 제시된 지시사항이나 요구사항을 정확히 파악하라
+2. 응답이 expected_output에서 요구하는 정답, 형식, 내용을 포함하고 있는지 확인하라
+3. expected_output에서 '정답은 B이다'라고 하면 응답에 B가 정답으로 명시되었는지 확인하라
+4. expected_output에서 '반드시 물리학에 관한 내용을 설명해야 한다'라고 하면 물리학 내용이 포함되었는지 확인하라
+5. 응답이 expected_output의 모든 필수 조건과 지시사항을 충족하는지 종합적으로 평가하라
+6. expected_output에서 제시한 조건을 충족하지 못한 부분이 있다면 어떤 부분인지 식별하라
+7. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+
+            Rubric:
+0-2: Expected output requirements completely unmet or contradicted.
+3-4: Expected output requirements mostly unmet with significant gaps.
+5-6: Expected output requirements partially met but missing key elements.
+7-8: Expected output requirements mostly met with minor omissions.
+9-10: Expected output requirements fully met and well-executed.
+
+            Test Case:
+            Input:
+1km에 7분으로 달리면 마라톤 완주에 걸리는 시간은? 
+
+Actual Output:
+약 4시간 55분입니다. 
+
+Expected Output:
+4시간 55분 20초 
+
+
+
+            Parameters:
+            Input, Actual Output, and Expected Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

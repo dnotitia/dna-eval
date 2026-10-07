@@ -1,0 +1,71 @@
+{
+ "source": "llm-model-test score.log, Qwen3.8-Flash-Next, 2026-10-03",
+ "label": "Qwen3.8-Flash-Next (Unc)",
+ "runs": [
+  {
+   "mean": 0.53,
+   "passed": 13
+  },
+  {
+   "mean": 0.53,
+   "passed": 14
+  },
+  {
+   "mean": 0.55,
+   "passed": 15
+  },
+  {
+   "mean": 0.58,
+   "passed": 17
+  },
+  {
+   "mean": 0.56,
+   "passed": 15
+  },
+  {
+   "mean": 0.52,
+   "passed": 10
+  },
+  {
+   "mean": 0.5,
+   "passed": 8
+  },
+  {
+   "mean": 0.56,
+   "passed": 15
+  },
+  {
+   "mean": 0.6,
+   "passed": 14
+  },
+  {
+   "mean": 0.54,
+   "passed": 13
+  },
+  {
+   "mean": 0.56,
+   "passed": 13
+  },
+  {
+   "mean": 0.53,
+   "passed": 12
+  },
+  {
+   "mean": 0.5,
+   "passed": 7
+  },
+  {
+   "mean": 0.6,
+   "passed": 16
+  },
+  {
+   "mean": 0.5,
+   "passed": 10
+  }
+ ],
+ "expected": {
+  "trimmed_mean": 0.5418,
+  "trimmed_passed": 13.09
+ },
+ "note": "expected = llm-model-test finalize_with_trimmed_mean rule (15% trim, int(n*p) each side) applied to runs"
+}
