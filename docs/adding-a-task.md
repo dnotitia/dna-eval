@@ -5,7 +5,7 @@ A task is four parts glued together in one file under `src/dna_eval/tasks/`:
 | part | what it is | where it comes from |
 | --- | --- | --- |
 | dataset | `Sample(id, input, target, metadata)` rows | any Inspect loader, or `dna_dataset` for suite datasets |
-| solver | how the model under evaluation is called | `generate()` plus Inspect solvers or `solvers/` |
+| solver | how the model under evaluation is called | `dna_generate()` plus Inspect solvers or `solvers/` |
 | scorer | how one sample is scored | `rubric_scorer` + a YAML rubric, or `scorers/` |
 | epochs + config | how many runs, and the generation settings | `epochs=`, `generation.dna_generate_config` |
 
@@ -28,7 +28,7 @@ carried along; a `context` column is shown to the judge if the rubric asks for i
 whose rows need more than a column rename goes through `record_to_sample` instead.
 
 - **Pin the commit.** Expose `revision` as a task argument whose default is the commit your
-  published numbers used, so it lands in the log's `task_args`. `-T revision=main` opts into
+  reported numbers used, so it lands in the log's `task_args`. `-T revision=main` opts into
   the latest data.
 - **Suite datasets** (`dnotitia/dna_*`) share one schema (`id`, `input`, optional `target`) and
   load with `dna_dataset("dna_<name>", revision=...)`, which requires the revision.
@@ -36,11 +36,19 @@ whose rows need more than a column rename goes through `record_to_sample` instea
 ## 2. Solver
 
 ```python
-solver=generate(),
+solver=dna_generate(),
 ```
 
 For most tasks that is the whole chain: the sample's `input` becomes one user turn and the
-model answers. The suite's conventions behind that single line:
+model answers. `dna_generate` is Inspect's `generate()` plus the suite's handling of the
+answer before it is judged:
+
+- a call that errors, or returns neither content nor reasoning, is retried (3 attempts);
+- the answer is stripped of surrounding whitespace;
+- no answer at all is judged as `[모델의 응답이 비어 있음]` instead of the sample erroring out.
+
+A task that does not want this handling can use plain `generate()`. The suite's other
+conventions behind that single line:
 
 - no system prompt unless the task is about one;
 - sampling left to the served model's `generation_config`; never set temperature here;
@@ -59,11 +67,11 @@ def my_system_prompt(text: str) -> Solver:
 ```
 
 ```python
-solver=[my_system_prompt("Answer in one sentence."), generate()],
+solver=[my_system_prompt("Answer in one sentence."), dna_generate()],
 ```
 
 A solver goes in `solvers/` (one `@solver` per file) when another task may reuse it. A prompt
-change that only `my_task` needs can stay inline (`[prompt_template(...), generate()]`).
+change that only `my_task` needs can stay inline (`[prompt_template(...), dna_generate()]`).
 
 ## 3. Scorer: write a rubric, not code
 
@@ -125,7 +133,7 @@ Variations:
 
 ```python
 epochs=epochs,                         # default 15
-config=dna_generate_config(thinking),  # max_tokens 65536, 3 retries, thinking via chat_template_kwargs
+config=dna_generate_config(thinking),  # max_tokens 16384, 3 retries, thinking via chat_template_kwargs
 ```
 
 `epochs=15` runs every sample 15 times. Inspect would normally reduce those per sample; the
@@ -163,10 +171,10 @@ metrics=[mean(), per_run_trimmed(), my_metric()],   # replaces the scorer's own 
 # src/dna_eval/tasks/my_task.py
 from inspect_ai import Task, task
 from inspect_ai.dataset import FieldSpec, hf_dataset
-from inspect_ai.solver import generate
 
 from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
+from dna_eval.solvers.dna_generate import dna_generate
 
 DATASET_REVISION = "<commit sha>"
 
@@ -176,7 +184,7 @@ def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REV
     return Task(
         dataset=hf_dataset("your-org/my_dataset", split="train", revision=revision,
                            sample_fields=FieldSpec(input="question", target="answer")),
-        solver=generate(),
+        solver=dna_generate(),
         scorer=rubric_scorer("my_task"),
         epochs=epochs,
         config=dna_generate_config(thinking),
@@ -192,6 +200,9 @@ from dna_eval.tasks.my_task import my_task  # noqa: F401
 
 ## 6. Test
 
+Install the test dependencies with `pip install -e ".[dev]"`, then run `pytest` from the
+repository root.
+
 - **Offline, no model:** run the task on `mockllm` to see the chain execute.
 
   ```python
@@ -201,9 +212,9 @@ from dna_eval.tasks.my_task import my_task  # noqa: F401
   eval(my_task(epochs=2), model="mockllm/model", model_roles={"grader": judge}, limit=3)
   ```
 
-- **If the task replaces a DeepEval task**, add it to `tests/parity/cases.py` with its two
-  fixtures (the DeepEval-rendered judge prompt, the per-run means from `score.log`). The three
-  parity tests then cover it automatically.
+- **If the task reproduces a DeepEval GEval metric**, add it to `tests/parity/cases.py` with
+  its two fixtures (the judge prompt rendered by DeepEval, the per-run means and pass counts of
+  a DeepEval run). The parity tests parameterised over `cases.py` then cover it.
 
 ## 7. Run
 

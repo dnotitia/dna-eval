@@ -1,5 +1,5 @@
-"""T1 — the request to the model under evaluation is what DeepEval sends: one user turn holding
-the sample input, no system prompt, max_tokens 65536, thinking via chat_template_kwargs.
+"""The request to the model under evaluation: one user turn holding
+the sample input, no system prompt, max_tokens 16384, thinking via chat_template_kwargs.
 
 Runs each task end to end against ``mockllm`` (no network for models; the dataset is fetched
 from the Hub, so this needs read access to dnotitia/dna_*).

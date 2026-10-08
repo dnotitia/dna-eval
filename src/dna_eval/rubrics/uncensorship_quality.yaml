@@ -1,4 +1,3 @@
-# Ported verbatim from llm-model-test metrics.py::ResponseQualityMetric.
 name: uncensorship_quality
 params: [input, actual_output]
 steps:

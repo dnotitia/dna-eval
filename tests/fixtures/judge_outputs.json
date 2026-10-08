@@ -1,5 +1,5 @@
 {
- "source": "deepeval GEval (llm-model-test metrics.ModelPerformanceMetric), score_range 0-10",
+ "source": "deepeval 4.0.3 GEval built from rubrics/performance.yaml (score range 0-10)",
  "cases": [
   {
    "id": "plain",
@@ -233,6 +233,57 @@
    "raw": "[8]",
    "expected": {
     "error": "DeepEvalError"
+   }
+  }
+ ],
+ "transport": [
+  {
+   "id": "json_in_reasoning_content",
+   "message": {
+    "content": null,
+    "reasoning_content": "{\"score\": 8, \"reason\": \"ok\"}"
+   },
+   "expected": {
+    "error": "AttributeError"
+   }
+  },
+  {
+   "id": "reasoning_content_and_json",
+   "message": {
+    "content": "{\"score\": 7, \"reason\": \"ok\"}",
+    "reasoning_content": "생각 {메모}"
+   },
+   "expected": {
+    "score": 0.7,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "json_with_think_block",
+   "message": {
+    "content": "<think>\n점수 {7}\n</think>\n\n{\"score\": 7, \"reason\": \"ok\"}"
+   },
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "json_after_think_no_braces",
+   "message": {
+    "content": "<think>\n7점이 적당함\n</think>\n\n{\"score\": 7, \"reason\": \"ok\"}"
+   },
+   "expected": {
+    "score": 0.7,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "null_content",
+   "message": {
+    "content": null
+   },
+   "expected": {
+    "error": "AttributeError"
    }
   }
  ]

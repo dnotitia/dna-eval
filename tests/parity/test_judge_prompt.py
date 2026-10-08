@@ -1,4 +1,4 @@
-"""T2 — the prompt the judge receives is byte-identical to DeepEval's GEval render (deepeval 4.0.3)."""
+"""The prompt the judge receives is byte-identical to DeepEval's GEval render (deepeval 4.0.3)."""
 from pathlib import Path
 
 import pytest

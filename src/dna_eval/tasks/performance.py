@@ -1,12 +1,12 @@
 """Performance: general Korean QA against reference answers (``dnotitia/dna_performance``)."""
 from inspect_ai import Task, task
-from inspect_ai.solver import generate
 
 from dna_eval.dataset import dna_dataset
 from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
+from dna_eval.solvers.dna_generate import dna_generate
 
-# dnotitia/dna_performance commit used for the published baselines.
+# dnotitia/dna_performance commit this task is pinned to.
 DATASET_REVISION = "d4582ca540eb8f6b7369b5e7853626acb87b603d"
 
 
@@ -19,7 +19,7 @@ def performance(thinking: bool = True, epochs: int = 15, revision: str = DATASET
     """
     return Task(
         dataset=dna_dataset("dna_performance", revision=revision),
-        solver=generate(),
+        solver=dna_generate(),
         scorer=rubric_scorer("performance"),
         epochs=epochs,
         config=dna_generate_config(thinking),

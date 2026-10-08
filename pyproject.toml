@@ -19,6 +19,9 @@ dependencies = [
   "openai>=1",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.entry-points.inspect_ai]
 dna_eval = "dna_eval._registry"
 

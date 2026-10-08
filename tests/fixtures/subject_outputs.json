@@ -1,0 +1,18 @@
+{
+ "source": "expected answer handed to the judge for each scripted reply in tests/parity/fake_openai.py",
+ "actual_output": {
+  "plain": "답변입니다.",
+  "surrounding_whitespace": "답변입니다.",
+  "reasoning_content_field": "답변입니다.",
+  "reasoning_field": "답변입니다.",
+  "think_tag": "답변입니다.",
+  "think_unclosed": "<think>\n생각만 하다가 잘림",
+  "reasoning_only": "[모델의 응답이 비어 있음]",
+  "empty": "[모델의 응답이 비어 있음]",
+  "http_400": "[모델의 응답이 비어 있음]",
+  "http_500": "[모델의 응답이 비어 있음]",
+  "slow": "[모델의 응답이 비어 있음]",
+  "http_500_then_answer": "재시도 후 답변",
+  "empty_then_answer": "재시도 후 답변"
+ }
+}

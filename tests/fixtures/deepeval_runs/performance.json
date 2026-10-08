@@ -1,6 +1,5 @@
 {
- "source": "llm-model-test score.log, Qwen3.8-Flash-Next, 2026-10-03",
- "label": "Qwen3.8-Flash-Next",
+ "source": "per-run means (rounded to 2 decimals) and pass counts of a 15-run DeepEval GEval evaluation",
  "runs": [
   {
    "mean": 0.93,
@@ -67,5 +66,5 @@
   "trimmed_mean": 0.8982,
   "trimmed_passed": 26.91
  },
- "note": "expected = llm-model-test finalize_with_trimmed_mean rule (15% trim, int(n*p) each side) applied to runs"
+ "note": "expected = 15% trimmed mean, int(n*p) dropped from each end, applied to runs"
 }

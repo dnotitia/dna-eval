@@ -9,12 +9,12 @@ pip install -e .
 export HF_TOKEN=...            # read access to dnotitia/dna_* datasets
 
 # subject: any OpenAI-compatible endpoint (vLLM provider shown)
-export VLLM_BASE_URL=http://localhost:49002/v1  VLLM_API_KEY=EMPTY
+export VLLM_BASE_URL=http://localhost:8000/v1  VLLM_API_KEY=EMPTY
 # judge: a second OpenAI-compatible endpoint, bound to the "grader" role via the generic provider
-export JUDGE_BASE_URL=http://localhost:8056/v1  JUDGE_API_KEY=EMPTY
+export JUDGE_BASE_URL=http://localhost:8001/v1  JUDGE_API_KEY=EMPTY
 
 inspect eval dna_eval/performance \
-  --model vllm/Qwen3.8-Flash-Next \
+  --model vllm/<model> \
   --model-role grader=openai-api/judge/gemma-4-31B-it \
   -T thinking=true -T epochs=15
 
@@ -22,6 +22,10 @@ inspect eval dna_eval/performance \
 
 The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`.
 `inspect view` shows every sample, judge prompt, and judge reason.
+
+Requests to the model have no time limit by default. `--attempt-timeout <seconds>` caps each
+request; a request that runs out is retried and, if every attempt fails, judged as an empty
+answer. (`--timeout` is different: it bounds a call including all its retries.)
 
 
 ## Layout
@@ -65,10 +69,10 @@ LLM judge should grade each answer against the reference.
 # src/dna_eval/tasks/my_task.py
 from inspect_ai import Task, task
 from inspect_ai.dataset import FieldSpec, hf_dataset
-from inspect_ai.solver import generate
 
 from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
+from dna_eval.solvers.dna_generate import dna_generate
 
 DATASET_REVISION = "<commit sha>"   # pin the data so a dataset update cannot move your numbers
 
@@ -77,7 +81,7 @@ def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REV
     return Task(
         dataset=hf_dataset("your-org/my_dataset", split="train", revision=revision,
                            sample_fields=FieldSpec(input="question", target="answer")),
-        solver=generate(),                     # one user turn, no system prompt
+        solver=dna_generate(),                 # one user turn, no system prompt
         scorer=rubric_scorer("my_task"),       # rubrics/my_task.yaml
         epochs=epochs,                         # 15 runs -> per_run_trimmed
         config=dna_generate_config(thinking),  # generation settings
@@ -112,7 +116,7 @@ from dna_eval.tasks.my_task import my_task  # noqa: F401
 inspect eval dna_eval/my_task --model vllm/<model> --model-role grader=openai-api/judge/<judge-model>
 ```
 
-The three sections below are needed only when `generate()`, `rubric_scorer`, or the default
+The three sections below are needed only when `dna_generate()`, `rubric_scorer`, or the default
 metrics are not enough. Each adds one file and changes one line of `my_task.py`.
 
 ### Add a solver
@@ -131,11 +135,11 @@ def my_system_prompt(text: str) -> Solver:
 
 ```python
 # my_task.py
-solver=[my_system_prompt("Answer in one sentence."), generate()],
+solver=[my_system_prompt("Answer in one sentence."), dna_generate()],
 ```
 
 A prompt change that only `my_task` needs can stay inline in the task instead (e.g.
-`prompt_template(...)` before `generate()`).
+`prompt_template(...)` before `dna_generate()`).
 
 ### Add a scorer
 

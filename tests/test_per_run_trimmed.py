@@ -1,4 +1,4 @@
-"""Per-run statistics must match the llm-model-test convention."""
+"""Per-run statistics: grouping by epoch and the integer-truncation trim."""
 from inspect_ai.scorer import SampleScore, Score
 
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed

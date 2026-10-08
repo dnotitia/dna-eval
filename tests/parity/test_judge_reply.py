@@ -1,8 +1,8 @@
-"""T4 — a judge reply is read exactly as DeepEval's GEval reads it (deepeval 4.0.3).
+"""A judge reply text is read exactly as DeepEval's GEval reads it (deepeval 4.0.3).
 
 ``fixtures/judge_outputs.json`` holds raw judge replies and what GEval made of them: the
 normalised score and reason, or an error. It is produced by running the replies through
-llm-model-test's own metric (see ``fixtures/make_judge_outputs.py``).
+DeepEval itself (see ``fixtures/make_judge_outputs.py``).
 """
 import json
 from pathlib import Path

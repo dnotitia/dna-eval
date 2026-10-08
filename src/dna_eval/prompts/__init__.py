@@ -1,7 +1,7 @@
 """Judge prompts: how a rubric is turned into the text the grader reads.
 
 ``geval_results.jinja`` reproduces the DeepEval GEval results prompt byte-for-byte so scores
-stay comparable with the DeepEval-based scoreboard. It is fixed for the whole suite; changing
+stay comparable with DeepEval GEval. It is fixed for the whole suite; changing
 it is a scorer version bump, not a rubric edit.
 """
 from __future__ import annotations

@@ -16,7 +16,7 @@ def dna_dataset(name: str, *, revision: str,
 
     ``revision`` is required: each task pins it as the default of its own ``revision``
     argument, so the commit is recorded in the log's ``task_args`` and a dataset update
-    cannot silently move a published number. Authentication for private repos follows
+    cannot silently move a reported number. Authentication for private repos follows
     ``huggingface_hub`` (``HF_TOKEN`` or a cached login); the token is not passed explicitly.
     """
     return hf_dataset(

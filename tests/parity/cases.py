@@ -1,5 +1,5 @@
 """Registry of DeepEval-parity cases. Adding a task to the suite means adding one entry here
-plus its fixtures; the three parity tests are parameterised over this table.
+plus its fixtures; the parity tests that take a task are parameterised over this table.
 
 Per task:
   task        : the @task factory

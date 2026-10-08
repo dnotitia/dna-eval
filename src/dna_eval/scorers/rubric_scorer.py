@@ -1,7 +1,7 @@
 """``rubric_scorer``: one judge pass against one rubric."""
 from __future__ import annotations
 
-from inspect_ai.model import GenerateConfig, get_model
+from inspect_ai.model import ContentReasoning, GenerateConfig, ModelOutput, get_model
 from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
 from inspect_ai.solver import TaskState
 from pydantic import BaseModel
@@ -28,14 +28,31 @@ def read_verdict(reply: str, rubric: Rubric) -> tuple[float, float, str]:
     return (v.score - rubric.lo) / (rubric.hi - rubric.lo), v.score, v.reason
 
 
+def content_as_sent(output: ModelOutput) -> str:
+    """The judge message's ``content`` as the server sent it, which is what DeepEval reads.
+
+    Inspect moves a ``<think>...</think>`` block out of the text into a ``ContentReasoning``
+    (``internal="think"``). DeepEval parses the raw content, so a brace inside that block
+    makes it fail; put the block back so ``read_verdict`` fails the same way. Reasoning sent
+    in a separate field (``reasoning_content``) is left out, as DeepEval never sees it.
+    """
+    text = output.completion
+    if not output.choices or isinstance(output.message.content, str) or text.lstrip().startswith("<think"):
+        return text
+    think = "".join(f"<think>{c.reasoning}</think>" for c in output.message.content
+                    if isinstance(c, ContentReasoning) and c.internal == "think")
+    return think + text
+
+
 @scorer(metrics=[mean(), per_run_trimmed()])
 def rubric_scorer(rubric: str, judge_retries: int = 2) -> Scorer:
     """Judge ``state.output`` against ``rubrics/<rubric>.yaml`` with the model bound to the ``grader`` role.
 
     The judge is called at temperature 0 and is expected to answer ``{"score": lo-hi, "reason": ...}``.
     The score is normalised to 0-1; ``metadata["passed"]`` applies the rubric threshold;
-    ``metadata["epoch"]`` lets ``per_run_trimmed`` regroup scores by run. Unparsable judge
-    output is retried ``judge_retries`` times and then scored 0, as DeepEval does.
+    ``metadata["epoch"]`` lets ``per_run_trimmed`` regroup scores by run. A judge call that
+    fails or cannot be read is retried ``judge_retries`` times and then scored 0, so the
+    sample still counts in every average.
     """
     r = load_rubric(rubric)
 
@@ -45,17 +62,19 @@ def rubric_scorer(rubric: str, judge_retries: int = 2) -> Scorer:
             expected_output=target.text, context=state.metadata.get("context"),
         )
         grader = get_model(role="grader", config=GenerateConfig(temperature=0.0))
-        last = ""
+        last, error = "", ""
         for _ in range(1 + judge_retries):
-            last = (await grader.generate(prompt)).completion
             try:
+                last = content_as_sent(await grader.generate(prompt))
                 norm, raw, reason = read_verdict(last, r)
                 break
             except ValueError:
-                continue
+                error = "parse"
+            except Exception as e:  # noqa: BLE001  (any failed call is retried)
+                last, error = f"{type(e).__name__}: {e}", "call"
         else:
-            return Score(value=0.0, answer=None, explanation=f"judge parse failed: {last[:300]}",
-                         metadata={"passed": False, "judge_error": "parse", "epoch": state.epoch})
+            return Score(value=0.0, answer=None, explanation=f"judge failed: {last[:300]}",
+                         metadata={"passed": False, "judge_error": error, "epoch": state.epoch})
         return Score(value=norm, answer=f"{raw:g}", explanation=reason,
                      metadata={"passed": norm >= r.threshold, "raw_score": raw, "epoch": state.epoch})
 

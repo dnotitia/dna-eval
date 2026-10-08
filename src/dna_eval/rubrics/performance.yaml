@@ -1,4 +1,3 @@
-# Ported verbatim from llm-model-test metrics.py::ModelPerformanceMetric.
 # Changing any step or range changes the score; bump the rubric version in the commit message.
 name: performance
 params: [input, actual_output, expected_output]

@@ -1,4 +1,4 @@
-"""T3 — per-run trimmed mean / pass count reproduce DeepEval's finalize_with_trimmed_mean."""
+"""Per-run trimmed mean and pass count reproduce the values recorded from a DeepEval GEval evaluation."""
 import json
 from pathlib import Path
 
