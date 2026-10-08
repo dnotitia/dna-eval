@@ -184,11 +184,6 @@ def my_metric() -> Metric:
 metrics=[mean(), per_run_trimmed(), my_metric()],
 ```
 
-## Tests
-
-`pytest tests/` — unit tests plus the DeepEval parity suite (`tests/parity/`).
-Every task must keep T1-T3 green; adding a task means adding its
-fixtures and one entry in `tests/parity/cases.py`.
 
 ## License
 

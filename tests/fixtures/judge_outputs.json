@@ -1,0 +1,239 @@
+{
+ "source": "deepeval GEval (llm-model-test metrics.ModelPerformanceMetric), score_range 0-10",
+ "cases": [
+  {
+   "id": "plain",
+   "raw": "{\"score\": 8, \"reason\": \"요구사항을 대부분 충족함\"}",
+   "expected": {
+    "score": 0.8,
+    "reason": "요구사항을 대부분 충족함"
+   }
+  },
+  {
+   "id": "reason_first",
+   "raw": "{\"reason\": \"ok\", \"score\": 9}",
+   "expected": {
+    "score": 0.9,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "code_fence",
+   "raw": "```json\n{\"score\": 7, \"reason\": \"ok\"}\n```",
+   "expected": {
+    "score": 0.7,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "prose_around",
+   "raw": "Here is my evaluation:\n{\"score\": 6, \"reason\": \"partial\"}\nThanks.",
+   "expected": {
+    "score": 0.6,
+    "reason": "partial"
+   }
+  },
+  {
+   "id": "float_score",
+   "raw": "{\"score\": 7.5, \"reason\": \"ok\"}",
+   "expected": {
+    "score": 0.75,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "float_score_high",
+   "raw": "{\"score\": 8.9, \"reason\": \"ok\"}",
+   "expected": {
+    "score": 0.89,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "string_score",
+   "raw": "{\"score\": \"8\", \"reason\": \"ok\"}",
+   "expected": {
+    "score": 0.8,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "string_float_score",
+   "raw": "{\"score\": \"7.5\", \"reason\": \"ok\"}",
+   "expected": {
+    "score": 0.75,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "trailing_comma",
+   "raw": "{\"score\": 8, \"reason\": \"ok\",}",
+   "expected": {
+    "score": 0.8,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "missing_close_brace",
+   "raw": "{\"score\": 8, \"reason\": \"ok\"",
+   "expected": {
+    "score": 0.8,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "braces_in_reason",
+   "raw": "{\"score\": 5, \"reason\": \"형식 {a: 1}을 지키지 않음\"}",
+   "expected": {
+    "score": 0.5,
+    "reason": "형식 {a: 1}을 지키지 않음"
+   }
+  },
+  {
+   "id": "nested_object",
+   "raw": "{\"score\": 4, \"reason\": \"ok\", \"detail\": {\"a\": 1}}",
+   "expected": {
+    "score": 0.4,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "extra_keys",
+   "raw": "{\"score\": 3, \"reason\": \"ok\", \"confidence\": 0.9}",
+   "expected": {
+    "score": 0.3,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "out_of_range",
+   "raw": "{\"score\": 12, \"reason\": \"ok\"}",
+   "expected": {
+    "score": 1.2,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "negative",
+   "raw": "{\"score\": -1, \"reason\": \"ok\"}",
+   "expected": {
+    "score": -0.1,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "zero",
+   "raw": "{\"score\": 0, \"reason\": \"완전히 틀림\"}",
+   "expected": {
+    "score": 0.0,
+    "reason": "완전히 틀림"
+   }
+  },
+  {
+   "id": "think_prefix",
+   "raw": "<think>score는 {7}점 정도</think>\n{\"score\": 7, \"reason\": \"ok\"}",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "two_objects",
+   "raw": "{\"score\": 2, \"reason\": \"draft\"}\n{\"score\": 9, \"reason\": \"final\"}",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "missing_reason",
+   "raw": "{\"score\": 8}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "missing_score",
+   "raw": "{\"reason\": \"ok\"}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "null_score",
+   "raw": "{\"score\": null, \"reason\": \"ok\"}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "word_score",
+   "raw": "{\"score\": \"eight\", \"reason\": \"ok\"}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "fraction_score",
+   "raw": "{\"score\": \"8/10\", \"reason\": \"ok\"}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "bool_score",
+   "raw": "{\"score\": true, \"reason\": \"ok\"}",
+   "expected": {
+    "score": 0.1,
+    "reason": "ok"
+   }
+  },
+  {
+   "id": "numeric_reason",
+   "raw": "{\"score\": 8, \"reason\": 123}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "null_reason",
+   "raw": "{\"score\": 8, \"reason\": null}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "list_reason",
+   "raw": "{\"score\": 8, \"reason\": [\"a\", \"b\"]}",
+   "expected": {
+    "error": "ValidationError"
+   }
+  },
+  {
+   "id": "single_quotes",
+   "raw": "{'score': 8, 'reason': 'ok'}",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "no_json",
+   "raw": "점수는 8점입니다.",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "empty",
+   "raw": "",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  },
+  {
+   "id": "array_only",
+   "raw": "[8]",
+   "expected": {
+    "error": "DeepEvalError"
+   }
+  }
+ ]
+}

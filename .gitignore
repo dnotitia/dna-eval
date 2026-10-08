@@ -5,3 +5,4 @@ logs/
 __pycache__/
 ref/build/
 ref/
+.env

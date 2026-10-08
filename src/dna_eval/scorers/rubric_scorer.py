@@ -1,16 +1,31 @@
 """``rubric_scorer``: one judge pass against one rubric."""
 from __future__ import annotations
 
-import json
-
 from inspect_ai.model import GenerateConfig, get_model
 from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
 from inspect_ai.solver import TaskState
+from pydantic import BaseModel
 
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed
 from dna_eval.prompts import build_prompt
-from dna_eval.rubrics import load_rubric
+from dna_eval.rubrics import Rubric, load_rubric
 from dna_eval.utils.json import extract_json
+
+
+class _Verdict(BaseModel):
+    """DeepEval's ``ReasonScore``: both fields required, ``score`` coerced to float."""
+    reason: str
+    score: float
+
+
+def read_verdict(reply: str, rubric: Rubric) -> tuple[float, float, str]:
+    """(normalised score, raw score, reason) from a judge reply, read as DeepEval's GEval reads it.
+
+    Raises ``ValueError`` (``pydantic.ValidationError`` included) when the reply cannot be
+    read. The score is not clipped to the rubric range, as in DeepEval.
+    """
+    v = _Verdict.model_validate(extract_json(reply))
+    return (v.score - rubric.lo) / (rubric.hi - rubric.lo), v.score, v.reason
 
 
 @scorer(metrics=[mean(), per_run_trimmed()])
@@ -34,16 +49,14 @@ def rubric_scorer(rubric: str, judge_retries: int = 2) -> Scorer:
         for _ in range(1 + judge_retries):
             last = (await grader.generate(prompt)).completion
             try:
-                data = extract_json(last)
-                raw, reason = int(data["score"]), str(data.get("reason", ""))
+                norm, raw, reason = read_verdict(last, r)
                 break
-            except (ValueError, KeyError, TypeError, json.JSONDecodeError):
+            except ValueError:
                 continue
         else:
             return Score(value=0.0, answer=None, explanation=f"judge parse failed: {last[:300]}",
                          metadata={"passed": False, "judge_error": "parse", "epoch": state.epoch})
-        norm = (raw - r.lo) / (r.hi - r.lo)
-        return Score(value=norm, answer=str(raw), explanation=reason,
+        return Score(value=norm, answer=f"{raw:g}", explanation=reason,
                      metadata={"passed": norm >= r.threshold, "raw_score": raw, "epoch": state.epoch})
 
     return score
