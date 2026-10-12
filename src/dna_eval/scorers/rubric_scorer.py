@@ -1,5 +1,19 @@
-"""``rubric_scorer``: one judge pass against one rubric."""
+"""``rubric_scorer``: judge an answer against a rubric, reported under the rubric's name.
+
+Every rubric shipped in ``rubrics/`` is registered with Inspect as a scorer of the same name
+when this module is imported (``dna_eval/performance``, ``dna_eval/uncensorship``, ...). The
+name is what the log viewer shows, and what ``inspect score`` looks up to re-score a log, for
+example with a different judge::
+
+    inspect score run.eval --scorer dna_eval/repetition --action overwrite --model-role grader=<judge>
+
+A judge rubric is one judge pass. A composite rubric (``compose``) judges the same answer
+against each of its components and folds them into one score; see ``rubrics/__init__.py``.
+"""
 from __future__ import annotations
+
+from dataclasses import dataclass
+from statistics import fmean
 
 from inspect_ai.model import ContentReasoning, GenerateConfig, ModelOutput, get_model
 from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
@@ -8,7 +22,7 @@ from pydantic import BaseModel
 
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed
 from dna_eval.prompts import build_prompt
-from dna_eval.rubrics import Rubric, load_rubric
+from dna_eval.rubrics import CompositeRubric, Rubric, load_rubric, rubric_names
 from dna_eval.utils.json import extract_json
 
 
@@ -44,38 +58,109 @@ def content_as_sent(output: ModelOutput) -> str:
     return think + text
 
 
-@scorer(metrics=[mean(), per_run_trimmed()])
-def rubric_scorer(rubric: str, judge_retries: int = 2) -> Scorer:
-    """Judge ``state.output`` against ``rubrics/<rubric>.yaml`` with the model bound to the ``grader`` role.
+@dataclass
+class _Judgment:
+    rubric: Rubric
+    value: float = 0.0
+    raw: float | None = None
+    reason: str = ""
+    error: str = ""          # "", "parse" or "call"
 
-    The judge is called at temperature 0 and is expected to answer ``{"score": lo-hi, "reason": ...}``.
-    The score is normalised to 0-1; ``metadata["passed"]`` applies the rubric threshold;
-    ``metadata["epoch"]`` lets ``per_run_trimmed`` regroup scores by run. A judge call that
-    fails or cannot be read is retried ``judge_retries`` times and then scored 0, so the
-    sample still counts in every average.
-    """
-    r = load_rubric(rubric)
+    @property
+    def passed(self) -> bool:
+        return not self.error and self.value >= self.rubric.threshold
+
+
+async def _judge_once(r: Rubric, state: TaskState, target: Target, context: list[str] | None) -> _Judgment:
+    """One judge call for one rubric; a failed call is returned, not raised."""
+    prompt = build_prompt(
+        r, input_text=state.input_text, actual_output=state.output.completion,
+        expected_output=target.text, context=state.metadata.get("context", context),
+    )
+    grader = get_model(role="grader", config=GenerateConfig(temperature=0.0))
+    last = ""
+    try:
+        last = content_as_sent(await grader.generate(prompt))
+        value, raw, reason = read_verdict(last, r)
+        return _Judgment(r, value, raw, reason)
+    except ValueError:
+        return _Judgment(r, reason=f"judge failed: {last[:300]}", error="parse")
+    except Exception as e:  # noqa: BLE001  (any failed call is retried)
+        return _Judgment(r, reason=f"judge failed: {type(e).__name__}: {e}"[:300], error="call")
+
+
+async def _judge_rounds(parts: list[Rubric], state: TaskState, target: Target,
+                        judge_retries: int, context: list[str] | None) -> list[_Judgment]:
+    """Judge every rubric; if any judgment failed, judge them all again, up to ``judge_retries``
+    more rounds (as DeepEval re-evaluates a whole failed test case). Judgments still failing
+    after the last round score 0, so the sample still counts in every average."""
+    for _ in range(1 + judge_retries):
+        judgments = [await _judge_once(r, state, target, context) for r in parts]
+        if not any(j.error for j in judgments):
+            break
+    return judgments
+
+
+def _judge_scorer(rubric: Rubric | CompositeRubric, judge_retries: int, context: list[str] | None) -> Scorer:
+    parts = rubric.components() if isinstance(rubric, CompositeRubric) else [rubric]
 
     async def score(state: TaskState, target: Target) -> Score:
-        prompt = build_prompt(
-            r, input_text=state.input_text, actual_output=state.output.completion,
-            expected_output=target.text, context=state.metadata.get("context"),
+        js = await _judge_rounds(parts, state, target, judge_retries, context)
+        if not isinstance(rubric, CompositeRubric):
+            j = js[0]
+            md = {"passed": j.passed, "epoch": state.epoch}
+            md |= {"judge_error": j.error} if j.error else {"raw_score": j.raw}
+            return Score(value=j.value, answer=state.output.completion, explanation=j.reason, metadata=md)
+        return Score(
+            value=fmean(j.value for j in js),                       # combine: mean
+            answer=state.output.completion,
+            explanation="\n\n".join(f"[{j.rubric.name}] {j.reason}" for j in js),
+            metadata={
+                "passed": all(j.passed for j in js),               # pass: all
+                "epoch": state.epoch,
+                "components": {j.rubric.name: {"value": j.value, "passed": j.passed, "raw": j.raw,
+                                               "judge_error": j.error or None} for j in js},
+            },
         )
-        grader = get_model(role="grader", config=GenerateConfig(temperature=0.0))
-        last, error = "", ""
-        for _ in range(1 + judge_retries):
-            try:
-                last = content_as_sent(await grader.generate(prompt))
-                norm, raw, reason = read_verdict(last, r)
-                break
-            except ValueError:
-                error = "parse"
-            except Exception as e:  # noqa: BLE001  (any failed call is retried)
-                last, error = f"{type(e).__name__}: {e}", "call"
-        else:
-            return Score(value=0.0, answer=None, explanation=f"judge failed: {last[:300]}",
-                         metadata={"passed": False, "judge_error": error, "epoch": state.epoch})
-        return Score(value=norm, answer=f"{raw:g}", explanation=reason,
-                     metadata={"passed": norm >= r.threshold, "raw_score": raw, "epoch": state.epoch})
 
     return score
+
+
+def _register(source: str, name: str):
+    """Register the scorer for one rubric with Inspect, under ``name``."""
+
+    def factory(judge_retries: int = 2, context: list[str] | None = None) -> Scorer:
+        """Judge ``state.output`` against the rubric with the model bound to the ``grader`` role.
+
+        The judge is called at temperature 0 and is expected to answer ``{"score": lo-hi,
+        "reason": ...}``. The score is normalised to 0-1; ``metadata["passed"]`` applies the
+        rubric threshold (for a composite: every component passes); ``metadata["epoch"]``
+        lets ``per_run_trimmed`` regroup scores by run. A failed or unreadable judge call is
+        retried ``judge_retries`` times (for a composite: all components are judged again)
+        and then scored 0, so the sample still counts in every average.
+
+        ``context`` is shown to the judge for every sample, for a rubric whose ``params``
+        include ``context``; a sample's own ``metadata["context"]`` takes precedence. Passing
+        it here keeps a long shared document (e.g. a persona sheet) out of every sample.
+        """
+        return _judge_scorer(load_rubric(source), judge_retries, context)
+
+    return scorer(metrics=[per_run_trimmed(), mean()], name=name)(factory)
+
+
+_SCORERS = {name: _register(name, name) for name in rubric_names()}
+
+
+def rubric_scorer(rubric: str, judge_retries: int = 2, context: list[str] | None = None) -> Scorer:
+    """The scorer for ``rubric``: a rubric name from ``rubrics/``, or a path to a rubric YAML.
+
+    A rubric given by path is registered under its ``name`` field when this is called, so a
+    log scored with it can be re-scored only in a process that calls this again (a task
+    module that builds it on import, or ``--scorer path/to/module.py``).
+    """
+    if rubric not in _SCORERS:
+        r = load_rubric(rubric)
+        if r.name in _SCORERS and rubric != r.name:
+            raise ValueError(f"rubric {rubric!r} is named {r.name!r}, which a shipped rubric already uses")
+        _SCORERS[rubric] = _register(rubric, r.name)
+    return _SCORERS[rubric](judge_retries=judge_retries, context=context)

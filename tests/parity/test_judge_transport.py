@@ -14,9 +14,9 @@ from inspect_ai import Task
 from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import Sample
 
-from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
+from dna_eval.tasks.dna_suite import dna_generate_config
 
 FIXTURE = json.loads((Path(__file__).parent.parent / "fixtures" / "judge_outputs.json").read_text(encoding="utf-8"))
 REPLIES = {f"text_{c['id']}": ({"content": c["raw"]}, c["expected"]) for c in FIXTURE["cases"]}

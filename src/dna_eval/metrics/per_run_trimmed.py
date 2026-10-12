@@ -17,10 +17,15 @@ from dna_eval.utils.stats import trim_mean
 
 
 @metric(scores="unreduced")
-def per_run_trimmed(proportiontocut: float = 0.15) -> Metric:
-    """``trimmed_mean`` of per-run dataset means, ``trimmed_passed`` of per-run pass counts, ``runs``."""
+def per_run_trimmed(proportiontocut: float = 0.15, group_by: str | None = None) -> Metric:
+    """``trimmed_mean`` of per-run dataset means, ``trimmed_passed`` of per-run pass counts, ``runs``.
 
-    def compute(scores: list[SampleScore]) -> Value:
+    With ``group_by``, the same statistics are computed separately for each value of that
+    sample-metadata field and reported as ``<value>/trimmed_mean`` and ``<value>/trimmed_passed``
+    (Inspect's ``grouped()`` only wraps metrics that return a single number).
+    """
+
+    def stats(scores: list[SampleScore]) -> dict[str, float]:
         by_run: dict[int, list[tuple[float, bool]]] = defaultdict(list)
         for s in scores:
             md = s.score.metadata or {}
@@ -36,5 +41,18 @@ def per_run_trimmed(proportiontocut: float = 0.15) -> Metric:
             "trimmed_passed": trim_mean(passed, proportiontocut),
             "runs": len(by_run),
         }
+
+    def compute(scores: list[SampleScore]) -> Value:
+        if group_by is None:
+            return stats(scores)
+        groups: dict[str, list[SampleScore]] = defaultdict(list)
+        for s in scores:
+            groups[str((s.sample_metadata or {}).get(group_by))].append(s)
+        out: dict[str, float] = {}
+        for g in sorted(groups):
+            st = stats(groups[g])
+            out[f"{g}/trimmed_mean"] = st["trimmed_mean"]
+            out[f"{g}/trimmed_passed"] = st["trimmed_passed"]
+        return out
 
     return compute

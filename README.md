@@ -33,14 +33,14 @@ answer. (`--timeout` is different: it bounds a call including all its retries.)
 ```
 src/dna_eval/
   dataset.py         shortcut loader for dnotitia/dna_* (revision required)
-  generation.py      the suite's GenerateConfig (max_tokens, retries, thinking toggle)
   rubrics/           rubric schema + the YAML rubrics
   prompts/           judge-prompt rendering + Jinja templates
   solvers/           one @solver per file
-  scorers/           one @scorer per file
+  scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
   metrics/           one @metric per file
   utils/             small dependency-free helpers
   tasks/             one @task per file
+    dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
 ```
 
 ## How to customize tasks (Simple)
@@ -70,9 +70,9 @@ LLM judge should grade each answer against the reference.
 from inspect_ai import Task, task
 from inspect_ai.dataset import FieldSpec, hf_dataset
 
-from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
+from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
 
 DATASET_REVISION = "<commit sha>"   # pin the data so a dataset update cannot move your numbers
 
@@ -85,6 +85,7 @@ def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REV
         scorer=rubric_scorer("my_task"),       # rubrics/my_task.yaml
         epochs=epochs,                         # 15 runs -> per_run_trimmed
         config=dna_generate_config(thinking),  # generation settings
+        headline_metric=HEADLINE,              # show the per-run trimmed mean first
     )
 ```
 

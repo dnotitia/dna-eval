@@ -15,11 +15,11 @@ from inspect_ai import Task
 from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import Sample
 
-from dna_eval.generation import MAX_RETRIES, dna_generate_config
 from dna_eval.prompts import build_prompt
 from dna_eval.rubrics import load_rubric
 from dna_eval.scorers.rubric_scorer import rubric_scorer
-from dna_eval.solvers.dna_generate import dna_generate
+from dna_eval.solvers.dna_generate import ATTEMPTS, dna_generate
+from dna_eval.tasks.dna_suite import dna_generate_config
 
 EXPECTED = json.loads((Path(__file__).parent.parent / "fixtures" / "subject_outputs.json")
                       .read_text(encoding="utf-8"))["actual_output"]
@@ -55,7 +55,7 @@ def test_judge_sees_deepeval_answer(run, case):
 
 def test_empty_reply_is_retried(run):
     _, srv = run
-    assert len(srv.subject_requests("empty")) == MAX_RETRIES
+    assert len(srv.subject_requests("empty")) == ATTEMPTS
 
 
 @pytest.mark.parametrize("case", ["http_500_then_answer", "empty_then_answer"])

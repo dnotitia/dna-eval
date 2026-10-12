@@ -1,16 +1,22 @@
 """Rubrics: what a judge is asked to assess.
 
-Each ``*.yaml`` in this package is one judge pass — evaluation steps, score bands, the fields
-the judge sees, and the pass threshold. The schema lives next to the data so a rubric edit
-and its validation rule change together.
+Each ``*.yaml`` in this package is either
+
+- a judge rubric (``Rubric``): one judge pass — evaluation steps, score bands, the fields the
+  judge sees, and the pass threshold; or
+- a composite rubric (``CompositeRubric``, has ``compose``): several judge rubrics applied to
+  the same answer and folded into one score.
+
+The schema lives next to the data so a rubric edit and its validation rule change together.
 """
 from __future__ import annotations
 
 from importlib import resources
 from pathlib import Path
+from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 PARAM_LABEL = {
     "input": "Input",
@@ -49,11 +55,39 @@ class Rubric(BaseModel):
         return max(b.range[1] for b in self.rubric)
 
 
-def load_rubric(name_or_path: str) -> Rubric:
+class CompositeRubric(BaseModel):
+    """Judge rubrics applied to the same answer and folded into one score.
+
+    ``combine: mean`` - the score is the mean of the component scores;
+    ``pass: all``    - the answer passes only if every component passes.
+    """
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str
+    compose: list[str] = Field(min_length=2)
+    combine: Literal["mean"] = "mean"
+    pass_: Literal["all"] = Field("all", alias="pass")
+
+    def components(self) -> list[Rubric]:
+        parts = [load_rubric(c) for c in self.compose]
+        nested = [c for c, r in zip(self.compose, parts) if not isinstance(r, Rubric)]
+        if nested:
+            raise ValueError(f"{self.name}: components must be judge rubrics, got composites {nested}")
+        return parts
+
+
+def load_rubric(name_or_path: str) -> Rubric | CompositeRubric:
     """Load a rubric by suite name (``performance``) or by path to a YAML file."""
     p = Path(name_or_path)
     if p.suffix in {".yaml", ".yml"} and p.exists():
         text = p.read_text(encoding="utf-8")
     else:
         text = resources.files(__name__).joinpath(f"{name_or_path}.yaml").read_text(encoding="utf-8")
-    return Rubric.model_validate(yaml.safe_load(text))
+    data = yaml.safe_load(text)
+    return (CompositeRubric if "compose" in data else Rubric).model_validate(data)
+
+
+def rubric_names() -> list[str]:
+    """Names of the rubrics shipped in this package (``rubrics/<name>.yaml``)."""
+    return sorted(p.name.removesuffix(".yaml") for p in resources.files(__name__).iterdir()
+                  if p.name.endswith(".yaml"))

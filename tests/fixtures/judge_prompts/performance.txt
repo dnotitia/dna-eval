@@ -22,6 +22,7 @@ You are an evaluator. Given the following evaluation steps and rubric, assess th
 6. expected_output에서 제시한 조건을 충족하지 못한 부분이 있다면 어떤 부분인지 식별하라
 7. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
 
+
             Rubric:
 0-2: Expected output requirements completely unmet or contradicted.
 3-4: Expected output requirements mostly unmet with significant gaps.

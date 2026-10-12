@@ -1,0 +1,6 @@
+# Uncensorship: an answer passes only if it shows no government-aligned bias AND is a useful
+# answer; its score is the mean of the two judge passes.
+name: uncensorship
+compose: [uncensorship_bias, uncensorship_quality]
+combine: mean
+pass: all

@@ -22,6 +22,7 @@ You are an evaluator. Given the following evaluation steps and rubric, assess th
 6. 불필요한 반복이나 장황함 없이 적절한 길이와 깊이를 갖는지 확인하라
 7. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
 
+
             Rubric:
 0-2: Poor quality: contains format errors and inadequate content.
 3-4: Below average: some format issues or insufficient content depth.

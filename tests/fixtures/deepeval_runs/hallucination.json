@@ -1,0 +1,412 @@
+{
+ "source": "per-run means (rounded to 2 decimals) and pass counts of a 15-run DeepEval GEval evaluation; groups = the same runs split by the sample's category",
+ "runs": [
+  {
+   "mean": 0.77,
+   "passed": 76
+  },
+  {
+   "mean": 0.77,
+   "passed": 77
+  },
+  {
+   "mean": 0.8,
+   "passed": 80
+  },
+  {
+   "mean": 0.78,
+   "passed": 78
+  },
+  {
+   "mean": 0.76,
+   "passed": 76
+  },
+  {
+   "mean": 0.78,
+   "passed": 78
+  },
+  {
+   "mean": 0.78,
+   "passed": 78
+  },
+  {
+   "mean": 0.8,
+   "passed": 80
+  },
+  {
+   "mean": 0.78,
+   "passed": 78
+  },
+  {
+   "mean": 0.77,
+   "passed": 77
+  },
+  {
+   "mean": 0.79,
+   "passed": 79
+  },
+  {
+   "mean": 0.77,
+   "passed": 77
+  },
+  {
+   "mean": 0.82,
+   "passed": 82
+  },
+  {
+   "mean": 0.79,
+   "passed": 79
+  },
+  {
+   "mean": 0.79,
+   "passed": 79
+  }
+ ],
+ "expected": {
+  "trimmed_mean": 0.7818,
+  "trimmed_passed": 78.18
+ },
+ "groups": {
+  "false_premise": {
+   "runs": [
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.85,
+     "passed": 17
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.91,
+     "passed": 18
+    },
+    {
+     "mean": 0.96,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.9336,
+    "trimmed_passed": 18.64
+   }
+  },
+  "true_premise": {
+   "runs": [
+    {
+     "mean": 0.96,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.9782,
+    "trimmed_passed": 19.55
+   }
+  },
+  "nonexistent": {
+   "runs": [
+    {
+     "mean": 0.11,
+     "passed": 2
+    },
+    {
+     "mean": 0.05,
+     "passed": 1
+    },
+    {
+     "mean": 0.15,
+     "passed": 3
+    },
+    {
+     "mean": 0.2,
+     "passed": 4
+    },
+    {
+     "mean": 0.15,
+     "passed": 3
+    },
+    {
+     "mean": 0.2,
+     "passed": 4
+    },
+    {
+     "mean": 0.15,
+     "passed": 3
+    },
+    {
+     "mean": 0.1,
+     "passed": 2
+    },
+    {
+     "mean": 0.1,
+     "passed": 2
+    },
+    {
+     "mean": 0.1,
+     "passed": 2
+    },
+    {
+     "mean": 0.1,
+     "passed": 2
+    },
+    {
+     "mean": 0.05,
+     "passed": 1
+    },
+    {
+     "mean": 0.25,
+     "passed": 5
+    },
+    {
+     "mean": 0.21,
+     "passed": 4
+    },
+    {
+     "mean": 0.15,
+     "passed": 3
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.1373,
+    "trimmed_passed": 2.73
+   }
+  },
+  "unknowable": {
+   "runs": [
+    {
+     "mean": 0.85,
+     "passed": 17
+    },
+    {
+     "mean": 0.85,
+     "passed": 17
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.8,
+     "passed": 16
+    },
+    {
+     "mean": 0.8,
+     "passed": 16
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.95,
+     "passed": 19
+    },
+    {
+     "mean": 0.85,
+     "passed": 17
+    },
+    {
+     "mean": 0.85,
+     "passed": 17
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.86,
+     "passed": 17
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    },
+    {
+     "mean": 0.8,
+     "passed": 16
+    },
+    {
+     "mean": 0.9,
+     "passed": 18
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.8691,
+    "trimmed_passed": 17.36
+   }
+  },
+  "grounding": {
+   "runs": [
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    },
+    {
+     "mean": 1.0,
+     "passed": 20
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 1.0,
+    "trimmed_passed": 20.0
+   }
+  }
+ },
+ "note": "expected = 15% trimmed mean, int(n*p) dropped from each end, applied to runs"
+}

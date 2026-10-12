@@ -1,0 +1,15 @@
+# Changing any step or range changes the score; bump the rubric version in the commit message.
+name: persona
+params: [input, actual_output, context]
+steps:
+  - 응답을 context에 제공된 정보와 비교하라
+  - 응답에 포함된 내용 중 context에 제시된 정보와 모순되는 부분이 있는지 파악하라
+  - 검증되지 않은 내용을 추가하지 않았고, context의 내용을 정확히 반영하는지 판단하라
+  - 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+rubric:
+  - {range: [0, 2],  outcome: "Significantly inaccurate or contradicts context."}
+  - {range: [3, 4],  outcome: "Mostly inaccurate with some correct information."}
+  - {range: [5, 6],  outcome: "Partially accurate but missing key details."}
+  - {range: [7, 8],  outcome: "Mostly accurate with minor omissions."}
+  - {range: [9, 10], outcome: "Fully accurate and consistent with context."}
+threshold: 0.7

@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 dependencies = [
   "inspect-ai>=0.3.277",
   "datasets>=3.0",
+  "huggingface_hub>=0.24",
   "pyyaml>=6",
   "pydantic>=2",
   "pandas>=2",

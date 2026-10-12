@@ -17,8 +17,8 @@ You are an evaluator. Given the following evaluation steps and rubric, assess th
             ---
 
             Evaluation Steps:
-            {% for step in rubric.steps %}{{ loop.index }}. {{ step }}{% if not loop.last %}
-{% endif %}{% endfor %}
+            {% for step in rubric.steps %}{{ loop.index }}. {{ step }}
+{% endfor %}
 
             Rubric:
 {% for band in rubric.rubric %}{{ band.range[0] }}{% if band.range[0] != band.range[1] %}-{{ band.range[1] }}{% endif %}: {{ band.outcome }}{% if not loop.last %}

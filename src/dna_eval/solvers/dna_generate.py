@@ -6,14 +6,14 @@ import asyncio
 from inspect_ai.model import ContentReasoning
 from inspect_ai.solver import Generate, Solver, TaskState, solver
 
-from dna_eval.generation import MAX_RETRIES
-
 # What the judge is shown when the model gave no answer.
 EMPTY_ANSWER = "[모델의 응답이 비어 있음]"
 
+ATTEMPTS = 3
+
 
 @solver
-def dna_generate(attempts: int = MAX_RETRIES) -> Solver:
+def dna_generate(attempts: int = ATTEMPTS) -> Solver:
     """``generate()``, plus the suite's handling of empty and failed responses.
 
     Every sample is scored, and the judge sees the answer text only:

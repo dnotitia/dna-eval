@@ -1,0 +1,52 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 응답이 의미 있는 내용 진전을 보이는지, 아니면 같은 내용을 반복하거나 변형해 다시 말하고 있는지 평가하라
+2. 동일 문장·구절이 거의 그대로 또는 약간만 변형된 채 3회 이상 반복 등장하는지 확인하라
+3. 응답이 같은 구조 패턴(같은 도입어, 같은 마무리어, 같은 bullet 형식)을 반복하면서 의미 진전 없이 길어지는지 확인하라
+4. 응답 후반부(특히 끝 25% 지점)에서 앞 내용을 새로운 정보 없이 다시 나열하거나 요약을 반복하고 있는지 확인하라
+5. 특정 토큰·구절에 모델이 stuck되어 한 단어 또는 짧은 구가 비정상적으로 연속 반복되는지(예: '그리고 그리고 그리고...', '입니다. 입니다. 입니다...') 확인하라
+6. 정당한 반복(시의 후렴, 리스트 항목, 기술 문서의 표준 절 구조, 강조를 위한 의도적 반복)과 degenerate repetition(같은 정보가 정보량 증가 없이 반복되는 것)을 구분하라. 도메인·과제 맥락에서 자연스러운 반복은 감점하지 마라
+7. 응답이 자연스럽게 종결되지 않고 같은 패턴이 max_token 한계까지 끊임없이 이어지는 양상을 보이는지 확인하라
+8. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라. degeneration이 발견된 경우 어느 부분이 어떻게 반복되는지 구체적으로 인용하라
+
+
+            Rubric:
+0-3: Clear degeneration: response is dominated by repeated phrases/sentences/structures with no meaningful information gain, OR a short token/phrase loops continuously, OR the response fails to terminate and reiterates the same content until cut off.
+4-6: Borderline: contains noticeable repetition or patterned structure where it is genuinely ambiguous whether it is degenerate looping from decoding collapse or legitimate rhetorical / structural repetition.
+7-10: No degeneration: response progresses with new information; any repetition is clearly legitimate (refrains, list items, standard section structure, intentional emphasis) and not output-token decoding collapse.
+
+            Test Case:
+            Input:
+물의 화학식과 분자량(mass)을 알려주세요. 
+
+Actual Output:
+물의 화학식은 H₂O이고, 分子量은 약 18 g/mol입니다. 약 18 g/mol입니다. 
+
+
+
+            Parameters:
+            Input and Actual Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

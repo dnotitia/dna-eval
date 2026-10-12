@@ -7,7 +7,7 @@ A task is four parts glued together in one file under `src/dna_eval/tasks/`:
 | dataset | `Sample(id, input, target, metadata)` rows | any Inspect loader, or `dna_dataset` for suite datasets |
 | solver | how the model under evaluation is called | `dna_generate()` plus Inspect solvers or `solvers/` |
 | scorer | how one sample is scored | `rubric_scorer` + a YAML rubric, or `scorers/` |
-| epochs + config | how many runs, and the generation settings | `epochs=`, `generation.dna_generate_config` |
+| epochs + config | how many runs, and the generation settings | `epochs=`, `tasks.dna_suite.dna_generate_config` |
 
 The walkthrough adds a hypothetical task, **`my_task`**. Its data is a Hugging Face dataset
 `your-org/my_dataset` with `question` and `answer` columns, and an LLM judge grades each answer
@@ -79,7 +79,9 @@ change that only `my_task` needs can stay inline (`[prompt_template(...), dna_ge
 scorer=rubric_scorer("my_task"),
 ```
 
-`rubric_scorer` is one judge pass driven by `src/dna_eval/rubrics/my_task.yaml`:
+`rubric_scorer` is one judge pass driven by `src/dna_eval/rubrics/my_task.yaml`. Every YAML file in
+`rubrics/` is registered with Inspect as a scorer of the same name, so results show up as
+`my_task` and `inspect score <log> --scorer dna_eval/my_task` can re-score a log:
 
 ```yaml
 name: my_task
@@ -108,10 +110,21 @@ DeepEval GEval prompt byte for byte; you edit rubrics, not the prompt.
 
 Variations:
 
-- **Several judge passes on one answer** (as in `uncensorship`): write one YAML per pass and
-  compose `composite_scorer([rubric_scorer("a"), rubric_scorer("b")], names=["a", "b"])`.
-  The sample score is the mean, and a sample passes only if every pass clears its threshold.
-- **Two independent metrics from one answer**: `scorer=[rubric_scorer("a"), rubric_scorer("b")]`.
+- **One metric made of several judge passes** (as in `uncensorship`): write one YAML per pass
+  and a composite YAML that names them, then use it like any rubric:
+
+  ```yaml
+  # rubrics/my_task.yaml
+  name: my_task
+  compose: [my_task_accuracy, my_task_tone]
+  combine: mean        # sample score = mean of the component scores
+  pass: all            # a sample passes only if every component passes
+  ```
+
+  `rubric_scorer("my_task")` then reports one score. If any component's judge call fails,
+  every component is judged again, as DeepEval re-evaluates a whole failed test case.
+- **Several independent metrics from one answer** (as in `degeneration`):
+  `scorer=[rubric_scorer("a"), rubric_scorer("b")]` reports each under its own name.
 - **Not a judge task at all**: write your own `@scorer` in `scorers/`, one per file. For
   example, a string-match check:
 
@@ -140,6 +153,9 @@ config=dna_generate_config(thinking),  # max_tokens 16384, 3 retries, thinking v
 suite instead reports **per-run** statistics (the dataset mean of each run, 15% trimmed across
 runs, plus the trimmed pass count) via the `per_run_trimmed` metric that `rubric_scorer`
 already declares. Both numbers appear in the `inspect eval` summary and in `inspect view`.
+Set `headline_metric=HEADLINE` (from `dna_eval.tasks.dna_suite`) so Inspect shows the
+trimmed mean first; without it Inspect shows `mean`, which it computes before the per-run
+metrics.
 
 `dna_generate_config(thinking, **overrides)` is the one place generation settings live. If
 `my_task` overrides something (say, a larger `max_tokens`), say why in a comment: the override
@@ -172,9 +188,9 @@ metrics=[mean(), per_run_trimmed(), my_metric()],   # replaces the scorer's own 
 from inspect_ai import Task, task
 from inspect_ai.dataset import FieldSpec, hf_dataset
 
-from dna_eval.generation import dna_generate_config
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
+from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
 
 DATASET_REVISION = "<commit sha>"
 
@@ -188,6 +204,7 @@ def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REV
         scorer=rubric_scorer("my_task"),
         epochs=epochs,
         config=dna_generate_config(thinking),
+        headline_metric=HEADLINE,
     )
 ```
 
