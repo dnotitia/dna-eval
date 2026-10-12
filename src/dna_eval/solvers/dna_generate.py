@@ -1,17 +1,17 @@
 """``dna_generate``: call the model under evaluation, retrying empty or failed calls."""
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Awaitable, Callable
-
-from inspect_ai.model import ContentReasoning, ModelOutput
+from inspect_ai.model import ModelOutput
 from inspect_ai.solver import Generate, Solver, TaskState, solver
+
+from dna_eval.utils.model_output import reasoning_text
+from dna_eval.utils.retry import call_with_retries
 
 # What the judge is shown when the model gave no answer, or no reasoning.
 EMPTY_ANSWER = "[모델의 응답이 비어 있음]"
 EMPTY_REASONING = "[추론 없음]"
 
-# ``state.store`` key holding the reasoning text (see ``rubrics``: ``sources: {...: reasoning}``).
+# ``state.store`` key holding the reasoning text; a rubric reads it with ``sources: {...: store.reasoning}``.
 REASONING_KEY = "reasoning"
 
 ATTEMPTS = 3
@@ -50,36 +50,3 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
         return state
 
     return solve
-
-
-async def call_with_retries(call: Callable[[], Awaitable[ModelOutput]], attempts: int = ATTEMPTS) -> ModelOutput | None:
-    """Run ``call`` until it returns content or reasoning, at most ``attempts`` times, 1 s then
-    2 s apart. Errors count as failed attempts. Returns the last output, or ``None`` if every
-    attempt raised."""
-    output = None
-    for attempt in range(1, attempts + 1):
-        try:
-            output = await call()
-            if output.completion or _has_reasoning(output):
-                return output
-        except Exception:  # noqa: BLE001  (any failed call is retried)
-            pass
-        if attempt < attempts:
-            await asyncio.sleep(2 ** (attempt - 1))
-    return output
-
-
-def reasoning_text(output: ModelOutput) -> str:
-    """The model's reasoning in ``output``, stripped; ``""`` if there is none."""
-    if not output.choices or isinstance(output.message.content, str):
-        return ""
-    return "\n".join(c.reasoning for c in output.message.content
-                     if isinstance(c, ContentReasoning) and c.reasoning).strip()
-
-
-def _has_reasoning(output: ModelOutput) -> bool:
-    # Raw, not stripped: a whitespace-only reasoning still counts as a reply, as in the
-    # retry rule this mirrors.
-    if not output.choices or isinstance(output.message.content, str):
-        return False
-    return any(isinstance(c, ContentReasoning) and c.reasoning for c in output.message.content)

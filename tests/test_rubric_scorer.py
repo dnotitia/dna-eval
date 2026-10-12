@@ -55,3 +55,19 @@ def _log(tmp_path):
                 scorer=[rubric_scorer("language_confusion"), rubric_scorer("repetition")])
     return inspect_eval(task, model=mk("H₂O입니다."), model_roles={"grader": mk('{"score": 9, "reason": "ok"}')},
                         display="none", log_dir=str(tmp_path / "logs"))[0]
+
+
+def test_store_source_reaches_the_judge(tmp_path):
+    """``reasoning_style`` reads ``store.reasoning``: what dna_generate stored, placeholder included."""
+    from dna_eval.solvers.dna_generate import EMPTY_REASONING, dna_generate
+
+    mk = lambda text: get_model("mockllm/model", custom_outputs=(  # noqa: E731
+        ModelOutput.from_content("mockllm/model", text) for _ in itertools.count()))
+    task = Task(dataset=[Sample(input="q", metadata={"reference_reasoning": "참조 생각"})],
+                solver=dna_generate(), scorer=rubric_scorer("reasoning_style"))
+    log = inspect_eval(task, model=mk("생각 없이 답만"), model_roles={"grader": mk('{"score": 5, "reason": "ok"}')},
+                       display="none", log_dir=str(tmp_path / "logs"))[0]
+    sample = log.samples[0]
+    judge = next(e for e in sample.events if e.event == "model" and e.role == "grader")
+    prompt = sample.attachments.get(judge.input[0].text.removeprefix("attachment://"), judge.input[0].text)
+    assert f"Actual Output:\n{EMPTY_REASONING} \n" in prompt and "Expected Output:\n참조 생각 \n" in prompt

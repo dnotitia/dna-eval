@@ -28,7 +28,8 @@ PARAM_LABEL = {
 
 # Where each judge-visible field comes from, unless a rubric's ``sources`` says otherwise.
 #   input / answer / reasoning / target : the sample input, the model's answer, the model's
-#   reasoning, the sample target; ``metadata.<key>`` : a field of the sample's metadata.
+#   reasoning (as the model returned it), the sample target; ``metadata.<key>`` / ``store.<key>``:
+#   a field of the sample's metadata, or of the sample store a solver wrote to.
 DEFAULT_SOURCES = {
     "input": "input",
     "actual_output": "answer",
@@ -66,9 +67,9 @@ class Rubric(BaseModel):
         stray = [p for p in v if p not in params]
         if stray:
             raise ValueError(f"sources for fields the judge is not shown: {stray}")
-        bad = [s for s in v.values() if s not in SOURCE_KINDS and not s.startswith("metadata.")]
+        bad = [s for s in v.values() if s not in SOURCE_KINDS and not s.startswith(("metadata.", "store."))]
         if bad:
-            raise ValueError(f"unknown sources {bad}; use one of {list(SOURCE_KINDS)} or metadata.<key>")
+            raise ValueError(f"unknown sources {bad}; use one of {list(SOURCE_KINDS)}, metadata.<key> or store.<key>")
         return v
 
     def source(self, param: str) -> str:

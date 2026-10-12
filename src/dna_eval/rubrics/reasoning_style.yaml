@@ -3,7 +3,7 @@
 name: reasoning_style
 params: [actual_output, expected_output]
 sources:
-  actual_output: reasoning
+  actual_output: store.reasoning                 # written by dna_generate (with its placeholder)
   expected_output: metadata.reference_reasoning
 steps:
   - "내용·정확성·타당성은 절대 평가하지 마라. 오직 두 reasoning trace가 '어떻게 사고/추론을 전개하는가'의 스타일 차이만 본다."

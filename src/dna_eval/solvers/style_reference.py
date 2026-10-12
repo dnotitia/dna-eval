@@ -25,7 +25,9 @@ import pandas as pd
 from inspect_ai.model import ChatMessageUser, GenerateConfig, Model, get_model, model_roles
 from inspect_ai.solver import Generate, Solver, TaskState, solver
 
-from dna_eval.solvers.dna_generate import ATTEMPTS, call_with_retries, reasoning_text
+from dna_eval.solvers.dna_generate import ATTEMPTS
+from dna_eval.utils.model_output import reasoning_text
+from dna_eval.utils.retry import call_with_retries
 
 logger = logging.getLogger(__name__)
 

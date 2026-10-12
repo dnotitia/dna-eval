@@ -37,11 +37,12 @@ The `style` task also needs a reference model (`-T reference=...`); see
 src/dna_eval/
   dataset.py         shortcut loader for dnotitia/dna_* (revision required)
   rubrics/           rubric schema + the YAML rubrics
-  prompts/           judge-prompt rendering + Jinja templates
+  prompts/           judge-prompt rendering + Jinja templates (what the judge reads)
+  judging.py         judge calls, verdict parsing, re-judge rounds (what the judge returns)
   solvers/           one @solver per file
   scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
   metrics/           one @metric per file
-  utils/             small dependency-free helpers
+  utils/             helpers with no suite logic (JSON, statistics, model output, retries)
   tasks/             one @task per file
     dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
 ```

@@ -103,7 +103,7 @@ threshold: 0.7
 | `steps` | the evaluation steps, verbatim; the judge reads them numbered |
 | `rubric` | score bands on the integer scale and what each band means |
 | `threshold` | pass line on the normalised 0-1 score (0.7 = judge gave 7 or more) |
-| `sources` | optional: where a field comes from — `answer` (default for `actual_output`), `reasoning`, `input`, `target` (default for `expected_output`), or `metadata.<key>`. The `style` rubrics use it to show the judge the model's reasoning and a reference model's answer |
+| `sources` | optional: where a field comes from — `answer` (default for `actual_output`), `reasoning`, `input`, `target` (default for `expected_output`), `metadata.<key>`, or `store.<key>` (a value a solver wrote to the sample store). The `style` rubrics use it to show the judge the model's reasoning and a reference model's answer |
 
 The rubric is validated on load (`rubrics/__init__.py`, pydantic). The judge **prompt** that
 wraps it, `prompts/geval_results.jinja`, is shared by every task in the suite and reproduces the
