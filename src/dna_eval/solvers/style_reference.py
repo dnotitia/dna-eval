@@ -17,7 +17,6 @@ import asyncio
 import hashlib
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -26,13 +25,13 @@ from inspect_ai.model import ChatMessageUser, GenerateConfig, Model, get_model, 
 from inspect_ai.solver import Generate, Solver, TaskState, solver
 
 from dna_eval.solvers.dna_generate import ATTEMPTS
+from dna_eval.utils.cache import cache_root
 from dna_eval.utils.model_output import reasoning_text
 from dna_eval.utils.retry import call_with_retries
 
 logger = logging.getLogger(__name__)
 
 ROLE = "reference"
-CACHE_ENV = "DNA_EVAL_CACHE_DIR"
 COLUMNS = ["id", "input", "reference_reasoning", "reference_content"]
 
 # What the judge is shown when the reference has no reasoning, or no answer.
@@ -45,10 +44,6 @@ ORIGIN_KEY = "reference_origin"
 # GenerateConfig fields that do not change what the model returns (left out of the hash).
 _RUNTIME_FIELDS = {"max_connections", "adaptive_connections", "max_retries", "timeout",
                    "attempt_timeout", "stream_idle_timeout", "cache", "batch", "fail_on_refusal"}
-
-
-def cache_root() -> Path:
-    return Path(os.environ.get(CACHE_ENV) or Path.home() / ".cache" / "dna_eval")
 
 
 class ReferenceCache:
