@@ -14,6 +14,10 @@ EMPTY_REASONING = "[추론 없음]"
 # ``state.store`` key holding the reasoning text; a rubric reads it with ``sources: {...: store.reasoning}``.
 REASONING_KEY = "reasoning"
 
+# ``state.store`` key recording why the answer is a placeholder: ``"failed"`` (every attempt
+# raised) or ``"empty"`` (the model returned no answer text); absent when there is an answer.
+NO_ANSWER_KEY = "no_answer"
+
 ATTEMPTS = 3
 
 
@@ -29,7 +33,9 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
     - no answer (all attempts failed, or only reasoning came back) becomes ``EMPTY_ANSWER``,
       which the judge scores like any other answer instead of the sample erroring out;
     - the reasoning (from a ``reasoning_content`` / ``reasoning`` field or a ``<think>`` block),
-      stripped, is kept in ``state.store["reasoning"]``, or ``EMPTY_REASONING`` if there is none.
+      stripped, is kept in ``state.store["reasoning"]``, or ``EMPTY_REASONING`` if there is none;
+    - why there is no answer, ``"failed"`` or ``"empty"``, is kept in ``state.store["no_answer"]``,
+      so the failure rate can be reported (``call_failures``).
 
     Only ``state.output.completion`` is rewritten; the assistant message (reasoning included)
     is left as the model returned it.
@@ -44,8 +50,11 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
             state = await generate(state)
             return state.output
 
-        await call_with_retries(call, attempts)
-        state.output.completion = state.output.completion.strip() or EMPTY_ANSWER
+        output = await call_with_retries(call, attempts)
+        answer = state.output.completion.strip()
+        if not answer:
+            state.store.set(NO_ANSWER_KEY, "failed" if output is None else "empty")
+        state.output.completion = answer or EMPTY_ANSWER
         state.store.set(REASONING_KEY, reasoning_text(state.output) or EMPTY_REASONING)
         return state
 

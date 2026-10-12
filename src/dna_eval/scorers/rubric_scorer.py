@@ -19,6 +19,7 @@ from inspect_ai.scorer import Score, Scorer, Target, mean, scorer
 from inspect_ai.solver import TaskState
 
 from dna_eval.judging import judge_rounds
+from dna_eval.metrics.call_failures import NO_ANSWER, call_failures
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed
 from dna_eval.rubrics import CompositeRubric, Rubric, load_rubric, rubric_names
 
@@ -34,7 +35,9 @@ def _register(source: str, name: str):
         rubric threshold (for a composite: every component passes); ``metadata["epoch"]``
         lets ``per_run_trimmed`` regroup scores by run. A failed or unreadable judge call is
         retried ``judge_retries`` times (for a composite: all components are judged again)
-        and then scored 0, so the sample still counts in every average.
+        and then scored 0, so the sample still counts in every average. ``call_failures``
+        reports how often that happened, and how often the model gave no answer
+        (``metadata["no_answer"]``, copied from ``state.store``).
 
         ``context`` is shown to the judge for every sample, for a rubric whose ``params``
         include ``context``; a sample's own ``metadata["context"]`` takes precedence. Passing
@@ -42,7 +45,7 @@ def _register(source: str, name: str):
         """
         return _score(load_rubric(source), judge_retries, context)
 
-    return scorer(metrics=[per_run_trimmed(), mean()], name=name)(factory)
+    return scorer(metrics=[per_run_trimmed(), mean(), call_failures()], name=name)(factory)
 
 
 def _score(rubric: Rubric | CompositeRubric, judge_retries: int, context: list[str] | None) -> Scorer:
@@ -50,9 +53,10 @@ def _score(rubric: Rubric | CompositeRubric, judge_retries: int, context: list[s
 
     async def score(state: TaskState, target: Target) -> Score:
         js = await judge_rounds(parts, state, target, judge_retries, context)
+        no_answer = {NO_ANSWER: state.store.get(NO_ANSWER)} if state.store.get(NO_ANSWER) else {}
         if not isinstance(rubric, CompositeRubric):
             j = js[0]
-            md = {"passed": j.passed, "epoch": state.epoch}
+            md = {"passed": j.passed, "epoch": state.epoch, **no_answer}
             md |= {"judge_error": j.error} if j.error else {"raw_score": j.raw}
             return Score(value=j.value, answer=state.output.completion, explanation=j.reason, metadata=md)
         return Score(
@@ -62,6 +66,7 @@ def _score(rubric: Rubric | CompositeRubric, judge_retries: int, context: list[s
             metadata={
                 "passed": all(j.passed for j in js),               # pass: all
                 "epoch": state.epoch,
+                **no_answer,
                 "components": {j.rubric.name: {"value": j.value, "passed": j.passed, "raw": j.raw,
                                                "judge_error": j.error or None} for j in js},
             },
