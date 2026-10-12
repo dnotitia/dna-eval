@@ -9,9 +9,9 @@ changing anything; `docs/architecture.md` explains how the code fits together, a
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-export HF_TOKEN=...                 # read access to the dnotitia/dna_* datasets
+export HF_TOKEN=...                 # read access to the dnotitia/dna_* datasets and gated benchmarks
 python -m pytest                    # whole suite, about a minute, no GPU
-python -m pytest -m "not network"   # skip the tests that download datasets from the Hub
+python -m pytest -m "not network"   # skip the tests that download data
 inspect list tasks                  # the registered tasks
 ```
 
@@ -34,7 +34,11 @@ Each one is a decision record; follow the link for the reasoning and the rejecte
   `rubrics`/`dataset` → `utils`. Solvers and scorers exchange data through keys a rubric names,
   never through imports. (0011)
 - **Pinned and explicit.** Datasets are pinned to a commit (0008); model roles are required
-  (0010); suite-wide settings live in `src/dna_eval/tasks/dna_suite/__init__.py` (0007).
+  (0010); suite-wide settings live in `src/dna_eval/tasks/dna_suite/__init__.py` (0007), and
+  benchmark settings in `src/dna_eval/tasks/benchmarks/__init__.py` (0015).
+- **Official protocol for benchmarks.** A standard benchmark follows its authors' code; every
+  departure is listed in the task's docstring (0015). Copied checking code stays unchanged in
+  `src/dna_eval/vendor/` with its licence (0016).
 - **Behaviour, not origin.** Code, docs, names and fixtures describe what a thing does in terms
   a reader of this repository can check, in English. (0014)
 
@@ -60,7 +64,8 @@ deliberate deviation (0001, 0004–0007). New tasks do not carry this constraint
   record instead of editing it.
 - **Tests:** add or update a test with every behaviour change. Tests never call real model
   endpoints: use `mockllm` or `tests/parity/fake_openai.py`, and bind models by `base_url`, not by
-  environment variables (0013). Mark tests that need the Hub with `@pytest.mark.network`.
+  environment variables (0013). Mark tests that need the network (the Hub, pinned downloads) with `@pytest.mark.network`; a
+  test of a gated dataset skips with the reason when the token has no access.
 
 ## Done means
 

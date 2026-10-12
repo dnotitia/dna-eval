@@ -1,6 +1,9 @@
 # DNA Evaluation Harness
 
-An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk).
+An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk):
+the DNA suite of LLM-judged tasks, and standard benchmarks (GPQA-Diamond, MMLU-Pro, HLE, AIME,
+IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench) reproduced from their official
+protocols; see [docs/benchmarks.md](docs/benchmarks.md).
 
 ## Quickstart
 
@@ -42,6 +45,7 @@ Read in this order as you need them:
 | `docs/decisions/` | before changing a rule: why things are the way they are |
 | `docs/adding-a-task.md` | adding or changing a task |
 | `docs/running-style-task.md` | running the style task, or generating its references |
+| `docs/benchmarks.md` | running a standard benchmark, or reading what it reports |
 
 AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
 
@@ -56,9 +60,11 @@ src/dna_eval/
   solvers/           one @solver per file
   scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
   metrics/           one @metric per file
-  utils/             helpers with no suite logic (JSON, statistics, model output, retries)
+  utils/             helpers with no suite logic (JSON, statistics, model output, retries, ...)
+  vendor/            third-party checking code, with its licence (IFEval/IFBench verifiers)
   tasks/             one @task per file
     dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
+    benchmarks/      standard benchmarks; __init__.py holds their generation config
 ```
 
 ## How to customize tasks (Simple)

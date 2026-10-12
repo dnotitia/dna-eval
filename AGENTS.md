@@ -11,7 +11,8 @@ and definition of done; this file only adds what an agent needs on top.
 - **Changing structure** (a new module, moving code, a new import between packages):
   `docs/architecture.md`, then the decision records it cites in `docs/decisions/`.
 - **Adding or changing a task:** `docs/adding-a-task.md`; for the style task,
-  `docs/running-style-task.md`.
+  `docs/running-style-task.md`; for a standard benchmark, `docs/benchmarks.md` and record 0015.
+- **Touching `src/dna_eval/vendor/`:** record 0016; checking logic stays as upstream wrote it.
 - **Changing a DNA suite rubric, the judge template, or suite settings:** the matching records
   in `docs/decisions/` (0003–0007) first; these change the suite's scores and its DeepEval
   parity. New tasks outside the ported suite need no DeepEval parity (0001).
