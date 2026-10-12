@@ -31,6 +31,20 @@ The `style` task also needs a reference model (`-T reference=...`); see
 [docs/running-style-task.md](docs/running-style-task.md).
 
 
+## Documentation
+
+Read in this order as you need them:
+
+| document | read it when |
+| --- | --- |
+| `CONTRIBUTING.md` | before changing anything: set-up, the project's rules, definition of done |
+| `docs/architecture.md` | before changing structure: how a sample flows, what each module may import, key names |
+| `docs/decisions/` | before changing a rule: why things are the way they are |
+| `docs/adding-a-task.md` | adding or changing a task |
+| `docs/running-style-task.md` | running the style task, or generating its references |
+
+AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
+
 ## Layout
 
 ```
@@ -193,6 +207,10 @@ def my_metric() -> Metric:
 metrics=[mean(), per_run_trimmed(), my_metric()],
 ```
 
+
+## Contributing
+
+See `CONTRIBUTING.md`.
 
 ## License
 
