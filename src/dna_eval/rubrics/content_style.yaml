@@ -1,0 +1,23 @@
+# Changing any step or range changes the score; bump the rubric version in the commit message.
+# Compares the style of the model's answer against a reference model's (style only, not correctness).
+name: content_style
+params: [actual_output, expected_output]
+sources:
+  actual_output: answer
+  expected_output: metadata.reference_content
+steps:
+  - "내용·사실·정확성·유용성은 절대 평가하지 마라. 두 답변 사이의 스타일 차이만 본다."
+  - "register 축: 종결어미 체계(하십시오체/해요체/한다체)·존댓말 수준·전반적인 사용역(register) 면에서 actual_output과 expected_output의 차이를 평가하라."
+  - "tone 축: 단정적인지/완곡한지(hedging), 독자와의 거리감, 주의/면책성 문구(disclaimer)나 메타코멘트의 가감 차이 등을 평가하라."
+  - "format 축: markdown(불릿/헤딩/볼드)·리스트 vs 산문·구조 조직 면에서의 차이를 평가하라."
+  - "verbosity 축: 분량·부연 설명·반복의 정도 면에서 차이를 평가하라."
+  - "lexis 축: 어휘 선택·한자어/외래어 비율·자연스러움·영어 혼입 정도의 차이를 평가하라."
+  - "위 5축을 종합해 actual_output의 스타일이 expected_output과 얼마나 유사한지 판단하라. 유사할수록 높은 점수를 부여하라."
+  - "나중에 reason에 이유를 보여줄 때는 반드시 한국어로 출력하라."
+rubric:
+  - {range: [0, 2], outcome: "Completely different answer style across most axes."}
+  - {range: [3, 4], outcome: "Clear style differences across multiple axes."}
+  - {range: [5, 6], outcome: "Noticeable differences in some axes, similar in others."}
+  - {range: [7, 8], outcome: "Mostly similar style with minor differences in a few axes."}
+  - {range: [9, 10], outcome: "Nearly identical answer style across all axes."}
+threshold: 0.7

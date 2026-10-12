@@ -1,0 +1,54 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 내용·정확성·타당성은 절대 평가하지 마라. 오직 두 reasoning trace가 '어떻게 사고/추론을 전개하는가'의 스타일 차이만 본다.
+2. voice 축: actual_output이 expected_output에 비해 노트체인지 vs 완성문인지, 1인칭 독백, trace의 격식 면에서 얼마나 다른지 평가하라.
+3. structure 축: 계획-실행 구조인지/단계 나열/헤더 사용 여부/선형적인 전개인지 vs 분기 구조인지 등의 구조적 측면에서 두 trace의 차이를 평가하라.
+4. self_correction 축: 되짚기·대안 검토·완곡 표현의 빈도와 방식이 얼마나 다른지 평가하라.
+5. verbosity 축: trace 길이·스텝 수·장황함 및 분량의 차이를 평가하라.
+6. lexis 축: 전문용어·영어/외래 스크립트 혼입 정도의 차이를 평가하라.
+7. 위 5축을 종합해 actual_output의 스타일이 expected_output과 얼마나 유사한지 판단하라. 유사할수록 높은 점수를 부여하라.
+8. 나중에 reason에 이유를 보여줄 때는 반드시 한국어로 출력하라.
+
+
+            Rubric:
+0-2: Completely different reasoning style across most axes.
+3-4: Clear style differences across multiple axes.
+5-6: Noticeable differences in some axes, similar in others.
+7-8: Mostly similar style with minor differences in a few axes.
+9-10: Nearly identical reasoning style across all axes.
+
+            Test Case:
+            Actual Output:
+사용자가 쿠릴열도 분쟁의 역사를 묻는다. 시대 순으로 정리하자. 
+
+Expected Output:
+Here's a thinking process: 1. Analyze the request. 2. Outline the history. 
+
+
+
+            Parameters:
+            Actual Output and Expected Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

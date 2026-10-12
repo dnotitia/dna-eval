@@ -18,11 +18,12 @@ from inspect_ai.dataset import Sample
 from dna_eval.prompts import build_prompt
 from dna_eval.rubrics import load_rubric
 from dna_eval.scorers.rubric_scorer import rubric_scorer
-from dna_eval.solvers.dna_generate import ATTEMPTS, dna_generate
+from dna_eval.solvers.dna_generate import ATTEMPTS, REASONING_KEY, dna_generate
 from dna_eval.tasks.dna_suite import dna_generate_config
 
-EXPECTED = json.loads((Path(__file__).parent.parent / "fixtures" / "subject_outputs.json")
-                      .read_text(encoding="utf-8"))["actual_output"]
+FIXTURE = json.loads((Path(__file__).parent.parent / "fixtures" / "subject_outputs.json").read_text(encoding="utf-8"))
+EXPECTED = FIXTURE["actual_output"]
+EXPECTED_REASONING = FIXTURE["reasoning"]
 
 
 @pytest.fixture(scope="module")
@@ -62,3 +63,12 @@ def test_empty_reply_is_retried(run):
 def test_failed_call_recovers_on_retry(run, case):
     _, srv = run
     assert len(srv.subject_requests(case)) == 2
+
+
+@pytest.mark.parametrize("case", list(EXPECTED_REASONING))
+def test_reasoning_is_split_off_like_deepeval(run, case):
+    """The reasoning a style judge sees: from a reasoning field or a leading <think> block,
+    stripped, or a placeholder when there is none."""
+    log, _ = run
+    sample = next(s for s in log.samples if s.id == case)
+    assert sample.store[REASONING_KEY] == EXPECTED_REASONING[case]

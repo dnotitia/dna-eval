@@ -1,0 +1,142 @@
+{
+ "source": "per-run means (rounded to 2 decimals) and pass counts of a 15-run DeepEval GEval evaluation; both rubrics judged the same answers against the same reference model",
+ "scorers": {
+  "reasoning_style": {
+   "runs": [
+    {
+     "mean": 0.88,
+     "passed": 43
+    },
+    {
+     "mean": 0.9,
+     "passed": 45
+    },
+    {
+     "mean": 0.86,
+     "passed": 42
+    },
+    {
+     "mean": 0.88,
+     "passed": 44
+    },
+    {
+     "mean": 0.9,
+     "passed": 44
+    },
+    {
+     "mean": 0.9,
+     "passed": 44
+    },
+    {
+     "mean": 0.86,
+     "passed": 42
+    },
+    {
+     "mean": 0.91,
+     "passed": 45
+    },
+    {
+     "mean": 0.89,
+     "passed": 44
+    },
+    {
+     "mean": 0.89,
+     "passed": 44
+    },
+    {
+     "mean": 0.9,
+     "passed": 45
+    },
+    {
+     "mean": 0.9,
+     "passed": 44
+    },
+    {
+     "mean": 0.89,
+     "passed": 44
+    },
+    {
+     "mean": 0.88,
+     "passed": 43
+    },
+    {
+     "mean": 0.88,
+     "passed": 44
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.89,
+    "trimmed_passed": 43.91
+   }
+  },
+  "content_style": {
+   "runs": [
+    {
+     "mean": 0.52,
+     "passed": 15
+    },
+    {
+     "mean": 0.56,
+     "passed": 24
+    },
+    {
+     "mean": 0.52,
+     "passed": 20
+    },
+    {
+     "mean": 0.49,
+     "passed": 13
+    },
+    {
+     "mean": 0.53,
+     "passed": 17
+    },
+    {
+     "mean": 0.54,
+     "passed": 21
+    },
+    {
+     "mean": 0.53,
+     "passed": 18
+    },
+    {
+     "mean": 0.56,
+     "passed": 21
+    },
+    {
+     "mean": 0.53,
+     "passed": 21
+    },
+    {
+     "mean": 0.55,
+     "passed": 22
+    },
+    {
+     "mean": 0.55,
+     "passed": 23
+    },
+    {
+     "mean": 0.58,
+     "passed": 24
+    },
+    {
+     "mean": 0.55,
+     "passed": 21
+    },
+    {
+     "mean": 0.52,
+     "passed": 18
+    },
+    {
+     "mean": 0.58,
+     "passed": 23
+    }
+   ],
+   "expected": {
+    "trimmed_mean": 0.54,
+    "trimmed_passed": 20.45
+   }
+  }
+ },
+ "note": "expected = 15% trimmed mean, int(n*p) dropped from each end, applied to runs"
+}

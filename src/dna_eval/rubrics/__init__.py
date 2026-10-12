@@ -26,6 +26,18 @@ PARAM_LABEL = {
 }
 
 
+# Where each judge-visible field comes from, unless a rubric's ``sources`` says otherwise.
+#   input / answer / reasoning / target : the sample input, the model's answer, the model's
+#   reasoning, the sample target; ``metadata.<key>`` : a field of the sample's metadata.
+DEFAULT_SOURCES = {
+    "input": "input",
+    "actual_output": "answer",
+    "expected_output": "target",
+    "context": "metadata.context",
+}
+SOURCE_KINDS = ("input", "answer", "reasoning", "target")
+
+
 class RubricBand(BaseModel):
     range: tuple[int, int]
     outcome: str
@@ -37,6 +49,7 @@ class Rubric(BaseModel):
     steps: list[str] = Field(min_length=1)
     rubric: list[RubricBand] = Field(min_length=1)
     threshold: float = Field(ge=0.0, le=1.0)
+    sources: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("params")
     @classmethod
@@ -45,6 +58,22 @@ class Rubric(BaseModel):
         if bad:
             raise ValueError(f"unknown params {bad}; allowed: {sorted(PARAM_LABEL)}")
         return v
+
+    @field_validator("sources")
+    @classmethod
+    def _known_sources(cls, v: dict[str, str], info) -> dict[str, str]:
+        params = info.data.get("params", [])
+        stray = [p for p in v if p not in params]
+        if stray:
+            raise ValueError(f"sources for fields the judge is not shown: {stray}")
+        bad = [s for s in v.values() if s not in SOURCE_KINDS and not s.startswith("metadata.")]
+        if bad:
+            raise ValueError(f"unknown sources {bad}; use one of {list(SOURCE_KINDS)} or metadata.<key>")
+        return v
+
+    def source(self, param: str) -> str:
+        """Where the judge-visible field ``param`` comes from."""
+        return self.sources.get(param, DEFAULT_SOURCES[param])
 
     @property
     def lo(self) -> int:

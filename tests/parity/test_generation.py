@@ -24,7 +24,7 @@ def _mock(text):
 @pytest.mark.parametrize("name", list(CASES))
 def test_generation_request_matches_deepeval(name, tmp_path):
     case = CASES[name]
-    log = inspect_eval(case["task"](epochs=2), model=_mock("모의 응답"), model_roles={"grader": _mock(JUDGE_JSON)},
+    log = inspect_eval(case["task"](epochs=2, **case.get("task_args", {})), model=_mock("모의 응답"), model_roles={"grader": _mock(JUDGE_JSON)},
                        limit=3, log_dir=str(tmp_path), display="none")[0]
     assert log.status == "success"
     for s in log.samples:

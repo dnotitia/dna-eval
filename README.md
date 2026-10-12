@@ -27,6 +27,9 @@ Requests to the model have no time limit by default. `--attempt-timeout <seconds
 request; a request that runs out is retried and, if every attempt fails, judged as an empty
 answer. (`--timeout` is different: it bounds a call including all its retries.)
 
+The `style` task also needs a reference model (`-T reference=...`); see
+[docs/running-style-task.md](docs/running-style-task.md).
+
 
 ## Layout
 

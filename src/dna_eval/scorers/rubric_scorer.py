@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed
 from dna_eval.prompts import build_prompt
 from dna_eval.rubrics import CompositeRubric, Rubric, load_rubric, rubric_names
+from dna_eval.solvers.dna_generate import REASONING_KEY, reasoning_text
 from dna_eval.utils.json import extract_json
 
 
@@ -71,13 +72,27 @@ class _Judgment:
         return not self.error and self.value >= self.rubric.threshold
 
 
+def _field(r: Rubric, param: str, state: TaskState, target: Target, context: list[str] | None):
+    """The value of judge-visible field ``param``, from where the rubric's ``sources`` say."""
+    src = r.source(param)
+    if src == "input":
+        return state.input_text
+    if src == "answer":
+        return state.output.completion
+    if src == "reasoning":                       # set by dna_generate; derived if another solver ran
+        return state.store.get(REASONING_KEY) or reasoning_text(state.output)
+    if src == "target":
+        return target.text
+    value = state.metadata.get(src.removeprefix("metadata."))
+    return context if value is None and param == "context" else value
+
+
 async def _judge_once(r: Rubric, state: TaskState, target: Target, context: list[str] | None) -> _Judgment:
     """One judge call for one rubric; a failed call is returned, not raised."""
-    prompt = build_prompt(
-        r, input_text=state.input_text, actual_output=state.output.completion,
-        expected_output=target.text, context=state.metadata.get("context", context),
-    )
-    grader = get_model(role="grader", config=GenerateConfig(temperature=0.0))
+    f = lambda p: _field(r, p, state, target, context)  # noqa: E731
+    prompt = build_prompt(r, input_text=f("input"), actual_output=f("actual_output"),
+                          expected_output=f("expected_output") or "", context=f("context"))
+    grader = get_model(role="grader", required=True, config=GenerateConfig(temperature=0.0))
     last = ""
     try:
         last = content_as_sent(await grader.generate(prompt))

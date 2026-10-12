@@ -5,7 +5,8 @@ columns. It is a convenience, not a requirement: a task may build its dataset wi
 Inspect loader (``hf_dataset``, ``json_dataset``, a custom ``record_to_sample``), since
 ``rubric_scorer`` only reads the sample's input, target and ``metadata["context"]``.
 """
-from huggingface_hub import hf_hub_download
+import pandas as pd
+from huggingface_hub import HfApi, hf_hub_download
 from inspect_ai.dataset import Dataset, FieldSpec, hf_dataset
 
 HF_ORG = "dnotitia"
@@ -33,3 +34,14 @@ def dna_file(name: str, filename: str, *, revision: str) -> str:
     path = hf_hub_download(f"{HF_ORG}/{name}", filename, repo_type="dataset", revision=revision)
     with open(path, encoding="utf-8") as f:
         return f.read()
+
+
+def dna_files(name: str, *, revision: str) -> list[str]:
+    """Paths of the files in ``dnotitia/<name>`` at the pinned commit."""
+    return HfApi().list_repo_files(f"{HF_ORG}/{name}", repo_type="dataset", revision=revision)
+
+
+def dna_table(name: str, filename: str, *, revision: str) -> list[dict]:
+    """Rows of a parquet file stored next to the data in ``dnotitia/<name>``, at the same commit."""
+    path = hf_hub_download(f"{HF_ORG}/{name}", filename, repo_type="dataset", revision=revision)
+    return pd.read_parquet(path).to_dict("records")
