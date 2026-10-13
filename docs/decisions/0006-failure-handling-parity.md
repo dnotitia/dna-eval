@@ -16,7 +16,7 @@ which keeps the denominator fixed and penalises unreliable models.
 - Model under evaluation (`solvers/dna_generate.py`): a call that raises or returns neither
   content nor reasoning is retried (3 attempts, 1 s then 2 s apart); the answer is stripped;
   no answer is judged as `[모델의 응답이 비어 있음]`; missing reasoning is `[추론 없음]`.
-- Judge (`judging.judge_rounds`): a failed or unreadable reply is retried for 2 more rounds and
+- Judge (`rubric_judging.judge_rounds`): a failed or unreadable reply is retried for 2 more rounds and
   then scores 0, still counted. For a composite rubric, one failing component re-judges all of
   them, as DeepEval re-evaluates a whole test case.
 - The placeholder strings are part of the behaviour and stay as they are.

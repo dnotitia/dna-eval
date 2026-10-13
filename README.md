@@ -1,6 +1,9 @@
 # DNA Evaluation Harness
 
-An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk).
+An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk):
+the DNA suite of LLM-judged tasks, and standard benchmarks (GPQA-Diamond, MMLU-Pro, HLE, AIME,
+IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench) reproduced from their official
+protocols; see [docs/benchmarks.md](docs/benchmarks.md).
 
 ## Quickstart
 
@@ -20,9 +23,10 @@ inspect eval dna_eval/performance \
 
 ```
 
-The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`,
-and `call_failures`: the share of answers where the model's calls all failed (`answer_failed`) or
-returned no answer (`answer_empty`), and where the judge still failed after its retries (`judge_failed`).
+The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`;
+`call_failures`: the share of answers where the model's calls all failed (`answer_failed`) or
+returned no answer (`answer_empty`), and `judge_failures`: the share where the judge still failed
+after its retries (`judge_failed`).
 These samples stay in the averages (a placeholder answer is judged; a failed judgment scores 0),
 so a high rate means a lower score reflects the endpoint, not the model.
 `inspect view` shows every sample, judge prompt, and judge reason.
@@ -33,6 +37,21 @@ answer. (`--timeout` is different: it bounds a call including all its retries.)
 
 The `style` task also needs a reference model (`-T reference=...`); see
 [docs/running-style-task.md](docs/running-style-task.md).
+
+## Environment variables
+
+Variables can also go in a `.env` file, which Inspect loads from the working directory upward.
+
+| variable | used for |
+| --- | --- |
+| `HF_TOKEN` | reading the `dnotitia/dna_*` datasets and gated benchmarks (KMMLU-Pro, HLE) |
+| `VLLM_BASE_URL`, `VLLM_API_KEY` | the server of the model under evaluation (`--model vllm/...`); unset, Inspect starts a local vLLM server |
+| `JUDGE_BASE_URL`, `JUDGE_API_KEY` | the judge server, for `--model-role grader=openai-api/judge/...` (the service name in `openai-api/judge/...` picks the variables) |
+| `DNA_EVAL_CACHE_DIR` | where dna-eval keeps generated style references and downloaded benchmark files (default `~/.cache/dna_eval`) |
+| `NLTK_DATA` | where the IFEval / IFBench verifiers find NLTK data (default `~/nltk_data`) |
+
+Defaults, `.env` precedence, model roles and the cache layout:
+[docs/configuration.md](docs/configuration.md).
 
 
 ## Documentation
@@ -46,6 +65,8 @@ Read in this order as you need them:
 | `docs/decisions/` | before changing a rule: why things are the way they are |
 | `docs/adding-a-task.md` | adding or changing a task |
 | `docs/running-style-task.md` | running the style task, or generating its references |
+| `docs/benchmarks.md` | running a standard benchmark, or reading what it reports |
+| `docs/configuration.md` | setting endpoints, keys, roles, logs or the cache |
 
 AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
 
@@ -56,13 +77,16 @@ src/dna_eval/
   dataset.py         shortcut loader for dnotitia/dna_* (revision required)
   rubrics/           rubric schema + the YAML rubrics
   prompts/           judge-prompt rendering + Jinja templates (what the judge reads)
-  judging.py         judge calls, verdict parsing, re-judge rounds (what the judge returns)
+  rubric_judging.py  the rubric judge: calls, verdict parsing, re-judge rounds (what the judge returns)
+  roles.py           model role names (grader, reference)
   solvers/           one @solver per file
   scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
   metrics/           one @metric per file
-  utils/             helpers with no suite logic (JSON, statistics, model output, retries)
+  utils/             helpers with no suite logic (JSON, statistics, model output, retries, ...)
+  vendor/            third-party checking code, with its licence (IFEval/IFBench verifiers)
   tasks/             one @task per file
     dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
+    benchmarks/      standard benchmarks; __init__.py holds their generation config
 ```
 
 ## How to customize tasks (Simple)

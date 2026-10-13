@@ -9,14 +9,14 @@ changing anything; `docs/architecture.md` explains how the code fits together, a
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-export HF_TOKEN=...                 # read access to the dnotitia/dna_* datasets
+export HF_TOKEN=...                 # read access to the dnotitia/dna_* datasets and gated benchmarks
 python -m pytest                    # whole suite, about a minute, no GPU
-python -m pytest -m "not network"   # skip the tests that download datasets from the Hub
+python -m pytest -m "not network"   # skip the tests that download data
 inspect list tasks                  # the registered tasks
 ```
 
 Inspect reads a `.env` file from the working directory upward (keep it out of git; it is
-ignored). Run `python -m pytest` rather than a bare `pytest` so the tests use this environment.
+ignored); `docs/configuration.md` lists the variables a run reads. Run `python -m pytest` rather than a bare `pytest` so the tests use this environment.
 
 ## Principles
 
@@ -30,11 +30,15 @@ Each one is a decision record; follow the link for the reasoning and the rejecte
 - **Folders by Inspect type.** Registered objects go in `solvers/`, `scorers/`, `metrics/`,
   `tasks/`, one implementation per file. Domain logic goes in a module named for it;
   `utils/` holds only helpers with no suite logic. A helper stays with its single caller. (0002)
-- **Dependencies point down.** `tasks` → `solvers`/`scorers`/`metrics` → `judging`/`prompts`/
+- **Dependencies point down.** `tasks` → `solvers`/`scorers`/`metrics` → `rubric_judging`/`prompts`/
   `rubrics`/`dataset` → `utils`. Solvers and scorers exchange data through keys a rubric names,
   never through imports. (0011)
 - **Pinned and explicit.** Datasets are pinned to a commit (0008); model roles are required
-  (0010); suite-wide settings live in `src/dna_eval/tasks/dna_suite/__init__.py` (0007).
+  (0010); suite-wide settings live in `src/dna_eval/tasks/dna_suite/__init__.py` (0007), and
+  benchmark settings in `src/dna_eval/tasks/benchmarks/__init__.py` (0016).
+- **Official protocol for benchmarks.** A standard benchmark follows its authors' code; every
+  departure is listed in the task's docstring (0016). Copied checking code stays unchanged in
+  `src/dna_eval/vendor/` with its licence (0017).
 - **Behaviour, not origin.** Code, docs, names and fixtures describe what a thing does in terms
   a reader of this repository can check, in English. (0014)
 
@@ -57,10 +61,12 @@ deliberate deviation (0001, 0004–0007). New tasks do not carry this constraint
 - **A decision:** if a change sets or reverses a rule others must follow (a new folder, a new
   dependency direction, a deviation from parity), add a record in `docs/decisions/` from
   `0000-template.md`. Accepted records are binding; to change one, supersede it with a new
-  record instead of editing it.
+  record instead of editing it. The only edit an accepted record takes is updating a reference
+  to a renamed file or module.
 - **Tests:** add or update a test with every behaviour change. Tests never call real model
   endpoints: use `mockllm` or `tests/parity/fake_openai.py`, and bind models by `base_url`, not by
-  environment variables (0013). Mark tests that need the Hub with `@pytest.mark.network`.
+  environment variables (0013). Mark tests that need the network (the Hub, pinned downloads) with `@pytest.mark.network`; a
+  test of a gated dataset skips with the reason when the token has no access.
 
 ## Done means
 

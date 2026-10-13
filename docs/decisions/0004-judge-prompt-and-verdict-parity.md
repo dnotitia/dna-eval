@@ -14,7 +14,7 @@ A judge's score depends on the exact prompt and on how its reply is parsed. Smal
 
 - `prompts/geval_results.jinja` renders the DeepEval GEval results prompt byte for byte. It is
   shared by every rubric; rubric files change, the template does not.
-- `judging.read_verdict` reads a reply as GEval does: the span from the first `{` to the last
+- `rubric_judging.read_verdict` reads a reply as GEval does: the span from the first `{` to the last
   `}`, a missing closing brace appended, trailing commas dropped, then `reason: str` and
   `score: float` validated with pydantic coercion. Scores are not clipped.
 - The reply is read from the content as the server sent it (`utils.model_output.content_as_sent`),

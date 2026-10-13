@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from dna_eval.rubrics import load_rubric
-from dna_eval.judging import read_verdict
+from dna_eval.rubric_judging import read_verdict
 
 FIXTURE = Path(__file__).parent.parent / "fixtures" / "judge_outputs.json"
 CASES = json.loads(FIXTURE.read_text(encoding="utf-8"))["cases"]

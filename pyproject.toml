@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dna-eval"
 version = "0.1.0.dev0"
-description = "DNA evaluation suite: LLM-as-judge tasks for Inspect AI, driven by data and rubrics"
+description = "Inspect AI tasks: the DNA suite (LLM-as-judge, driven by rubrics) and standard benchmarks"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -18,6 +18,16 @@ dependencies = [
   "pandas>=2",
   "jinja2>=3",
   "openai>=1",
+  "numpy>=1.26",
+  # standard benchmarks: math answer equivalence
+  "math-verify[antlr4_13_2]>=0.8",
+  # standard benchmarks: IFEval / IFBench verifiers (vendor/ifbench)
+  "absl-py",
+  "emoji",
+  "immutabledict",
+  "langdetect",
+  "nltk>=3.9",
+  "syllapy>=0.8",
 ]
 
 [project.optional-dependencies]
@@ -30,10 +40,10 @@ dna_eval = "dna_eval._registry"
 where = ["src"]
 
 [tool.setuptools.package-data]
-dna_eval = ["rubrics/*.yaml", "prompts/*.jinja"]
+dna_eval = ["rubrics/*.yaml", "prompts/*.jinja", "vendor/*/LICENSE", "vendor/*/NOTICE.md"]
 
 [tool.pytest.ini_options]
 # src layout: make the package and the tests package importable without `pip install -e .`
 pythonpath = ["src", "."]
 testpaths = ["tests"]
-markers = ["network: needs read access to the dnotitia/dna_* datasets on the Hub"]
+markers = ["network: needs network access (Hub datasets, some of them gated, or pinned downloads)"]

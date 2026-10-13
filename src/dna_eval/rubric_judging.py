@@ -1,4 +1,4 @@
-"""Calling the judge and reading its verdict.
+"""The rubric judge: calling it with a rubric and reading its verdict.
 
 ``prompts`` renders what the judge reads; this module makes the call, reads the reply the way
 DeepEval's GEval reads it, and runs the re-judge rounds. ``scorers/rubric_scorer.py`` turns the
@@ -14,11 +14,10 @@ from inspect_ai.solver import TaskState
 from pydantic import BaseModel
 
 from dna_eval.prompts import build_prompt
+from dna_eval.roles import GRADER_ROLE
 from dna_eval.rubrics import Rubric
 from dna_eval.utils.json import escape_stray_backslashes, extract_json
 from dna_eval.utils.model_output import content_as_sent, reasoning_text
-
-GRADER_ROLE = "grader"
 
 
 class _Verdict(BaseModel):
