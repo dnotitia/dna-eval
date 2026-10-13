@@ -2,7 +2,7 @@
 
 Tasks in `src/dna_eval/tasks/benchmarks/` reproduce published benchmarks so that a model's
 numbers can be set next to other model reports. Each follows the benchmark's official
-protocol, adapted only where reasoning models need it (decision record 0015). The task's
+protocol, adapted only where reasoning models need it (decision record 0016). The task's
 docstring is the full account: the source it follows, and every departure from it.
 
 ## Running
@@ -56,5 +56,5 @@ with runs graded by the same judge, which the log records.
 
 The IFEval and IFBench verifiers are vendored from `allenai/IFBench` under Apache-2.0
 (`src/dna_eval/vendor/ifbench/`, with its `LICENSE` and a `NOTICE.md` listing the local
-changes; decision record 0016). They download NLTK data (`punkt_tab`, `stopwords`,
+changes; decision record 0017). They download NLTK data (`punkt_tab`, `stopwords`,
 `averaged_perceptron_tagger_eng`) the first time a response is scored.

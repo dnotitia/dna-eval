@@ -20,7 +20,7 @@ Deviations, all recorded in the log:
   the ``grader`` role is bound to (required). A different judge shifts accuracy and calibration;
   compare only runs with the same judge. Structured output is requested through Inspect's
   ``response_schema``; see ``scorers/hle_judge.py`` for the fallback and the retries.
-- **Reasoning-model handling** (decision record 0015): thinking on, sampling from the served
+- **Reasoning-model handling** (decision record 0016): thinking on, sampling from the served
   model's ``generation_config``, no ``max_tokens`` (the official script caps the subject by
   ``--max_completion_tokens``), the judge sees only the final content. A cut-off answer scores 0
   without a judge call and is reported by ``answer_diagnostics``.

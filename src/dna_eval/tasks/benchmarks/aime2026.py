@@ -15,7 +15,7 @@ Departures:
 - MathArena's parser, when a response has several boxes, prefers an earlier exact box over a
   last box that is only a decimal approximation; here the last box is always the answer.
 - Thinking on, sampling from the served model's ``generation_config``, no ``max_tokens``, and
-  the answer read from the final content only (decision record 0015). A truncated response
+  the answer read from the final content only (decision record 0016). A truncated response
   scores 0 and is counted by ``answer_diagnostics``.
 - ``epochs`` defaults to 8: accuracy is pass@1 averaged over 8 runs (MathArena's default is 4).
 """

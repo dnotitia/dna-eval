@@ -24,7 +24,7 @@ dataset (Hub, pinned)      solvers                      scorers                 
 
 A task runs this for every sample and every run (`epochs`).
 
-Standard benchmarks (`tasks/benchmarks/`, 0015) use the same four stages with other parts: the
+Standard benchmarks (`tasks/benchmarks/`, 0016) use the same four stages with other parts: the
 dataset is a public one pinned by Hub revision or checksum; the solver is Inspect's `generate()`
 (GPQA shuffles options first with `shuffled_choices`); the scorer reads the answer from the final
 content (`letter_choice`, `math_answer`, `instruction_following`) or asks the judge (`hle_judge`,
@@ -35,7 +35,7 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | module | holds | may import |
 | --- | --- | --- |
 | `tasks/dna_suite/` | the suite's tasks; `__init__.py`: its conventions (generation config, headline) | everything below |
-| `tasks/benchmarks/` | standard benchmarks; `__init__.py`: their generation config (0015) | everything below |
+| `tasks/benchmarks/` | standard benchmarks; `__init__.py`: their generation config (0016) | everything below |
 | `solvers/` | one solver per file, with its own defaults and placeholders | `utils`, other solvers |
 | `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark scorers | `judging`, `prompts`, `rubrics`, `metrics`, `vendor`, `utils` |
 | `metrics/` | one metric per file | `utils` |
@@ -44,7 +44,7 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | `rubrics/` | rubric schema and the rubric YAML files | — |
 | `dataset.py` | Hub loaders for the suite's datasets and the files next to them | — |
 | `utils/` | helpers with no suite logic: JSON, statistics, model output, retries, math answers, cache | — |
-| `vendor/` | third-party checking code, unchanged, with its licence and notice (0016) | — |
+| `vendor/` | third-party checking code, unchanged, with its licence and notice (0017) | — |
 | `_registry.py` | the package entry point; imports every module that registers objects | everything |
 
 Dependencies point down the table; solvers and scorers never import each other or `tasks` (0011).
@@ -88,5 +88,5 @@ task) and `reference` (style, when references are generated); both are required 
 - **placeholder**: the fixed text the judge sees when a model gave no answer or no reasoning.
 - **headline**: the metric Inspect shows first for a task (`trimmed_mean` for the suite; the
   benchmark's own number for a standard benchmark).
-- **benchmark**: a published evaluation reproduced in `tasks/benchmarks/` (0015).
+- **benchmark**: a published evaluation reproduced in `tasks/benchmarks/` (0016).
 - **truncated**: the model stopped at a token or context limit; such an answer scores 0.

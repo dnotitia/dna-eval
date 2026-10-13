@@ -37,7 +37,7 @@ def ifeval(thinking: bool = True, epochs: int = 1, revision: str = DATASET_REVIS
     checks work, and the NLTK data the verifiers download on first use, are described in
     ``scorers/instruction_following.py``.
 
-    Deviations, for reasoning models (decision record 0015):
+    Deviations, for reasoning models (decision record 0016):
 
     - the model is sampled with the served model's ``generation_config`` instead of greedy
       decoding, with thinking on and no output cap, so a long reasoning trace does not cut the

@@ -21,7 +21,7 @@ Departures:
   only responses with no readable answer; ``boxed`` in the score metadata tells them apart.
 - Thinking on, sampling from the served model's ``generation_config``, and no output cap
   (lm-evaluation-harness: greedy, 2048 tokens), which would cut off a reasoning model
-  mid-thought (decision record 0015). A truncated response scores 0.
+  mid-thought (decision record 0016). A truncated response scores 0.
 
 Reported: ``accuracy``, ``stderr``, ``accuracy`` per ``category`` (``grouped``), and
 ``answer_diagnostics``.

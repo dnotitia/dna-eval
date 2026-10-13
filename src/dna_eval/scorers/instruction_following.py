@@ -20,7 +20,7 @@ Instructions that quote the prompt (``combination:repeat_prompt``) get the sampl
 Deviations from the released code:
 
 - a response cut off at a token or context limit follows nothing, strict or loose
-  (decision record 0015), instead of being checked as far as it goes;
+  (decision record 0016), instead of being checked as far as it goes;
 - a verifier that raises is counted as not followed and the error is kept in
   ``metadata["errors"]``, instead of stopping the run;
 - the language detector is seeded (``langdetect`` is otherwise non-deterministic on short or

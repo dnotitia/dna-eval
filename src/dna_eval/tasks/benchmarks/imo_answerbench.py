@@ -19,7 +19,7 @@ Deviations, all recorded in the log:
   last ``\\boxed{}``); the rest is verbatim.
 - **Grader model.** The paper's grader is a Gemini model. Here it is whatever model the ``grader``
   role is bound to (required); numbers are comparable only to runs with the same grader.
-- **Reasoning-model handling** (decision record 0015): thinking on, sampling from the served
+- **Reasoning-model handling** (decision record 0016): thinking on, sampling from the served
   model's ``generation_config``, no ``max_tokens``, the grader sees only the final content; a
   cut-off answer scores 0 without a grader call and is reported by ``answer_diagnostics``.
 """

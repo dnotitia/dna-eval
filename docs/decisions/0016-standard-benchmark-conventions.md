@@ -1,4 +1,4 @@
-# 0015. Standard benchmarks follow their official protocol, adapted only for reasoning models
+# 0016. Standard benchmarks follow their official protocol, adapted only for reasoning models
 
 - Status: accepted
 - Date: 2026-10-12
