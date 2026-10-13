@@ -15,6 +15,28 @@ against the reference. That is the common case in this suite: the judge scores e
 against a rubric, 15 runs are folded into a trimmed mean and a pass count, and the task file
 stays a few lines long.
 
+## Before you start: licences
+
+A task brings in material that is not ours: the data it downloads, and often a prompt or code
+from the benchmark's authors. Check both before writing the task; a maintainer decides the
+hard cases, so you only need to find out and say what you found.
+
+1. **Data.** Run `python scripts/license_report.py`. It finds the data every task uses (nothing
+   to declare), looks up each Hub dataset's licence and access terms at the pinned revision, and
+   compares them with the table in `docs/benchmarks.md`. Add your task's row to that table. For
+   data that is not on the Hub, read the licence where the file is published.
+2. **Copied text or code.** If you take a prompt, an answer pattern or a function from somewhere
+   else, put a one-line comment above it naming the source and its licence, and add an entry to
+   `THIRD_PARTY_NOTICES.md`. Text under a licence that does not allow commercial use goes in a
+   file of its own that starts with an `SPDX-License-Identifier:` line (as
+   `src/dna_eval/tasks/benchmarks/kobalt_prompts.py` does).
+3. **Say so in the pull request.** The template asks what you copied and what the data's
+   licence is. Non-commercial, share-alike, no stated licence, or access terms you are unsure
+   of: write them down and leave the decision to the reviewer.
+
+The same report runs on every pull request and is shown in the checks' summary; it does not
+block a merge.
+
 ## 1. Dataset
 
 ```python

@@ -1,0 +1,22 @@
+# Reports the data every task uses and its licence on each pull request (decision record 0018).
+# The report is shown in the run's summary; it never fails the check.
+name: licence report
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Licence report
+        # No token: gated datasets' public card is still readable; private datasets show as unavailable.
+        run: python scripts/license_report.py >> "$GITHUB_STEP_SUMMARY" || echo "report failed" >> "$GITHUB_STEP_SUMMARY"
