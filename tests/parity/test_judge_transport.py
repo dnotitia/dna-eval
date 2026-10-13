@@ -4,7 +4,8 @@
 shapes such as ``reasoning_content`` from a judge served with a reasoning parser, through the
 real path: the judge (``fake_openai.FakeOpenAI``) answers, Inspect's provider turns the
 response into ``completion``, and ``rubric_scorer`` reads it. Expected values come from
-``fixtures/judge_outputs.json``; a reply DeepEval fails on must end as a 0 after retries.
+``fixtures/judge_outputs.json``; a reply DeepEval fails on must end as a 0 after retries,
+except the deliberate deviations listed in ``test_judge_reply.DEVIATIONS``.
 """
 import json
 from pathlib import Path
@@ -17,6 +18,7 @@ from inspect_ai.dataset import Sample
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
 from dna_eval.tasks.dna_suite import dna_generate_config
+from tests.parity.test_judge_reply import DEVIATIONS
 
 FIXTURE = json.loads((Path(__file__).parent.parent / "fixtures" / "judge_outputs.json").read_text(encoding="utf-8"))
 REPLIES = {f"text_{c['id']}": ({"content": c["raw"]}, c["expected"]) for c in FIXTURE["cases"]}
@@ -39,7 +41,10 @@ def scores(fake_openai, models, tmp_path_factory):
 @pytest.mark.parametrize("case", list(REPLIES))
 def test_judge_reply_over_http_matches_deepeval(scores, case):
     score, expected = scores[case], REPLIES[case][1]
-    if "error" in expected:
+    if case.removeprefix("text_") in DEVIATIONS:
+        assert not score.metadata.get("judge_error")
+        assert (score.value, score.explanation) == DEVIATIONS[case.removeprefix("text_")]
+    elif "error" in expected:
         assert score.value == 0.0 and score.metadata.get("judge_error")
     else:
         assert not score.metadata.get("judge_error")

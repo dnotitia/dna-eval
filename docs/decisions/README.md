@@ -32,3 +32,4 @@ the first version of the suite.
 | [0012](0012-style-references.md) | Style references: published first, otherwise generated and cached locally | accepted |
 | [0013](0013-hermetic-tests.md) | Tests run without models, network endpoints or internal code | accepted |
 | [0014](0014-open-source-hygiene.md) | Describe behaviour, not where it came from | accepted |
+| [0015](0015-repair-stray-backslashes-in-judge-replies.md) | Judge replies with stray backslashes are read after escaping them | accepted |

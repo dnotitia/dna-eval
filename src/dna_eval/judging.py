@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from dna_eval.prompts import build_prompt
 from dna_eval.rubrics import Rubric
-from dna_eval.utils.json import extract_json
+from dna_eval.utils.json import escape_stray_backslashes, extract_json
 from dna_eval.utils.model_output import content_as_sent, reasoning_text
 
 GRADER_ROLE = "grader"
@@ -28,12 +28,18 @@ class _Verdict(BaseModel):
 
 
 def read_verdict(reply: str, rubric: Rubric) -> tuple[float, float, str]:
-    """(normalised score, raw score, reason) from a judge reply, read as DeepEval's GEval reads it.
+    """(normalised score, raw score, reason) from a judge reply, read as DeepEval's GEval reads it,
+    with one exception (decision record 0015): a reply DeepEval cannot parse is read again with
+    its stray backslashes escaped, so a verdict quoting LaTeX (``\\pi``) is not lost.
 
     Raises ``ValueError`` (``pydantic.ValidationError`` included) when the reply cannot be
     read. The score is not clipped to the rubric range, as in DeepEval.
     """
-    v = _Verdict.model_validate(extract_json(reply))
+    try:
+        data = extract_json(reply)
+    except ValueError:
+        data = extract_json(escape_stray_backslashes(reply))
+    v = _Verdict.model_validate(data)
     return (v.score - rubric.lo) / (rubric.hi - rubric.lo), v.score, v.reason
 
 

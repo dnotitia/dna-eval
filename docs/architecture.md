@@ -18,7 +18,7 @@ dataset (Hub, pinned)      solvers                      scorers                 
 2. **Solvers.** `dna_generate` calls the model under evaluation with the suite's handling of
    empty and failed replies, strips the answer, and stores the reasoning (0006).
 3. **Scorers.** `rubric_scorer` resolves the rubric's fields (`sources`), renders the judge
-   prompt, calls the judge, reads the verdict, retries failed rounds (0003, 0004, 0006).
+   prompt, calls the judge, reads the verdict, retries failed rounds (0003, 0004, 0006, 0015).
 4. **Metrics.** `per_run_trimmed` regroups the scores by run and reports the trimmed mean and
    pass count; suite tasks make it the headline (0005). `call_failures` reports how many scores
    stand for failed calls rather than judged answers (0006).
