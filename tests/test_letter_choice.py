@@ -159,24 +159,24 @@ def _exam_scores(license_name, subject_accuracy):
 def test_license_pass_requires_every_subject_and_the_average():
     subjects = EXAMS["관세사"][0][1]
     good = license_pass()(_exam_scores("관세사", {s: 0.7 for s in subjects}))
-    assert good["관세사"] == pytest.approx(0.7) and good["관세사/passed"] == 1.0 and good["licenses_passed"] == 1.0
+    assert good["license_name/관세사"] == pytest.approx(0.7) and good["license_passed/관세사"] == 1.0 and good["licenses_passed"] == 1.0
     low_subject = {s: 0.9 for s in subjects} | {subjects[0]: 0.3}                  # average 0.78, one subject < 40
-    assert license_pass()(_exam_scores("관세사", low_subject))["관세사/passed"] == 0.0
+    assert license_pass()(_exam_scores("관세사", low_subject))["license_passed/관세사"] == 0.0
     low_average = {s: 0.55 for s in subjects}                                      # all subjects >= 40, average < 60
-    assert license_pass()(_exam_scores("관세사", low_average))["관세사/passed"] == 0.0
-    assert license_pass()(_exam_scores("관세사", {subjects[0]: 0.9}))["관세사/passed"] == 0.0   # a subject has no questions
+    assert license_pass()(_exam_scores("관세사", low_average))["license_passed/관세사"] == 0.0
+    assert license_pass()(_exam_scores("관세사", {subjects[0]: 0.9}))["license_passed/관세사"] == 0.0   # a subject has no questions
 
 
 def test_license_pass_course_choice_and_special_licenses():
     # 공인노무사: passing either of the two elective courses is enough.
     common = {s: 0.7 for s in ["노동법1", "노동법2", "민법", "사회보험법"]}
-    assert license_pass()(_exam_scores("공인노무사", common | {"경영학개론": 0.7}))["공인노무사/passed"] == 1.0
-    assert license_pass()(_exam_scores("공인노무사", common | {"경제학원론": 0.7}))["공인노무사/passed"] == 1.0
-    assert license_pass()(_exam_scores("공인노무사", common))["공인노무사/passed"] == 0.0
+    assert license_pass()(_exam_scores("공인노무사", common | {"경영학개론": 0.7}))["license_passed/공인노무사"] == 1.0
+    assert license_pass()(_exam_scores("공인노무사", common | {"경제학원론": 0.7}))["license_passed/공인노무사"] == 1.0
+    assert license_pass()(_exam_scores("공인노무사", common))["license_passed/공인노무사"] == 0.0
     # 변호사: no per-subject minimum, average line of about 54.2%.
-    assert license_pass()(_exam_scores("변호사", {"민사법": 0.6}))["변호사/passed"] == 1.0
-    assert license_pass()(_exam_scores("변호사", {"민사법": 0.5}))["변호사/passed"] == 0.0
+    assert license_pass()(_exam_scores("변호사", {"민사법": 0.6}))["license_passed/변호사"] == 1.0
+    assert license_pass()(_exam_scores("변호사", {"민사법": 0.5}))["license_passed/변호사"] == 0.0
     # 법무사: subject minimums only, no average line.
-    assert license_pass()(_exam_scores("법무사", {s: 0.41 for s in EXAMS["법무사"][0][1]}))["법무사/passed"] == 1.0
+    assert license_pass()(_exam_scores("법무사", {s: 0.41 for s in EXAMS["법무사"][0][1]}))["license_passed/법무사"] == 1.0
     # A licence with no question is not reported.
-    assert "의사" not in license_pass()(_exam_scores("관세사", {"회계학": 0.7}))
+    assert "license_name/의사" not in license_pass()(_exam_scores("관세사", {"회계학": 0.7}))

@@ -187,8 +187,8 @@ def test_kmmlu_pro_end_to_end_weighted(tmp_path, monkeypatch):
     m = metrics(log)
     assert m["accuracy"] == pytest.approx(1 / 3)
     assert m["weighted_accuracy"] == pytest.approx(3 / 6)
-    assert m["관세사"] == pytest.approx(3 / 4) and m["약사"] == 0.0
-    assert m["관세사/passed"] == 0.0 and m["licenses_passed"] == 0.0           # a licence needs every subject
+    assert m["license_name/관세사"] == pytest.approx(3 / 4) and m["license_name/약사"] == 0.0
+    assert m["license_passed/관세사"] == 0.0 and m["licenses_passed"] == 0.0           # a licence needs every subject
     assert log.results.scores[0].metrics["weighted_accuracy"].value == m["weighted_accuracy"]
     assert log.eval.task_args["revision"] == kmmlu_pro.DATASET_REVISION
     assert log.results.headline.metric == "weighted_accuracy"

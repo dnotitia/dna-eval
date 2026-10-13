@@ -123,8 +123,9 @@ def _passed(license_name: str, average: float, by_subject: dict[str, float]) -> 
 
 @metric
 def license_pass() -> Metric:
-    """Per licence: ``<licence>`` (weighted accuracy, 0-1) and ``<licence>/passed`` (1.0 or 0.0),
-    plus ``licenses_passed``, the number of licences passed.
+    """Per licence: ``license_name/<licence>`` (weighted accuracy, 0-1) and
+    ``license_passed/<licence>`` (1.0 or 0.0), plus ``licenses_passed``, the number of licences
+    passed. The names follow the benchmarks' ``<field>/<value>`` form for per-group numbers.
 
     Questions are weighted by their exam score. As in the official script, the average
     condition of every course uses the weighted accuracy over all of the licence's questions,
@@ -147,7 +148,7 @@ def license_pass() -> Metric:
             average = _weighted(by_license[name])
             subjects = {sub: _weighted(p) for (lic, sub), p in by_subject.items() if lic == name}
             ok = _passed(name, average, subjects)
-            out[name], out[f"{name}/passed"] = average, 1.0 if ok else 0.0
+            out[f"{LICENSE_KEY}/{name}"], out[f"license_passed/{name}"] = average, 1.0 if ok else 0.0
             passed += ok
         out["licenses_passed"] = float(passed)
         return out
