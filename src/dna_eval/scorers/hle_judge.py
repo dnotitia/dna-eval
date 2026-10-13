@@ -22,7 +22,7 @@ from dna_eval.judging import GRADER_ROLE
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.metrics.calibration_error import CONFIDENCE, calibration_error
 from dna_eval.prompts import env
-from dna_eval.utils.json import extract_json
+from dna_eval.utils.json import escape_stray_backslashes, extract_json
 from dna_eval.utils.model_output import is_truncated
 
 TEMPLATE = "hle_judge.jinja"
@@ -61,11 +61,16 @@ def _labelled_fields(reply: str) -> dict[str, str]:
 
 def read_judgement(reply: str) -> Judgement:
     """The judgement in a judge reply: a JSON object (structured output, or JSON in prose), else
-    ``name: value`` lines. Raises ``ValueError`` when a field is missing or malformed."""
+    ``name: value`` lines. A JSON object whose strings quote LaTeX with single backslashes
+    (``\\frac{\\pi}{2}``) is read after escaping them. Raises ``ValueError`` when a field is
+    missing or malformed."""
     try:
         fields = extract_json(reply)
     except ValueError:
-        fields = _labelled_fields(reply)
+        try:
+            fields = extract_json(escape_stray_backslashes(reply))
+        except ValueError:
+            fields = _labelled_fields(reply)
     try:
         return Judgement.model_validate(fields)
     except ValueError as e:      # pydantic.ValidationError is a ValueError

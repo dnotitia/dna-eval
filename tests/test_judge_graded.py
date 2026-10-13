@@ -51,6 +51,13 @@ def test_none_answer_is_no_extraction():
     assert _extracted(" 42 ") == "42"
 
 
+def test_judgement_quoting_latex():
+    """Single backslashes from LaTeX are not valid JSON escapes; the judgement is still read."""
+    j = read_judgement(r'{"extracted_final_answer": "\sqrt{2}\pi", "reasoning": "matches \mid x \mid",'
+                       r' "correct": "yes", "confidence": 90}')
+    assert (j.extracted_final_answer, j.correct, j.confidence) == (r"\sqrt{2}\pi", "yes", 90)
+
+
 @pytest.mark.parametrize("reply", [
     '{"extracted_final_answer": "1", "reasoning": "r", "correct": "yes"}',                  # no confidence
     '{"reasoning": "r", "correct": "yes", "confidence": 5}',                                # no answer
