@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-10-13
-- Scope: reading judge verdicts (`judging.read_verdict`) for every rubric, DNA suite included.
+- Scope: reading judge verdicts (`rubric_judging.read_verdict`) for every rubric, DNA suite included.
   Amends 0004 for this one case; the rest of 0004 stands.
 
 ## Context

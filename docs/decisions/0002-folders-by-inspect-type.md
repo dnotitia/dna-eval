@@ -15,7 +15,7 @@ Contributors need to find a scorer or solver by where Inspect would look for it.
   settings (defaults, placeholders), nothing else.
 - A file may register one implementation under several names when the names come from data
   (`scorers/rubric_scorer.py` registers one scorer per rubric file).
-- Domain logic lives in modules named for what they hold: `rubrics/`, `prompts/`, `judging.py`,
+- Domain logic lives in modules named for what they hold: `rubrics/`, `prompts/`, `rubric_judging.py`,
   `dataset.py`.
 - `utils/` holds only helpers with no suite logic, named for what they operate on (`json`,
   `stats`, `model_output`, `retry`).

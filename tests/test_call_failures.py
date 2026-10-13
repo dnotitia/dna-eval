@@ -1,7 +1,7 @@
-"""``call_failures`` reports how often a score stands for a failed call.
+"""``call_failures`` and ``judge_failures`` report how often a score stands for a failed call.
 
 Failed calls keep their samples in every average (a placeholder answer is judged; a failed
-judgment scores 0); this metric makes their share visible. Run against the scripted server in
+judgment scores 0); these metrics make their share visible. Run against the scripted server in
 ``tests/parity/fake_openai.py``: the subject fails every attempt (HTTP 500), returns nothing,
 returns only reasoning, or answers; one answered sample's judge fails every round.
 """
@@ -12,7 +12,7 @@ from inspect_ai.dataset import Sample
 from inspect_ai.model import get_model
 from inspect_ai.scorer import SampleScore, Score
 
-from dna_eval.metrics.call_failures import call_failures
+from dna_eval.metrics.judge_failures import judge_failures
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import EMPTY_ANSWER, NO_ANSWER_KEY, dna_generate
 from dna_eval.tasks.dna_suite import dna_generate_config
@@ -60,4 +60,4 @@ def test_composite_counts_a_failed_component():
                   "a": {"judge_error": None}, "b": {"judge_error": "parse"}}}), sample_id=1),
               SampleScore(score=Score(value=0.9, metadata={"components": {
                   "a": {"judge_error": None}, "b": {"judge_error": None}}}), sample_id=2)]
-    assert call_failures()(scores) == {"answer_failed": 0.0, "answer_empty": 0.0, "judge_failed": 0.5}
+    assert judge_failures()(scores) == {"judge_failed": 0.5}

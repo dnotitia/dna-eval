@@ -9,6 +9,8 @@ consequences, and the alternatives that were rejected.
 - **Superseded** and **deprecated** records are history; they do not govern current work.
 - To change a decision, add a new record that supersedes the old one, and set the old one's
   status to `superseded by NNNN`. Do not rewrite an accepted record.
+- The one edit an accepted record takes: when a file or module it names is renamed, update the
+  reference. The decision text stays as it was; say so in the commit message.
 - Start from `0000-template.md`; take the next free number. Keep a record under about 30 lines.
 
 Records 0001–0014 were written together on 2026-10-12 from the decisions taken while building
@@ -33,3 +35,5 @@ the first version of the suite.
 | [0013](0013-hermetic-tests.md) | Tests run without models, network endpoints or internal code | accepted |
 | [0014](0014-open-source-hygiene.md) | Describe behaviour, not where it came from | accepted |
 | [0015](0015-repair-stray-backslashes-in-judge-replies.md) | Judge replies with stray backslashes are read after escaping them | accepted |
+| [0016](0016-standard-benchmark-conventions.md) | Standard benchmarks follow their official protocol, adapted only for reasoning models | accepted |
+| [0017](0017-vendored-third-party-code.md) | Third-party evaluation code is vendored unchanged, with its licence | accepted |

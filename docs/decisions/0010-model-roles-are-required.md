@@ -10,7 +10,7 @@ role. A run that forgot `--model-role grader=...` would have the model judge its
 
 ## Decision
 
-Every role lookup uses `required=True`: `grader` in `judging.py`, `reference` in
+Every role lookup uses `required=True`: `grader` in `rubric_judging.py`, `reference` in
 `solvers/style_reference.py`. A missing role stops the eval with Inspect's
 "Model role '<role>' is required" error.
 

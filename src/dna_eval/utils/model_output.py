@@ -33,3 +33,8 @@ def content_as_sent(output: ModelOutput) -> str:
     think = "".join(f"<think>{c.reasoning}</think>" for c in output.message.content
                     if isinstance(c, ContentReasoning) and c.internal == "think")
     return think + text
+
+
+def is_truncated(output: ModelOutput) -> bool:
+    """Whether generation stopped at a token or context limit rather than finishing."""
+    return output.stop_reason in ("max_tokens", "model_length")

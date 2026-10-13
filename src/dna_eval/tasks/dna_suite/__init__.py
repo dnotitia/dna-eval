@@ -16,7 +16,7 @@ from inspect_ai.log import HeadlineMetric
 from inspect_ai.model import GenerateConfig
 
 MAX_TOKENS = 16384      # answer budget, reasoning included
-MAX_RETRIES = 3         # attempts per call to the model under evaluation
+MAX_RETRIES = 3         # retries of a failed request to the model under evaluation (Inspect's)
 
 # The number Inspect shows first for a task (log header, log listing). Without it Inspect
 # picks ``mean``, which it computes before the per-run metrics.
