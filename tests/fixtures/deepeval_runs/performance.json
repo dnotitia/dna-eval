@@ -1,0 +1,70 @@
+{
+ "source": "per-run means (rounded to 2 decimals) and pass counts of a 15-run DeepEval GEval evaluation",
+ "runs": [
+  {
+   "mean": 0.93,
+   "passed": 28
+  },
+  {
+   "mean": 0.93,
+   "passed": 28
+  },
+  {
+   "mean": 0.9,
+   "passed": 27
+  },
+  {
+   "mean": 0.88,
+   "passed": 26
+  },
+  {
+   "mean": 0.93,
+   "passed": 28
+  },
+  {
+   "mean": 0.9,
+   "passed": 27
+  },
+  {
+   "mean": 0.86,
+   "passed": 26
+  },
+  {
+   "mean": 0.91,
+   "passed": 27
+  },
+  {
+   "mean": 0.88,
+   "passed": 26
+  },
+  {
+   "mean": 0.87,
+   "passed": 26
+  },
+  {
+   "mean": 0.87,
+   "passed": 26
+  },
+  {
+   "mean": 0.89,
+   "passed": 27
+  },
+  {
+   "mean": 0.96,
+   "passed": 29
+  },
+  {
+   "mean": 0.9,
+   "passed": 27
+  },
+  {
+   "mean": 0.89,
+   "passed": 27
+  }
+ ],
+ "expected": {
+  "trimmed_mean": 0.8982,
+  "trimmed_passed": 26.91
+ },
+ "note": "expected = 15% trimmed mean, int(n*p) dropped from each end, applied to runs"
+}

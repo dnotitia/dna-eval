@@ -1,0 +1,23 @@
+# Changing any step or range changes the score; bump the rubric version in the commit message.
+# Compares the style of the model's reasoning trace against a reference model's (style only, not correctness).
+name: reasoning_style
+params: [actual_output, expected_output]
+sources:
+  actual_output: store.reasoning                 # written by dna_generate (with its placeholder)
+  expected_output: metadata.reference_reasoning
+steps:
+  - "내용·정확성·타당성은 절대 평가하지 마라. 오직 두 reasoning trace가 '어떻게 사고/추론을 전개하는가'의 스타일 차이만 본다."
+  - "voice 축: actual_output이 expected_output에 비해 노트체인지 vs 완성문인지, 1인칭 독백, trace의 격식 면에서 얼마나 다른지 평가하라."
+  - "structure 축: 계획-실행 구조인지/단계 나열/헤더 사용 여부/선형적인 전개인지 vs 분기 구조인지 등의 구조적 측면에서 두 trace의 차이를 평가하라."
+  - "self_correction 축: 되짚기·대안 검토·완곡 표현의 빈도와 방식이 얼마나 다른지 평가하라."
+  - "verbosity 축: trace 길이·스텝 수·장황함 및 분량의 차이를 평가하라."
+  - "lexis 축: 전문용어·영어/외래 스크립트 혼입 정도의 차이를 평가하라."
+  - "위 5축을 종합해 actual_output의 스타일이 expected_output과 얼마나 유사한지 판단하라. 유사할수록 높은 점수를 부여하라."
+  - "나중에 reason에 이유를 보여줄 때는 반드시 한국어로 출력하라."
+rubric:
+  - {range: [0, 2], outcome: "Completely different reasoning style across most axes."}
+  - {range: [3, 4], outcome: "Clear style differences across multiple axes."}
+  - {range: [5, 6], outcome: "Noticeable differences in some axes, similar in others."}
+  - {range: [7, 8], outcome: "Mostly similar style with minor differences in a few axes."}
+  - {range: [9, 10], outcome: "Nearly identical reasoning style across all axes."}
+threshold: 0.7

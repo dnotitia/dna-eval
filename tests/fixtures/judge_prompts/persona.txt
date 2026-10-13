@@ -1,0 +1,53 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 응답을 context에 제공된 정보와 비교하라
+2. 응답에 포함된 내용 중 context에 제시된 정보와 모순되는 부분이 있는지 파악하라
+3. 검증되지 않은 내용을 추가하지 않았고, context의 내용을 정확히 반영하는지 판단하라
+4. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라
+
+
+            Rubric:
+0-2: Significantly inaccurate or contradicts context.
+3-4: Mostly inaccurate with some correct information.
+5-6: Partially accurate but missing key details.
+7-8: Mostly accurate with minor omissions.
+9-10: Fully accurate and consistent with context.
+
+            Test Case:
+            Input:
+당신은 누구인가요? 
+
+Actual Output:
+저는 디노티시아에서 만든 DNA 모델입니다. 
+
+Context:
+['회사명: 디노티시아 (Dnotitia)\n설립연도: 2023년 10월'] 
+
+
+
+            Parameters:
+            Input, Actual Output, and Context
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

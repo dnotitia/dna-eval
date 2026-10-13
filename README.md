@@ -1,185 +1,221 @@
-# DokPaMo (Sovereign AI Foundation Model Project) Phase 2 Evaluation — NIA Benchmark
+# DNA Evaluation Harness
 
-- (Evaluation Direction) Considering the advancement of DokPaMo models compared to Phase 1, the evaluation has been strengthened by expanding the evaluation datasets, introducing open-ended (descriptive) formats, and increasing the proportion of high-difficulty questions (Math), etc.
-    - Math Evaluation
-    - Knowledge Evaluation
-    - Long-Context Comprehension Evaluation
-    - Instruction-Following Evaluation
-    - Korean Language Evaluation
-    - Social Safety Evaluation
-    - Reliability Evaluation
-    - Safety Evaluation
+An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk).
+
+## Quickstart
+
+```bash
+pip install -e .
+export HF_TOKEN=...            # read access to dnotitia/dna_* datasets
+
+# subject: any OpenAI-compatible endpoint (vLLM provider shown)
+export VLLM_BASE_URL=http://localhost:8000/v1  VLLM_API_KEY=EMPTY
+# judge: a second OpenAI-compatible endpoint, bound to the "grader" role via the generic provider
+export JUDGE_BASE_URL=http://localhost:8001/v1  JUDGE_API_KEY=EMPTY
+
+inspect eval dna_eval/performance \
+  --model vllm/<model> \
+  --model-role grader=openai-api/judge/gemma-4-31B-it \
+  -T thinking=true -T epochs=15
+
+```
+
+The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`,
+and `call_failures`: the share of answers where the model's calls all failed (`answer_failed`) or
+returned no answer (`answer_empty`), and where the judge still failed after its retries (`judge_failed`).
+These samples stay in the averages (a placeholder answer is judged; a failed judgment scores 0),
+so a high rate means a lower score reflects the endpoint, not the model.
+`inspect view` shows every sample, judge prompt, and judge reason.
+
+Requests to the model have no time limit by default. `--attempt-timeout <seconds>` caps each
+request; a request that runs out is retried and, if every attempt fails, judged as an empty
+answer. (`--timeout` is different: it bounds a call including all its retries.)
+
+The `style` task also needs a reference model (`-T reference=...`); see
+[docs/running-style-task.md](docs/running-style-task.md).
 
 
-## Benchmark Tasks
+## Documentation
 
-### Math
+Read in this order as you need them:
 
-- Evaluation Area: Assesses the model's logical reasoning and computational abilities through math problems organized by difficulty level
-- Fields: Geometry, Algebra, Topology, Discrete Mathematics, Analysis, Probability and Statistics
-- Other Characteristics
-    - Short-answer (open-ended) format
-    - Difficulty Levels
-        - Hard: International olympiad level (e.g., IMO). Solvable by frontier models in only some cases
-        - Medium: Upper-level difficulty of domestic (Korean) math competitions
-        - Easy: Middle school competition level and easier high school competition problems
-- Tasks
-
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `math-en` | Math problems in English | Short answer |
-| `math-ko` | Math problems in Korean | Short answer |
-
----
-
-### Knowledge
-
-- Evaluation Area: Assesses professional-exam-level knowledge and answer accuracy. Evaluates the foundational knowledge level of large language models (LLMs)
-- Fields: Korea-specific knowledge, globally shared knowledge (history, culture, society, geography, language, politics and law, etc.)
-- Tasks
-
-| **Task** | **Format** |
+| document | read it when |
 | --- | --- |
-| `knowledge-rsimpleqa` | Short answer |
-| `knowledge-ropenbookqa` | Multiple choice |
-| `knowledge-rhellaswag` | Multiple choice |
-| `knowledge-rmmlu` | Multiple choice |
+| `CONTRIBUTING.md` | before changing anything: set-up, the project's rules, definition of done |
+| `docs/architecture.md` | before changing structure: how a sample flows, what each module may import, key names |
+| `docs/decisions/` | before changing a rule: why things are the way they are |
+| `docs/adding-a-task.md` | adding or changing a task |
+| `docs/running-style-task.md` | running the style task, or generating its references |
 
----
+AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
 
-### Long-Context Comprehension
+## Layout
 
-- Evaluation Area: Assesses long-context understanding and the accuracy of identifying key information. Evaluates an LLM's ability to comprehend long contexts and perform tasks over long passages
-- Fields
-    - Judgment ability: Assesses the ability to judge unanswerable or uncertain information
-    - Key information summarization/extraction: Assesses the ability to identify key terms and issues in long passages, government documents, and policy reports
-    - Long-form summarization: Assesses the ability to summarize multi-party utterance documents such as meeting minutes and derive key content
-    - Logical/causal reasoning: Assesses the ability to connect and reconstruct multi-step information
-    - Multi-document comprehension, comparison/contrast: Case-law-based question answering
-    - Document-based question answering: Assesses summarization of full-length novels and narrative documents, and context-based reasoning
-- Tasks
+```
+src/dna_eval/
+  dataset.py         shortcut loader for dnotitia/dna_* (revision required)
+  rubrics/           rubric schema + the YAML rubrics
+  prompts/           judge-prompt rendering + Jinja templates (what the judge reads)
+  judging.py         judge calls, verdict parsing, re-judge rounds (what the judge returns)
+  solvers/           one @solver per file
+  scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
+  metrics/           one @metric per file
+  utils/             helpers with no suite logic (JSON, statistics, model output, retries)
+  tasks/             one @task per file
+    dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
+```
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `longcontext-idk_short` | Judgment ability evaluation | Short answer |
-| `longcontext-ldkp_long` | Key information summarization/extraction | Open-ended |
-| `longcontext-ldkp_short` | Key information summarization/extraction | Short answer |
-| `longcontext-lfsum_long` | Long-form summarization | Open-ended |
-| `longcontext-logiqa_short` | Logical/causal reasoning | Short answer |
-| `longcontext-mrcr_long` | Multi-document comprehension and comparison/contrast | Open-ended |
-| `longcontext-mrcr_short` | Multi-document comprehension and comparison/contrast | Short answer |
-| `longcontext-narrativeqa_long` | Document-based question answering | Open-ended |
-| `longcontext-narrativeqa_short` | Document-based question answering | Short answer |
+## How to customize tasks (Simple)
 
----
+To integrate your own dataset into a `dna-eval` task, add a new task file to `src/dna_eval/tasks`.
 
-### Instruction Following
+And then, add the followings if necessary: (1) dataset, (2) solver chain, (3) scorer, (4) run settings 
 
-- Evaluation Area: Assesses the accuracy of multiple-choice, single-turn instruction following in Korean-language contexts. Evaluates how precisely the model executes user instructions under complex constraints and within its own context
-- Fields: A total of 12 domains — public services/civil affairs, business, finance/accounting, healthcare, legal affairs/law, science and technology, data analysis, education/research, culture/content, commerce, travel/logistics, and daily life
-    - Classification: Classification accuracy
-    - Information extraction: Field extraction accuracy
-    - Planning/design: Constraint satisfaction and feasibility
-    - Transformation: Format validity and value preservation
-    - Verification (consistency): Calculation and rule accuracy
-- Tasks
+Each building block of dna-eval is based on Inspect AI; for anything not covered here, please refer to their documentations: [Tasks](https://inspect.aisi.org.uk/tasks.html) ·
+[Datasets](https://inspect.aisi.org.uk/datasets.html) ·
+[Solvers](https://inspect.aisi.org.uk/solvers.html) ·
+[Scorers](https://inspect.aisi.org.uk/scorers.html) ·
+[Metrics](https://inspect.aisi.org.uk/metrics.html) ·
+[Model-graded scoring](https://inspect.aisi.org.uk/model-graded.html) ·
+[Examples](https://inspect.aisi.org.uk/examples/).
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `instruction-cls` | Classification | Multiple choice |
-| `instruction-ext` | Information extraction | Multiple choice |
-| `instruction-pln` | Planning/design | Multiple choice |
-| `instruction-trf` | Transformation | Multiple choice |
-| `instruction-ver` | Verification (consistency) | Multiple choice |
+Below is a simple example of adding a new task (called `my_task`) to the dna-eval harness: an LLM-judge task
+whose criteria are stored as a YAML rubrics. Full walkthrough: `docs/adding-a-task.md`.
 
----
+### Add a task
 
-### Korean Language
+Say `your-org/my_dataset` on the Hugging Face Hub has `question` and `answer` columns, and an
+LLM judge should grade each answer against the reference.
 
-- Evaluation Area: Assesses proficiency in Korean linguistic rules, socio-cultural context, and pragmatic execution. Verifies Korean language processing ability in sociolinguistic contexts, and diagnoses risks of misunderstanding, inappropriate expressions, hallucination, and format violations that may arise in Korean AI service environments such as public services, education, and civil affairs. Diagnoses Korean normativity, usability, cultural context understanding, and suitability for public services
-- Fields
-    - Grammatical competence: Abilities related to linguistic knowledge such as vocabulary, morphology, syntax, semantics, and phonology
-        - Spelling and spacing
-        - Synonyms
-        - Archaic language
-        - Sentence constituent agreement
-    - Discourse competence: The ability to construct discourse with formal cohesion and semantic coherence within utterance contexts
-        - Discourse connectives and conjunctive expressions
-        - Contextual comprehension
-    - Sociolinguistic competence: The ability to properly understand the sociolinguistic situation in which discourse takes place and to use language appropriate to it
-        - Honorifics
-        - Style/register shifting
-        - Conversational speech acts and politeness strategies
-        - Idiomatic expressions
-        - Dialects
-        - Neologisms
-- Tasks
+```python
+# src/dna_eval/tasks/my_task.py
+from inspect_ai import Task, task
+from inspect_ai.dataset import FieldSpec, hf_dataset
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `korprof-d01` | Spelling and spacing | Multiple choice |
-| `korprof-d02` | Honorifics | Multiple choice |
-| `korprof-d03` | Sentence constituent agreement | Multiple choice |
-| `korprof-d04` | Discourse connectives and conjunctive expressions | Multiple choice |
-| `korprof-d05` | Style/register shifting | Multiple choice |
-| `korprof-d06` | Contextual comprehension | Multiple choice |
-| `korprof-d07` | Conversational speech acts and politeness strategies | Multiple choice |
-| `korprof-d08` | Idiomatic expressions | Multiple choice |
-| `korprof-d09` | Synonyms | Multiple choice |
-| `korprof-d10` | Archaic language | Multiple choice |
-| `korprof-d11` | Dialects | Multiple choice |
-| `korprof-d12` | Neologisms | Multiple choice |
+from dna_eval.scorers.rubric_scorer import rubric_scorer
+from dna_eval.solvers.dna_generate import dna_generate
+from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
 
----
+DATASET_REVISION = "<commit sha>"   # pin the data so a dataset update cannot move your numbers
 
-### Social Safety
+@task
+def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REVISION) -> Task:
+    return Task(
+        dataset=hf_dataset("your-org/my_dataset", split="train", revision=revision,
+                           sample_fields=FieldSpec(input="question", target="answer")),
+        solver=dna_generate(),                 # one user turn, no system prompt
+        scorer=rubric_scorer("my_task"),       # rubrics/my_task.yaml
+        epochs=epochs,                         # 15 runs -> per_run_trimmed
+        config=dna_generate_config(thinking),  # generation settings
+        headline_metric=HEADLINE,              # show the per-run trimmed mean first
+    )
+```
 
-- Evaluation Area: Assesses whether the model can be used safely by evaluating the operation of guardrails and blocking capabilities against various social safety threats that may arise in the domestic (Korean) environment. Verifies the effectiveness of the model's technical safety guardrails for safe use against everyday risks, and evaluates the model's ability to perform safely in accordance with ethical standards
-- Fields
-    - Policy violation/refusal: Evaluates the model's ability to withhold prohibited assistance and to refuse appropriately when necessary
-    - Providing safe alternatives: Evaluates the ability to refuse prohibited requests and present safe alternatives (prevention/help/legal substitutes)
-    - Jailbreak/bypass robustness: Evaluates the model's defenses for maintaining guardrails against bypass techniques such as role-play, translation, code-switching, instruction inversion, and injection
-- Tasks
+A suite dataset (`dnotitia/dna_*`) loads with `dna_dataset("dna_<name>", revision=...)` instead.
+The judge criteria go in one YAML file next to the other rubrics:
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `socialsafety-t1` | Policy violation/refusal | Multiple choice |
-| `socialsafety-t2` | Providing safe alternatives | Multiple choice |
-| `socialsafety-t4` | Jailbreak/bypass robustness | Multiple choice |
+```yaml
+# src/dna_eval/rubrics/my_task.yaml
+name: my_task
+params: [input, actual_output, expected_output]   # what the judge is shown
+steps:
+  - Identify the final answer in expected_output.
+  - Check whether actual_output reaches the same answer.
+  - Penalise claims in actual_output that contradict expected_output.
+rubric:
+  - {range: [0, 3],  outcome: Wrong answer or contradicts the reference.}
+  - {range: [4, 6],  outcome: Partly correct; key parts missing.}
+  - {range: [7, 10], outcome: Same answer as the reference.}
+threshold: 0.7                                     # pass line on the 0-1 score
+```
 
----
+Register the task in `src/dna_eval/_registry.py`, and run it like any other task:
 
-### Reliability
+```python
+from dna_eval.tasks.my_task import my_task  # noqa: F401
+```
 
-- Evaluation Area: Assesses fact-based accuracy and neutrality in value judgments. A benchmark optimized for the Korean language and Korean cultural context
-- Fields
-    - Fact-based: Evaluates whether the LLM can generate neutral and accurate responses grounded in objective facts on topics such as politics, society, religion, and culture
-    - Value-judgment-based: Evaluates whether the model can generate unbiased responses that are acceptable in light of Korean society's cultural, ethical, and legal standards on socially sensitive areas such as political ideology, gender roles, religious ethics, and cultural superiority
-- Tasks
+```bash
+inspect eval dna_eval/my_task --model vllm/<model> --model-role grader=openai-api/judge/<judge-model>
+```
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `reliability_fact-mcqa` | Fact-based | Multiple choice |
-| `reliability_fact-rubric_5pt` | Fact-based | Open-ended |
-| `reliability_fact-short_qa` | Fact-based | Open-ended |
-| `reliability_value-rubric_5pt` | Value-judgment-based | Open-ended |
+The three sections below are needed only when `dna_generate()`, `rubric_scorer`, or the default
+metrics are not enough. Each adds one file and changes one line of `my_task.py`.
 
----
+### Add a solver
 
-### Safety
+Say `my_task` should run with a system prompt. One `@solver` per file in `solvers/`:
 
-- Evaluation Area: Assesses safety in high-risk areas such as cybersecurity and national security/CBRN-E. A benchmark optimized for the Korean language and Korean cultural context
-- Fields
-    - Cybersecurity: Evaluates whether the model provides dangerous information or performs improper actions in response to questions about its information security knowledge and its own vulnerabilities
-    - National security and CBRN-E: Evaluates whether the model generates clear and acceptable responses in nationally sensitive security areas such as domestic conflicts, international diplomacy, and CBRN-E
-- Tasks
+```python
+# src/dna_eval/solvers/my_system_prompt.py
+@solver
+def my_system_prompt(text: str) -> Solver:
+    async def solve(state: TaskState, generate: Generate) -> TaskState:
+        state.messages.insert(0, ChatMessageSystem(content=text))
+        return state
+    return solve
+```
 
-| **Task** | **Description** | **Format** |
-| --- | --- | --- |
-| `safety_cyber-mcqa` | Cybersecurity | Multiple choice |
-| `safety_cyber-safety_binary` | Cybersecurity | Open-ended |
-| `safety_natl-mcqa` | National security/CBRN-E | Multiple choice |
-| `safety_natl-rubric_5pt` | National security/CBRN-E | Open-ended |
-| `safety_natl-safety_binary` | National security/CBRN-E | Open-ended |
+```python
+# my_task.py
+solver=[my_system_prompt("Answer in one sentence."), dna_generate()],
+```
 
----
+A prompt change that only `my_task` needs can stay inline in the task instead (e.g.
+`prompt_template(...)` before `dna_generate()`).
+
+### Add a scorer
+
+Say `my_task` should be checked by string match instead of a judge. One `@scorer` per file in
+`scorers/`:
+
+```python
+# src/dna_eval/scorers/my_scorer.py
+@scorer(metrics=[mean(), per_run_trimmed()])
+def my_scorer() -> Scorer:
+    async def score(state: TaskState, target: Target) -> Score:
+        passed = target.text.strip() in state.output.completion
+        return Score(value=1.0 if passed else 0.0, answer=state.output.completion,
+                     metadata={"passed": passed, "epoch": state.epoch})
+    return score
+```
+
+```python
+# my_task.py
+scorer=my_scorer(),
+```
+
+`per_run_trimmed` reads `epoch` and `passed` from `Score.metadata`; a scorer that wants the
+suite's per-run statistics has to set both.
+
+### Add a metric
+
+Say `my_task` should also report its worst run. One `@metric` per file in `metrics/`;
+`scores="unreduced"` gives the metric every run of every sample instead of one reduced score
+per sample:
+
+```python
+# src/dna_eval/metrics/my_metric.py
+@metric(scores="unreduced")
+def my_metric() -> Metric:
+    def compute(scores: list[SampleScore]) -> Value:
+        by_run = defaultdict(list)
+        for s in scores:
+            by_run[s.score.metadata["epoch"]].append(s.score.as_float())
+        return min(sum(v) / len(v) for v in by_run.values())   # lowest run mean
+    return compute
+```
+
+```python
+# my_task.py (replaces the metrics the scorer declares)
+metrics=[mean(), per_run_trimmed(), my_metric()],
+```
+
+
+## Contributing
+
+See `CONTRIBUTING.md`.
+
+## License
+
+MIT.

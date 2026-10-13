@@ -1,0 +1,55 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 내용·사실·정확성·유용성은 절대 평가하지 마라. 두 답변 사이의 스타일 차이만 본다.
+2. register 축: 종결어미 체계(하십시오체/해요체/한다체)·존댓말 수준·전반적인 사용역(register) 면에서 actual_output과 expected_output의 차이를 평가하라.
+3. tone 축: 단정적인지/완곡한지(hedging), 독자와의 거리감, 주의/면책성 문구(disclaimer)나 메타코멘트의 가감 차이 등을 평가하라.
+4. format 축: markdown(불릿/헤딩/볼드)·리스트 vs 산문·구조 조직 면에서의 차이를 평가하라.
+5. verbosity 축: 분량·부연 설명·반복의 정도 면에서 차이를 평가하라.
+6. lexis 축: 어휘 선택·한자어/외래어 비율·자연스러움·영어 혼입 정도의 차이를 평가하라.
+7. 위 5축을 종합해 actual_output의 스타일이 expected_output과 얼마나 유사한지 판단하라. 유사할수록 높은 점수를 부여하라.
+8. 나중에 reason에 이유를 보여줄 때는 반드시 한국어로 출력하라.
+
+
+            Rubric:
+0-2: Completely different answer style across most axes.
+3-4: Clear style differences across multiple axes.
+5-6: Noticeable differences in some axes, similar in others.
+7-8: Mostly similar style with minor differences in a few axes.
+9-10: Nearly identical answer style across all axes.
+
+            Test Case:
+            Actual Output:
+쿠릴열도 분쟁은 1855년 시모다 조약에서 시작됩니다. 
+
+Expected Output:
+## 쿠릴 열도 분쟁
+- 1855년: 시모다 조약 
+
+
+
+            Parameters:
+            Actual Output and Expected Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:

@@ -1,0 +1,49 @@
+You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between 0 and 10, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            1. 응답이 한국어 질문에 대해 한국어로 일관되게 작성되고, 뜬금없는 외래 문자가 출현하지 않는지 평가하라
+2. 본문 평문(괄호·따옴표·코드블록·수식 밖)에 한자, 일본어 가나(히라가나/가타카나), 키릴 문자, 그리스 문자, 아랍 문자, 데바나가리 문자 등 외래 스크립트가 단독으로 노출되었는지 확인하라. 평문 한 글자라도 노출되면 leak로 간주한다
+3. 괄호 병기(예: '인(仁)', '모음조화(vowel harmony)'), 따옴표 인용, 코드 블록, LaTeX 수식, 대문자 약어(RSA, DNA 등) 안의 외래 스크립트는 정상적인 사용으로 간주하고 감점하지 마라
+4. 도메인 용어 또는 전문 용어 등에서 사용되는 자연스러운 code switching이 아닌, LLM 답변의 출력 토큰 decoding confusion으로 인한 부자연스러운 leakage로 보이는 것들은 leak으로 간주하라질문에서 명시적으로 특정 문자(예: '한자 금지', '그리스 문자 금지', '영어 단어 금지') 사용을 금지했다면, 어떠한 형태라도 해당 문자가 등장하면 명백한 위반으로 간주하고 강하게 감점하라
+5. 나중에 reason에 이유를 보여줄 때 이 내용은 반드시 한국어로 출력하라. leak가 발견된 경우 어떤 스크립트의 어느 표현이 문제인지 구체적으로 인용하라
+
+
+            Rubric:
+0-3: Clear leak: response contains foreign-script characters or English words in plain prose that appear to stem from output-token decoding confusion (not legitimate domain code-switching), OR an explicit script-prohibition instruction in the question was violated in any form.
+4-6: Borderline: contains foreign-script characters or English words in plain prose where it is genuinely ambiguous whether they are natural domain/technical code-switching or decoding-confusion leakage.
+7-10: No leak: response is consistently in Korean; any foreign scripts appear only in legitimate contexts (parenthetical glosses, citations, code blocks, formulas, acronyms) and any code-switching is clearly natural domain usage.
+
+            Test Case:
+            Input:
+물의 화학식과 분자량(mass)을 알려주세요. 
+
+Actual Output:
+물의 화학식은 H₂O이고, 分子量은 약 18 g/mol입니다. 약 18 g/mol입니다. 
+
+
+
+            Parameters:
+            Input and Actual Output
+
+
+            ---
+            **Example JSON:**
+            {
+                "reason": "your concise and informative reason here",
+                "score": 0
+            }
+
+            JSON:
