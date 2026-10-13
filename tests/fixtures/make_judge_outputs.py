@@ -77,6 +77,11 @@ RAW = {
     "no_json": "점수는 8점입니다.",
     "empty": "",
     "array_only": "[8]",
+    # LaTeX in the reason: a single backslash before a letter that is not a JSON escape
+    "latex_invalid_escape": '{"score": 10, "reason": "수식($n, \\mid$, \\pi)만 사용됨"}',
+    "latex_valid_escape": '{"score": 9, "reason": "분수 \\frac{1}{2} 사용"}',
+    "latex_escaped_backslash": '{"score": 8, "reason": "기호 \\\\pi 사용"}',
+    "latex_bad_unicode_escape": '{"score": 7, "reason": "\\underline{x} 사용"}',
 }
 
 TRANSPORT = {

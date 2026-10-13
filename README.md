@@ -23,7 +23,11 @@ inspect eval dna_eval/performance \
 
 ```
 
-The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`.
+The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`,
+and `call_failures`: the share of answers where the model's calls all failed (`answer_failed`) or
+returned no answer (`answer_empty`), and where the judge still failed after its retries (`judge_failed`).
+These samples stay in the averages (a placeholder answer is judged; a failed judgment scores 0),
+so a high rate means a lower score reflects the endpoint, not the model.
 `inspect view` shows every sample, judge prompt, and judge reason.
 
 Requests to the model have no time limit by default. `--attempt-timeout <seconds>` caps each

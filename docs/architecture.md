@@ -18,9 +18,10 @@ dataset (Hub, pinned)      solvers                      scorers                 
 2. **Solvers.** `dna_generate` calls the model under evaluation with the suite's handling of
    empty and failed replies, strips the answer, and stores the reasoning (0006).
 3. **Scorers.** `rubric_scorer` resolves the rubric's fields (`sources`), renders the judge
-   prompt, calls the judge, reads the verdict, retries failed rounds (0003, 0004, 0006).
+   prompt, calls the judge, reads the verdict, retries failed rounds (0003, 0004, 0006, 0015).
 4. **Metrics.** `per_run_trimmed` regroups the scores by run and reports the trimmed mean and
-   pass count; suite tasks make it the headline (0005).
+   pass count; suite tasks make it the headline (0005). `call_failures` reports how many scores
+   stand for failed calls rather than judged answers (0006).
 
 A task runs this for every sample and every run (`epochs`).
 
@@ -56,8 +57,10 @@ Parts exchange data through named keys, never through imports:
 | key | written by | read by |
 | --- | --- | --- |
 | `Score.metadata["epoch"]`, `["passed"]` | `rubric_scorer` | `per_run_trimmed` |
-| `Score.metadata["raw_score"]`, `["judge_error"]`, `["components"]` | `rubric_scorer` | people, in the viewer |
+| `Score.metadata["raw_score"]`, `["components"]` | `rubric_scorer` | people, in the viewer |
 | `state.store["reasoning"]` | `dna_generate` | rubrics with `sources: {...: store.reasoning}` |
+| `state.store["no_answer"]` → `Score.metadata["no_answer"]` | `dna_generate`, copied by `rubric_scorer` | `call_failures` |
+| `Score.metadata["judge_error"]` | `rubric_scorer` | `call_failures`, people in the viewer |
 | `state.store["reference_origin"]` | `style_reference` | people, in the viewer |
 | `metadata["context"]` | dataset, or `rubric_scorer(context=...)` | rubrics with `context` in `params` |
 | `metadata["reference_reasoning"]`, `["reference_content"]` | style task, `style_reference` | `style` rubrics |

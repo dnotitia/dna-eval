@@ -4,8 +4,8 @@
 through the modules imported here. Importing ``scorers.rubric_scorer`` registers one scorer
 per rubric in ``rubrics/``, whether or not a task uses it.
 """
-from dna_eval.metrics import (answer_diagnostics, calibration_error, instruction_following,  # noqa: F401
-                              license_pass, per_run_trimmed, weighted_accuracy)
+from dna_eval.metrics import (answer_diagnostics, calibration_error, call_failures,  # noqa: F401
+                              instruction_following, license_pass, per_run_trimmed, weighted_accuracy)
 from dna_eval.scorers import (hle_judge, imo_answer_grader, letter_choice, math_answer,  # noqa: F401
                               rubric_scorer)
 from dna_eval.scorers import instruction_following as _instruction_following  # noqa: F401
