@@ -43,6 +43,7 @@ HF_DATASET = "cais/hle"
 DATASET_REVISION = "5a81a4c7271a2a2a312b9a690f0c2fde837e4c29"
 
 # Verbatim from run_model_predictions.py: one system prompt for every question type.
+# centerforaisafety/hle (MIT, Copyright (c) 2025 centerforaisafety); see THIRD_PARTY_NOTICES.md.
 SYSTEM_PROMPT = (
     "Your response should be in the following format:\n"
     "Explanation: {your explanation for your answer choice}\n"

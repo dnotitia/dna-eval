@@ -1,0 +1,8 @@
+dna-eval
+Copyright 2026 Dnotitia Inc.
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes material from third parties under their own licences, listed in
+THIRD_PARTY_NOTICES.md. One file, src/dna_eval/tasks/benchmarks/kobalt_prompts.py, is
+licensed under CC-BY-NC-4.0 (non-commercial use only), not under the Apache License.

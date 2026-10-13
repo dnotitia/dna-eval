@@ -13,9 +13,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "src" / "dna_eval"
 DECISIONS = ROOT / "docs" / "decisions"
-DOCS = sorted([ROOT / n for n in ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md")]
+DOCS = sorted([ROOT / n for n in ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "THIRD_PARTY_NOTICES.md")]
               + list((ROOT / "docs").rglob("*.md")))
-ROOT_FILES = {"README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml"}
+ROOT_FILES = {"README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "THIRD_PARTY_NOTICES.md"}
 PATHLIKE = re.compile(r"^[\w.\-/]+(\.(py|md|yaml|jinja|json|txt|toml)|/)$")
 STATUS = re.compile(r"^accepted$|^proposed$|^deprecated$|^superseded by (\d{4})$")
 

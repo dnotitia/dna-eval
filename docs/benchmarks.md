@@ -36,6 +36,29 @@ use, and read `truncated` in the results to see how many answers ran out of room
 
 Gated datasets need an `HF_TOKEN` whose account has accepted the dataset's terms.
 
+## Data licences
+
+dna-eval does not include benchmark data; each task downloads it when it runs. Using it is
+governed by the dataset's own licence and, for gated datasets, the terms accepted on the Hub.
+Check them before using a task for anything but non-commercial research.
+
+| task | dataset licence | conditions to note |
+| --- | --- | --- |
+| `gpqa_diamond` | CC-BY-4.0 | do not reveal examples online in plain text or images (the dataset's terms) |
+| `mmlu_pro` | MIT | |
+| `kmmlu_pro` | CC-BY-NC-ND-4.0 | **non-commercial use only** (also agreed when requesting access) |
+| `click` | none stated | no licence is published for the dataset |
+| `kobalt` | CC-BY-NC-4.0 | **non-commercial use only**; the task's prompts carry the same licence (`THIRD_PARTY_NOTICES.md`) |
+| `aime2025`, `aime2026` | CC-BY-NC-SA-4.0 | **non-commercial use only** |
+| `hrm8k_ksm` | MIT | |
+| `imo_answerbench` | CC-BY-4.0 | |
+| `hle` | MIT | keep questions out of training data (the dataset carries a canary string) |
+| `ifeval` | Apache-2.0 | |
+| `ifbench` | ODC-BY-1.0 | |
+
+Evaluation logs hold every question and answer. Treat them as copies of the data: in
+particular, do not publish logs of `gpqa_diamond` or `hle`.
+
 ## What every result reports
 
 - **The headline**, plus `stderr` and the benchmark's own breakdowns (per category, per

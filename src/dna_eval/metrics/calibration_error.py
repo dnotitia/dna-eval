@@ -7,6 +7,8 @@ from inspect_ai.scorer import Metric, SampleScore, Value, metric
 # Score.metadata key a scorer sets for this metric.
 CONFIDENCE = "confidence"    # int 0-100 the answer was stated with, or None if there was no judgement
 
+# rms_calibration_error is ported from centerforaisafety/hle (MIT, Copyright (c) 2025
+# centerforaisafety); see THIRD_PARTY_NOTICES.md.
 BIN_SIZE = 100               # target number of samples per bin
 
 

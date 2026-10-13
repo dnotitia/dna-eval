@@ -11,6 +11,7 @@ from dna_eval.tasks.benchmarks import HEADLINE, benchmark_generate_config, bench
 # TIGER-Lab/MMLU-Pro commit this task is pinned to.
 DATASET_REVISION = "b189ec765aa7ed75c8acfea42df31fdae71f97be"
 
+# Instruction and answer patterns: TIGER-AI-Lab/MMLU-Pro (Apache-2.0); see THIRD_PARTY_NOTICES.md.
 INSTRUCTION = ("The following are multiple choice questions (with answers) about {category}. Think step by "
                "step and then output the answer in the format of \"The answer is (X)\" at the end.\n\n")
 # The official script's two extraction patterns, in order.

@@ -30,6 +30,7 @@ from inspect_ai.solver import generate
 from dna_eval.scorers.math_answer import math_answer
 from dna_eval.tasks.benchmarks import HEADLINE, benchmark_generate_config
 
+# Third-party text: eth-sri/matharena (MIT, Copyright (c) 2024 SRI Lab, ETH Zurich); see THIRD_PARTY_NOTICES.md.
 # MathArena's ``instruction`` for AIME, the same every year (the doubled braces in its YAML are
 # ``str.format`` escapes).
 INSTRUCTION = "Put your final answer within \\boxed{}.\nThe answer is an integer between 0 and 999 inclusive."

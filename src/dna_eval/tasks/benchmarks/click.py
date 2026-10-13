@@ -11,6 +11,7 @@ from dna_eval.tasks.benchmarks import HEADLINE, benchmark_generate_config, bench
 # EunsuKim/CLIcK commit this task is pinned to.
 DATASET_REVISION = "d61627859645b5e6edc03fd9f835735d8226fa4e"
 
+# Answer pattern: LG-AI-EXAONE/KMMLU-Pro (BSD-3-Clause, Copyright (c) 2025 LG AI Research); see THIRD_PARTY_NOTICES.md.
 ANSWER_PATTERN = r"(?i)정답[^A-E]*:[^A-E]*([A-E])"
 LETTERS = "ABCDE"
 
@@ -54,6 +55,7 @@ def subcategory(record: dict) -> str:
     raise ValueError(f"cannot place CLIcK question {i!r} in a subcategory")
 
 
+# Prompt wording: lm-evaluation-harness ``click`` task (MIT, Copyright (c) 2020 EleutherAI); see THIRD_PARTY_NOTICES.md.
 def build_prompt(record: dict) -> str:
     """The question with its paragraph (if any) and all of its lettered options."""
     choices = record["choices"]

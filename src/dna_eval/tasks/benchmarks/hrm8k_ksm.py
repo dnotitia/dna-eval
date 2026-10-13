@@ -39,6 +39,7 @@ DATASET_REVISION = "c360cabf8d733a82455565358b3dc965aab9ba8d"
 
 def record_to_sample(record: dict) -> Sample:
     """One problem as a single user turn, in the prompt of lm-evaluation-harness's HRM8K task."""
+    # lm-evaluation-harness (MIT, Copyright (c) 2020 EleutherAI); see THIRD_PARTY_NOTICES.md.
     prompt = ("주어진 문제를 풀어보세요.\n"
               "문제를 푼 후, 최종 답변을 다음과 같은 형식으로 작성하세요: $\\boxed{N}$.\n\n"
               f"문제: {record['question'].strip()}\n답변:")

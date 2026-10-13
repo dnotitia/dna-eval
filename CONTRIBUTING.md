@@ -63,6 +63,10 @@ deliberate deviation (0001, 0004–0007). New tasks do not carry this constraint
   `0000-template.md`. Accepted records are binding; to change one, supersede it with a new
   record instead of editing it. The only edit an accepted record takes is updating a reference
   to a renamed file or module.
+- **Third-party material** (a prompt, a ported function, vendored code): say in a comment where
+  it comes from and add it to `THIRD_PARTY_NOTICES.md` with its licence and your changes. Text
+  under a licence that does not permit commercial use goes in a file of its own, marked with an
+  `SPDX-License-Identifier` line, and is named in `NOTICE`.
 - **Tests:** add or update a test with every behaviour change. Tests never call real model
   endpoints: use `mockllm` or `tests/parity/fake_openai.py`, and bind models by `base_url`, not by
   environment variables (0013). Mark tests that need the network (the Hub, pinned downloads) with `@pytest.mark.network`; a

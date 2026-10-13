@@ -19,6 +19,7 @@ DATA_FILE = "data/kmmlu_pro.jsonl"
 # Commit this task is pinned to.
 DATASET_REVISION = "e1567939724a369e428e66f15472562c55a5d181"
 
+# LG-AI-EXAONE/KMMLU-Pro (BSD-3-Clause, Copyright (c) 2025 LG AI Research); see THIRD_PARTY_NOTICES.md.
 # The official prompts. The second line holds a single space, as in the official code; the
 # five-option variant adds the letter E to the instruction and an option line.
 TEMPLATE = ("다음 문제에 대해 정답을 고르세요. 당신의 최종 정답은 {letters} 중 하나이고, \"정답:\" 뒤에 와야 합니다. "

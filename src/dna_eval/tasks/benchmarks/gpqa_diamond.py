@@ -17,6 +17,7 @@ from dna_eval.utils.cache import cache_root, fetch_pinned
 DATA_URL = "https://openaipublic.blob.core.windows.net/simple-evals/gpqa_diamond.csv"
 DATA_SHA256 = "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305"
 
+# Prompt and answer pattern: openai/simple-evals (MIT, Copyright (c) 2024 OpenAI); see THIRD_PARTY_NOTICES.md.
 PROMPT = ("Answer the following multiple choice question. The last line of your response should be of "
           "the following format: 'Answer: $LETTER' (without quotes) where LETTER is one of ABCD. "
           "Think step by step before answering.\n\n{Question}\n\nA) {A}\nB) {B}\nC) {C}\nD) {D}")
