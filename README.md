@@ -76,8 +76,7 @@ AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points i
 src/dna_eval/
   dataset.py         shortcut loader for dnotitia/dna_* (revision required)
   rubrics/           rubric schema + the YAML rubrics
-  prompts/           judge-prompt rendering + Jinja templates (what the judge reads)
-  rubric_judging.py  the rubric judge: calls, verdict parsing, re-judge rounds (what the judge returns)
+  rubric_judging.py  the rubric judge: its prompt, calls, verdict parsing, re-judge rounds
   roles.py           model role names (grader, reference)
   solvers/           one @solver per file
   scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric

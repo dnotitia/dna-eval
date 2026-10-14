@@ -128,7 +128,7 @@ threshold: 0.7
 | `sources` | optional: where a field comes from — `answer` (default for `actual_output`), `reasoning`, `input`, `target` (default for `expected_output`), `metadata.<key>`, or `store.<key>` (a value a solver wrote to the sample store). The `style` rubrics use it to show the judge the model's reasoning and a reference model's answer |
 
 The rubric is validated on load (`rubrics/__init__.py`, pydantic). The judge **prompt** that
-wraps it, `prompts/geval_results.jinja`, is shared by every task in the suite and reproduces the
+wraps it, `GEVAL_RESULTS` in `src/dna_eval/rubric_judging.py`, is shared by every task in the suite and reproduces the
 DeepEval GEval prompt byte for byte; you edit rubrics, not the prompt.
 
 Variations:

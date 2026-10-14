@@ -15,7 +15,7 @@ Deviations, all recorded in the log:
 - **Subject prompt.** The benchmark ships none; the problem is preceded by "Put your final answer
   within \\boxed{}.", so the grader can read the answer from the last box.
 - **Grader prompt.** The paper's prompt refers to an extraction section it does not print. The
-  section in ``prompts/imo_answer_grader.jinja`` is this project's addition (the answer is the
+  section in the grader prompt (``scorers/imo_answer_grader.py``) is this project's addition (the answer is the
   last ``\\boxed{}``); the rest is verbatim.
 - **Grader model.** The paper's grader is a Gemini model. Here it is whatever model the ``grader``
   role is bound to (required); numbers are comparable only to runs with the same grader.

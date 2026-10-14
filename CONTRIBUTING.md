@@ -30,7 +30,9 @@ Each one is a decision record; follow the link for the reasoning and the rejecte
 - **Folders by Inspect type.** Registered objects go in `solvers/`, `scorers/`, `metrics/`,
   `tasks/`, one implementation per file. Domain logic goes in a module named for it;
   `utils/` holds only helpers with no suite logic. A helper stays with its single caller. (0002)
-- **Dependencies point down.** `tasks` → `solvers`/`scorers`/`metrics` → `rubric_judging`/`prompts`/
+- **Prompts live where they are used.** A prompt is a constant in the module that uses it; one
+  shared by several modules lives in the module they all depend on, never in one of them. (0019)
+- **Dependencies point down.** `tasks` → `solvers`/`scorers`/`metrics` → `rubric_judging`/
   `rubrics`/`dataset` → `utils`. Solvers and scorers exchange data through keys a rubric names,
   never through imports. (0011)
 - **Pinned and explicit.** Datasets are pinned to a commit (0008); model roles are required

@@ -9,7 +9,7 @@ How dna-eval is put together. For *why* a part is the way it is, follow the reco
 dataset (Hub, pinned)      solvers                      scorers                       metrics
   Sample(input, target,  ─▶ style_reference (style)  ─▶ rubric_scorer("<rubric>")  ─▶ per_run_trimmed
          metadata)          dna_generate               └─ rubric_judging.judge_rounds  mean
-                              writes store["reasoning"]    ├─ prompts.build_prompt      (per run, then
+                              writes store["reasoning"]    ├─ build_prompt              (per run, then
                                                            ├─ grader role (judge)        across runs)
                                                            └─ read_verdict
 ```
@@ -43,10 +43,9 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | `tasks/dna_suite/` | the suite's tasks; `__init__.py`: its conventions (generation config, headline) | everything below |
 | `tasks/benchmarks/` | standard benchmarks; `__init__.py`: their generation config (0016) | everything below |
 | `solvers/` | one solver per file, with its own defaults and placeholders | `roles`, `utils`, other solvers |
-| `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark scorers | `rubric_judging`, `roles`, `prompts`, `rubrics`, `metrics`, `vendor`, `utils` |
+| `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark scorers, each with its judge prompt | `rubric_judging`, `roles`, `rubrics`, `metrics`, `vendor`, `utils` |
 | `metrics/` | one metric per file | `utils`; the key names other metrics define |
-| `rubric_judging.py` | the rubric judge: judge call, verdict reading, re-judge rounds, `sources` resolution | `roles`, `prompts`, `rubrics`, `utils` |
-| `prompts/` | judge prompt templates and rendering (what the judge reads); text the model under evaluation reads stays in its task file | `rubrics` |
+| `rubric_judging.py` | the rubric judge: its prompt (`GEVAL_RESULTS`), judge call, verdict reading, re-judge rounds, `sources` resolution | `roles`, `rubrics`, `utils` |
 | `roles.py` | the model role names (`grader`, `reference`) (0010) | — |
 | `rubrics/` | rubric schema and the rubric YAML files | — |
 | `dataset.py` | Hub loaders for the suite's datasets and the files next to them | — |
@@ -55,6 +54,11 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | `_registry.py` | the package entry point; imports every module that registers objects | everything |
 
 Dependencies point down the table; solvers and scorers never import each other or `tasks` (0011).
+
+Prompts live where they are used (0019): a task's instructions to the model under evaluation in
+the task file, a judge's prompt in its scorer (or, for rubric judging, in `rubric_judging.py`).
+A prompt several modules share lives in the module they all depend on, never in one of them;
+templates that need Jinja are rendered with `utils/templates.py`.
 
 ## Contracts between parts
 

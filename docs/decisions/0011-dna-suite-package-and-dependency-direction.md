@@ -12,7 +12,7 @@ scorer imported a solver to read a value the solver had stored.
 
 - The suite's tasks live in `tasks/dna_suite/`. Its `__init__.py` holds the suite conventions
   (`dna_generate_config`, `MAX_TOKENS`, `HEADLINE`) and imports no task module.
-- Dependencies point down: `tasks` → `solvers` / `scorers` / `metrics` → `rubric_judging` / `prompts` /
+- Dependencies point down: `tasks` → `solvers` / `scorers` / `metrics` → `rubric_judging` /
   `rubrics` / `dataset` → `utils`. Solvers and scorers do not import each other or `tasks`.
 - A value a solver hands to the judge travels as data: the solver writes `state.store` or
   `state.metadata`, and the rubric's `sources` names the key (`store.reasoning`).

@@ -7,10 +7,10 @@ import pytest
 from inspect_ai.scorer import Score, SampleScore
 
 from dna_eval.metrics.calibration_error import calibration_error, rms_calibration_error
-from dna_eval.prompts import env
-from dna_eval.scorers.hle_judge import _extracted, read_judgement
-from dna_eval.scorers.imo_answer_grader import read_grade
+from dna_eval.scorers.hle_judge import JUDGE_PROMPT, _extracted, read_judgement
+from dna_eval.scorers.imo_answer_grader import GRADER_PROMPT, read_grade
 from dna_eval.utils.math_answer import last_boxed
+from dna_eval.utils.templates import render
 from dna_eval.tasks.benchmarks import imo_answerbench as imo
 
 # --- HLE judge prompt -------------------------------------------------------------------------
@@ -18,7 +18,7 @@ from dna_eval.tasks.benchmarks import imo_answerbench as imo
 
 def test_hle_judge_prompt_is_the_official_text():
     """SHA-256 of the official ``JUDGE_PROMPT.format(...)`` output (typos and all) for this input."""
-    out = env.get_template("hle_judge.jinja").render(
+    out = render(JUDGE_PROMPT, 
         question="What is {x}?\n{{y}}", response="Answer: 4 {z}", correct_answer="4")
     assert hashlib.sha256(out.encode()).hexdigest() == "b0efcf361d572e9e29571ad0962b6e1cf33d76b261423d46003fa3d17fa87b74"
     assert "if there if there is any inconsistency" in out and out.endswith("no confidence score available.")
@@ -137,7 +137,7 @@ def test_last_boxed_balances_braces():
 
 
 def test_imo_prompt_keeps_the_paper_text_and_adds_section_two():
-    out = env.get_template("imo_answer_grader.jinja").render(
+    out = render(GRADER_PROMPT, 
         problem="Find $x$.", solution="so \\boxed{3}", golden_answer="3")
     assert out.startswith("# System Role: Deterministic Mathematical Autograder\n")
     assert out.endswith("Problem: Find $x$.\nModel Solution: so \\boxed{3}\nGolden Answer: 3")

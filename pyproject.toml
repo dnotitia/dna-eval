@@ -40,7 +40,7 @@ dna_eval = "dna_eval._registry"
 where = ["src"]
 
 [tool.setuptools.package-data]
-dna_eval = ["rubrics/*.yaml", "prompts/*.jinja", "vendor/*/LICENSE", "vendor/*/NOTICE.md"]
+dna_eval = ["rubrics/*.yaml", "vendor/*/LICENSE", "vendor/*/NOTICE.md"]
 
 [tool.pytest.ini_options]
 # src layout: make the package and the tests package importable without `pip install -e .`

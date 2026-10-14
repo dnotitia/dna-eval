@@ -29,7 +29,7 @@ The licence text is in `LICENSE`.
 
 | source | material | files | changes |
 | --- | --- | --- | --- |
-| [confident-ai/deepeval](https://github.com/confident-ai/deepeval), Copyright 2024 Confident AI Inc. | the GEval results prompt; `trim_and_load_json` | `src/dna_eval/prompts/geval_results.jinja`, `src/dna_eval/utils/json.py` | prompt as a Jinja template rendering the same bytes; function ported to Python unchanged in behaviour |
+| [confident-ai/deepeval](https://github.com/confident-ai/deepeval), Copyright 2024 Confident AI Inc. | the GEval results prompt; `trim_and_load_json` | `src/dna_eval/rubric_judging.py` (`GEVAL_RESULTS`), `src/dna_eval/utils/json.py` | prompt as a Jinja template string rendering the same bytes; function ported to Python unchanged in behaviour |
 | [TIGER-AI-Lab/MMLU-Pro](https://github.com/TIGER-AI-Lab/MMLU-Pro) | the instruction, question layout and answer patterns of `evaluate_from_api.py` | `src/dna_eval/tasks/benchmarks/mmlu_pro.py` | 0-shot; the last answer pattern and the random fallback are dropped |
 | [allenai/IFBench](https://github.com/allenai/IFBench), Copyright Allen Institute for AI; Google Research Authors | the instruction verifiers | `src/dna_eval/vendor/ifbench/` | listed in `src/dna_eval/vendor/ifbench/NOTICE.md` |
 
@@ -37,7 +37,7 @@ The licence text is in `LICENSE`.
 
 | source | material | files |
 | --- | --- | --- |
-| [centerforaisafety/hle](https://github.com/centerforaisafety/hle), Copyright (c) 2025 centerforaisafety | the system prompt, the judge prompt, `calib_err` | `src/dna_eval/tasks/benchmarks/hle.py`, `src/dna_eval/prompts/hle_judge.jinja`, `src/dna_eval/metrics/calibration_error.py` |
+| [centerforaisafety/hle](https://github.com/centerforaisafety/hle), Copyright (c) 2025 centerforaisafety | the system prompt, the judge prompt, `calib_err` | `src/dna_eval/tasks/benchmarks/hle.py`, `src/dna_eval/scorers/hle_judge.py` (`JUDGE_PROMPT`), `src/dna_eval/metrics/calibration_error.py` |
 | [openai/simple-evals](https://github.com/openai/simple-evals), Copyright (c) 2024 OpenAI | the GPQA prompt and answer pattern | `src/dna_eval/tasks/benchmarks/gpqa_diamond.py` |
 | [eth-sri/matharena](https://github.com/eth-sri/matharena), Copyright (c) 2024 SRI Lab, ETH Zurich | the AIME instruction | `src/dna_eval/tasks/benchmarks/aime.py` |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K and CLIcK prompts; HRM8K answer extraction and normalisation | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/utils/math_answer.py` |
@@ -102,6 +102,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 | source | material | files | changes |
 | --- | --- | --- | --- |
-| Luong et al. (2025), "Towards Robust Mathematical Reasoning", arXiv 2511.01846, https://arxiv.org/abs/2511.01846 | the AnswerAutoGrader prompt (Appendix A.5) | `src/dna_eval/prompts/imo_answer_grader.jinja` | line wraps joined; typeset quotes written as backticks; section "# 2. Extraction Protocol" added by this project |
+| Luong et al. (2025), "Towards Robust Mathematical Reasoning", arXiv 2511.01846, https://arxiv.org/abs/2511.01846 | the AnswerAutoGrader prompt (Appendix A.5) | `src/dna_eval/scorers/imo_answer_grader.py` (`GRADER_PROMPT`) | line wraps joined; typeset quotes written as backticks; section "# 2. Extraction Protocol" added by this project |
 
 Licence: https://creativecommons.org/licenses/by/4.0/

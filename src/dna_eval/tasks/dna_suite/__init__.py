@@ -9,7 +9,7 @@ One convention for every task, so a number from one task is comparable with anot
   default first metric (``mean``).
 
 Changing these values moves every score in the suite at once; treat it as a suite version
-bump, like editing ``prompts/geval_results.jinja``. Keep this module free of task imports so
+bump, like editing the judge prompt in ``rubric_judging.py``. Keep this module free of task imports so
 the task modules can import from it.
 """
 from inspect_ai.log import HeadlineMetric

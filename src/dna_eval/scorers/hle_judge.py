@@ -1,6 +1,6 @@
 """``hle_judge``: Humanity's Last Exam correctness, judged as the benchmark's own script does.
 
-The judge prompt (``prompts/hle_judge.jinja``) is the one in ``hle_eval/run_judge_results.py`` of
+The judge prompt (``JUDGE_PROMPT``) is the one in ``hle_eval/run_judge_results.py`` of
 github.com/centerforaisafety/hle, typos included. The judge extracts the response's final answer,
 says whether it matches the reference (``correct``: ``yes``/``no``) and extracts the confidence
 the response stated (``confidence``: 0-100). The judge is the model bound to the ``grader`` role
@@ -21,12 +21,32 @@ from pydantic import BaseModel, field_validator
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.metrics.calibration_error import CONFIDENCE, calibration_error
 from dna_eval.metrics.judge_failures import JUDGE_ERROR, judge_failures
-from dna_eval.prompts import env
 from dna_eval.roles import GRADER_ROLE
 from dna_eval.utils.json import escape_stray_backslashes, extract_json
 from dna_eval.utils.model_output import is_truncated
+from dna_eval.utils.templates import render
 
-TEMPLATE = "hle_judge.jinja"
+# The judge prompt of Humanity's Last Exam, verbatim from hle_eval/run_judge_results.py (typos
+# included), as a Jinja template. Source: centerforaisafety/hle (MIT, Copyright (c) 2025
+# centerforaisafety); see THIRD_PARTY_NOTICES.md.
+JUDGE_PROMPT = r"""Judge whether the following [response] to [question] is correct or not based on the precise and unambiguous [correct_answer] below.
+
+[question]: {{ question }}
+
+[response]: {{ response }}
+
+Your judgement must be in the format and criteria specified below:
+
+extracted_final_answer: The final exact answer extracted from the [response]. Put the extracted answer as 'None' if there is no exact, final answer to extract from the response.
+
+[correct_answer]: {{ correct_answer }}
+
+reasoning: Explain why the extracted_final_answer is correct or incorrect based on [correct_answer], focusing only on if there are meaningful differences between [correct_answer] and the extracted_final_answer. Do not comment on any background to the problem, do not attempt to solve the problem, do not argue for any answer different than [correct_answer], focus only on whether the answers match.
+
+correct: Answer 'yes' if extracted_final_answer matches the [correct_answer] given above, or is within a small margin of error for numerical problems. Answer 'no' otherwise, i.e. if there if there is any inconsistency, ambiguity, non-equivalency, or if the extracted answer is incorrect.
+
+
+confidence: The extracted confidence score between 0|\%| and 100|\%| from [response]. Put 100 if there is no confidence score available."""
 
 
 class Judgement(BaseModel):
@@ -107,7 +127,7 @@ def hle_judge(judge_retries: int = 2) -> Scorer:
         md: dict = {TRUNCATED: is_truncated(state.output), EXTRACTED: None, CONFIDENCE: None}
         if md[TRUNCATED]:
             return Score(value=0.0, answer="", explanation="answer cut off", metadata=md)
-        prompt = env.get_template(TEMPLATE).render(
+        prompt = render(JUDGE_PROMPT,
             question=state.user_prompt.text, response=state.output.completion, correct_answer=target.text)
         schema = ResponseSchema(name="extracted_answer", json_schema=json_schema(Judgement))
         use_schema, error = True, ""

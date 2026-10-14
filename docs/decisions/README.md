@@ -38,3 +38,4 @@ the first version of the suite.
 | [0016](0016-standard-benchmark-conventions.md) | Standard benchmarks follow their official protocol, adapted only for reasoning models | accepted |
 | [0017](0017-vendored-third-party-code.md) | Third-party evaluation code is vendored unchanged, with its licence | accepted |
 | [0018](0018-licence-check.md) | Licences are checked by one short procedure; a script reports, maintainers decide | accepted |
+| [0019](0019-prompts-live-where-used.md) | Prompts live in the module that uses them | accepted |

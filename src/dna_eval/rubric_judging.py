@@ -1,6 +1,8 @@
-"""The rubric judge: calling it with a rubric and reading its verdict.
+"""The rubric judge: the prompt it reads, the call, and how its verdict is read.
 
-``prompts`` renders what the judge reads; this module makes the call, reads the reply the way
+``build_prompt`` renders the DeepEval GEval results prompt for a rubric, byte for byte, so scores
+stay comparable with DeepEval GEval; the prompt is fixed for the whole suite, and changing it is
+a scorer version bump, not a rubric edit. This module makes the call, reads the reply the way
 DeepEval's GEval reads it, and runs the re-judge rounds. ``scorers/rubric_scorer.py`` turns the
 judgments into Inspect scores.
 """
@@ -13,11 +15,83 @@ from inspect_ai.scorer import Target
 from inspect_ai.solver import TaskState
 from pydantic import BaseModel
 
-from dna_eval.prompts import build_prompt
 from dna_eval.roles import GRADER_ROLE
-from dna_eval.rubrics import Rubric
+from dna_eval.rubrics import PARAM_LABEL, Rubric
 from dna_eval.utils.json import escape_stray_backslashes, extract_json
 from dna_eval.utils.model_output import content_as_sent, reasoning_text
+from dna_eval.utils.templates import render
+
+
+# DeepEval GEvalTemplate.generate_evaluation_results, reproduced byte for byte (Jinja).
+# Source: confident-ai/deepeval (Apache-2.0, Copyright 2024 Confident AI Inc.); see THIRD_PARTY_NOTICES.md.
+# Indentation and blank lines are what textwrap.dedent leaves behind in DeepEval; keep them.
+# Changing this text changes every score in the suite.
+GEVAL_RESULTS = r"""You are an evaluator. Given the following evaluation steps and rubric, assess the response below and return a JSON object with two fields:
+
+            - `"score"`: an integer between {{ rubric.lo }} and {{ rubric.hi }}, based on the rubric provided.
+            - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
+
+            Your explanation should:
+            - Be specific and grounded in the evaluation steps and rubric.
+            - Mention key details from the test case parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            {% for step in rubric.steps %}{{ loop.index }}. {{ step }}
+{% endfor %}
+
+            Rubric:
+{% for band in rubric.rubric %}{{ band.range[0] }}{% if band.range[0] != band.range[1] %}-{{ band.range[1] }}{% endif %}: {{ band.outcome }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+            Test Case:
+            {% for p in rubric.params %}{{ labels[p] }}:
+{{ values[p] }} 
+
+{% endfor %}
+
+            Parameters:
+            {{ parameters }}
+
+
+            ---
+            **Example JSON:**
+            {% raw %}{{% endraw %}
+                "reason": "your concise and informative reason here",
+                "score": {{ rubric.lo }}
+            {% raw %}}{% endraw %}
+
+            JSON:
+"""
+
+
+def join_english(items) -> str:
+    """DeepEval construct_g_eval_params_string: "A", "A and B", "A, B, and C"."""
+    items = list(items)
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return ", ".join(items[:-1]) + f", and {items[-1]}"
+
+
+def build_prompt(rubric: Rubric, *, input_text: str, actual_output: str,
+                 expected_output: str = "", context: list[str] | None = None) -> str:
+    """The judge prompt for ``rubric``. ``context`` is rendered with ``repr`` as DeepEval does."""
+    values = {
+        "input": input_text,
+        "actual_output": actual_output,
+        "expected_output": expected_output,
+        "context": repr(context or []),
+    }
+    return render(GEVAL_RESULTS, rubric=rubric, labels=PARAM_LABEL, values=values,
+                  parameters=join_english(PARAM_LABEL[p] for p in rubric.params))
+
 
 
 class _Verdict(BaseModel):
