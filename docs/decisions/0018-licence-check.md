@@ -20,7 +20,7 @@ agent and a burden for a person.
   reports.
 - What only the contributor knows, whether text or code was copied, is asked once, in free form,
   in the pull request template. Copied material gets a source comment and a
-  `THIRD_PARTY_NOTICES.md` entry; non-commercial text lives in its own file with an SPDX line.
+  `THIRD_PARTY_NOTICES.md` entry; non-commercial text is marked as an SPDX snippet where it is used.
 - Maintainers decide non-commercial, share-alike, unlicensed and unclear cases, and tidy the
   notices in review.
 

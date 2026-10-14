@@ -245,8 +245,8 @@ See `CONTRIBUTING.md`.
 Apache License 2.0 (`LICENSE`), copyright Dnotitia Inc.
 
 Third-party material (prompts, ported code, vendored verifiers) keeps its own licence; see
-`THIRD_PARTY_NOTICES.md`. One file is not Apache-licensed:
-`src/dna_eval/tasks/benchmarks/kobalt_prompts.py` (the KoBALT prompts) is CC-BY-NC-4.0,
-non-commercial use only, as is the KoBALT dataset. Benchmark datasets are downloaded at run
+`THIRD_PARTY_NOTICES.md`. One part is not Apache-licensed: the KoBALT prompts in
+`src/dna_eval/tasks/benchmarks/kobalt.py` (a marked snippet) are CC-BY-NC-4.0, non-commercial
+use only, as is the KoBALT dataset. Benchmark datasets are downloaded at run
 time under their own licences, some of them non-commercial: see
 [docs/benchmarks.md](docs/benchmarks.md#data-licences).

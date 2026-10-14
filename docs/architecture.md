@@ -46,7 +46,7 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark scorers | `rubric_judging`, `roles`, `prompts`, `rubrics`, `metrics`, `vendor`, `utils` |
 | `metrics/` | one metric per file | `utils`; the key names other metrics define |
 | `rubric_judging.py` | the rubric judge: judge call, verdict reading, re-judge rounds, `sources` resolution | `roles`, `prompts`, `rubrics`, `utils` |
-| `prompts/` | judge prompt templates and rendering (what the judge reads) | `rubrics` |
+| `prompts/` | judge prompt templates and rendering (what the judge reads); text the model under evaluation reads stays in its task file | `rubrics` |
 | `roles.py` | the model role names (`grader`, `reference`) (0010) | — |
 | `rubrics/` | rubric schema and the rubric YAML files | — |
 | `dataset.py` | Hub loaders for the suite's datasets and the files next to them | — |

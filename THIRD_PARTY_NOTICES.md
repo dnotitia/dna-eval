@@ -10,7 +10,8 @@ Every file below that holds third-party material says so in a comment and points
 
 ### KoBALT prompts: CC-BY-NC-4.0 (non-commercial use only)
 
-- File: `src/dna_eval/tasks/benchmarks/kobalt_prompts.py`
+- Where: `SYSTEM`, `PROMPT` and `ANSWER_PATTERN` in `src/dna_eval/tasks/benchmarks/kobalt.py`, between
+  `SPDX-SnippetBegin` and `SPDX-SnippetEnd`
 - Source: https://github.com/snunlp/KoBALT, files evaluation_protocol.md and data/inference_gpt.py
 - Authors: Hyopil Shin, Sangah Lee, Dongjun Jang, Wooseok Song, Jaeyoon Kim, Chaeyoung Oh,
   Hyemi Jo, Youngchae Ahn, Sihyun Oh, Hyohyeong Chang, Sunkyoung Kim, Jinsik Lee (2025),
@@ -19,7 +20,7 @@ Every file below that holds third-party material says so in a comment and points
   https://creativecommons.org/licenses/by-nc/4.0/
 - Changes: the user prompt takes a `{question}` placeholder; the strings are otherwise as published.
 
-This file, and the `kobalt` task that uses it, may be used for non-commercial purposes only.
+This snippet, and the `kobalt` task that uses it, may be used for non-commercial purposes only.
 The KoBALT dataset has the same licence.
 
 ## Apache License 2.0

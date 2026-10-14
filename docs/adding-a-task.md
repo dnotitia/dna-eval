@@ -27,9 +27,9 @@ hard cases, so you only need to find out and say what you found.
    data that is not on the Hub, read the licence where the file is published.
 2. **Copied text or code.** If you take a prompt, an answer pattern or a function from somewhere
    else, put a one-line comment above it naming the source and its licence, and add an entry to
-   `THIRD_PARTY_NOTICES.md`. Text under a licence that does not allow commercial use goes in a
-   file of its own that starts with an `SPDX-License-Identifier:` line (as
-   `src/dna_eval/tasks/benchmarks/kobalt_prompts.py` does).
+   `THIRD_PARTY_NOTICES.md`. Text under a licence that does not allow commercial use is wrapped in
+   `SPDX-SnippetBegin` / `SPDX-SnippetEnd` comments with its `SPDX-License-Identifier:`, as the
+   KoBALT prompts in `src/dna_eval/tasks/benchmarks/kobalt.py` are.
 3. **Say so in the pull request.** The template asks what you copied and what the data's
    licence is. Non-commercial, share-alike, no stated licence, or access terms you are unsure
    of: write them down and leave the decision to the reviewer.
