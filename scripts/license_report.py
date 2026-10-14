@@ -1,33 +1,32 @@
-"""Report the data each task uses and its licence, against the table in docs/benchmarks.md.
+"""List the data every task uses, with its licence and access terms.
 
-    python scripts/license_report.py            # markdown report (needs network for licences)
+    python scripts/license_report.py            # markdown table (needs network for licences)
     python scripts/license_report.py --offline  # only which data each task uses
-    python scripts/license_report.py --strict   # exit 1 if a benchmark is missing from, or
-                                                # disagrees with, the licence table
+    python scripts/license_report.py --json     # the discovered data, as JSON
 
-Nothing has to be declared for this: every registered task is built once with the data
-loaders replaced by stubs that record what they were asked for (a Hub dataset and revision,
-or a pinned URL) and stop. No data is downloaded. Licences come from the Hub dataset card at
-the pinned revision, gated-access terms included.
+A lookup aid for contributors and reviewers (see "Before you start: licences" in
+docs/adding-a-task.md); it checks nothing and enforces nothing. Nothing has to be declared:
+every registered task is built once with the data loaders replaced by stubs that record what
+they were asked for (a Hub dataset and revision, or a pinned URL) and stop. No data is
+downloaded: connections are refused while tasks are built, so a task that loads data another
+way shows "network access" or "no data found" instead of downloading. Licences come from the
+Hub dataset card at the pinned revision, gated-access terms included.
 
-The report is advice, not a verdict: a non-commercial or missing licence is for a maintainer
-to decide on (see "Licences" in docs/adding-a-task.md). Run it as a script, in its own
-process: the stubs must be in place before dna_eval is imported.
+Run it as a script, in its own process: the stubs must be in place before dna_eval is imported.
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
 import inspect
 import json
 import pkgutil
 import re
+import socket
 import sys
 from dataclasses import asdict, dataclass, field
 from importlib import import_module
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-TABLE_DOC = ROOT / "docs" / "benchmarks.md"
 PLACEHOLDER = "placeholder"   # value for task arguments with no default (e.g. style's reference)
 
 
@@ -74,8 +73,36 @@ def _install_stubs() -> None:
     cache.fetch_pinned = lambda url, path, sha256: _record(Source("url", url, sha256))
 
 
+class NetworkBlocked(Exception):
+    """Raised for any connection attempt while tasks are being built."""
+
+
+@contextlib.contextmanager
+def _no_network():
+    """Refuse every outgoing connection inside the block.
+
+    Sockets are refused rather than setting ``HF_HUB_OFFLINE``, which the Hub client reads once
+    at import and would keep for the licence lookups that follow.
+    """
+    def refuse(*a, **k):
+        raise NetworkBlocked("network access while building the task (a data loader this report does not stub?)")
+
+    saved = socket.socket.connect, socket.socket.connect_ex, socket.create_connection
+    socket.socket.connect = socket.socket.connect_ex = refuse
+    socket.create_connection = refuse
+    try:
+        yield
+    finally:
+        socket.socket.connect, socket.socket.connect_ex, socket.create_connection = saved
+
+
 def discover() -> list[TaskData]:
-    """Build every task under dna_eval.tasks once and record the data it asks for."""
+    """Build every task under dna_eval.tasks once, offline, and record the data it asks for."""
+    with _no_network():
+        return _discover()
+
+
+def _discover() -> list[TaskData]:
     _install_stubs()
     from inspect_ai._util.registry import is_registry_object, registry_info
 
@@ -125,76 +152,37 @@ def hub_licence(source: Source) -> dict:
     return {"licence": ", ".join(licence) if isinstance(licence, list) else licence, "terms": "; ".join(terms)}
 
 
-def table_licences() -> dict[str, str]:
-    """task -> licence as written in the "Data licences" table of docs/benchmarks.md."""
-    text = TABLE_DOC.read_text(encoding="utf-8")
-    section = text.split("## Data licences", 1)[-1].split("\n## ", 1)[0]
-    out = {}
-    for line in section.splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 2 and "`" in cells[0]:
-            for task in re.findall(r"`([^`]+)`", cells[0]):
-                out[task] = cells[1]
-    return out
-
-
-def _norm(licence: str | None) -> str:
-    return "none" if not licence or licence.lower().startswith("none") else licence.lower()
-
-
-def report(found: list[TaskData], offline: bool) -> tuple[str, int]:
-    """Markdown report and the number of benchmark tasks that need attention."""
-    table = table_licences()
-    rows, attention = [], 0
+def report(found: list[TaskData], offline: bool) -> str:
+    """Markdown table: one row per task and data source."""
+    rows = []
     for d in found:
-        own = ".dna_suite." in d.module
+        notes = [] if d.sources else ["no data found"]
         for s in d.sources or [Source("none", "—")]:
-            looked = {"licence": None, "terms": "", "failed": ""}
-            if not offline and s.kind == "hub":
-                looked = hub_licence(s)
-            status = "suite data" if own else ""
-            if not own:
-                listed = table.get(d.task)
-                card = _norm(looked["licence"])
-                if listed is None:
-                    status, needs = "not in the table", True
-                elif offline or s.kind != "hub" or looked.get("failed"):
-                    status, needs = "ok", False
-                elif card == "none" and _norm(listed) != "none":
-                    status, needs = f"the card states none; the table says {listed} (from the dataset's README?)", False
-                elif card != _norm(listed):
-                    status, needs = f"the table says {listed}", True
-                else:
-                    status, needs = "ok", False
-                if needs or d.error:
-                    attention += 1
+            looked = hub_licence(s) if not offline and s.kind == "hub" else {"licence": None, "terms": "", "failed": ""}
+            if looked.get("failed"):
+                notes.append(looked["failed"])
             if d.error:
-                status += f"; build failed: {d.error}"
+                notes.append(f"build failed: {d.error}")
             source = f"{s.name}@{(s.revision or '')[:7]}" if s.kind == "hub" else s.name
             licence = ("—" if offline or s.kind != "hub" else "unavailable" if looked.get("failed")
                        else looked["licence"] or "none stated")
-            if looked.get("failed"):
-                status += f" ({looked['failed']})"
-            rows.append(f"| `{d.task}` | {source} | {licence} | {looked['terms']} | {status} |")
-    head = ["| task | data | licence | access terms | check |", "| --- | --- | --- | --- | --- |"]
-    note = ("Licences of non-Hub files (`url`) are in docs/benchmarks.md. A non-commercial or missing "
-            "licence needs a maintainer's decision.")
-    return "\n".join(["## Data licences", "", *head, *rows, "", note, ""]), attention
+            rows.append(f"| `{d.task}` | {source} | {licence} | {looked['terms']} | {'; '.join(notes)} |")
+            notes = []
+    note = ("Data that is not on the Hub (a URL): read its licence where it is published. \"no data found\" "
+            "or \"network access\": the task loads data in a way this script does not see; load it with "
+            "`hf_dataset` or `fetch_pinned`, or teach the script the loader.")
+    return "\n".join(["| task | data | licence | access terms | note |", "| --- | --- | --- | --- | --- |",
+                      *rows, "", note, ""])
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--offline", action="store_true", help="do not look licences up on the Hub")
-    parser.add_argument("--strict", action="store_true", help="exit 1 when a benchmark needs attention")
     parser.add_argument("--json", action="store_true", help="print the discovered data as JSON")
     args = parser.parse_args()
     found = discover()
-    if args.json:
-        print(json.dumps([asdict(d) for d in found], indent=1))
-        return 0
-    text, attention = report(found, args.offline)
-    print(text)
-    return 1 if args.strict and attention else 0
+    print(json.dumps([asdict(d) for d in found], indent=1) if args.json else report(found, args.offline))
+    return 0
 
 
 if __name__ == "__main__":

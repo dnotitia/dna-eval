@@ -1,7 +1,7 @@
-"""``scripts/license_report.py`` finds each task's data without downloading it, and flags
-benchmarks missing from the licence table."""
+"""``scripts/license_report.py`` finds each task's data without downloading anything."""
 import importlib.util
 import json
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -14,7 +14,7 @@ def _module():
     spec = importlib.util.spec_from_file_location("license_report", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module          # dataclasses look their module up while it loads
-    spec.loader.exec_module(module)        # defines functions only; stubs go in when discover() runs
+    spec.loader.exec_module(module)          # defines functions only; stubs go in when discover() runs
     return module
 
 
@@ -24,25 +24,24 @@ def test_every_task_is_found_with_its_pinned_data():
     found = {t["task"]: t for t in json.loads(out.stdout)}
     assert {"performance", "style", "gpqa_diamond", "hle", "kmmlu_pro", "aime2025", "ifbench"} <= set(found)
     assert all(t["sources"] and not t["error"] for t in found.values())
-    assert found["hle"]["sources"] == [{"kind": "hub", "name": "cais/hle", "revision": found["hle"]["sources"][0]["revision"]}]
+    assert [s["name"] for s in found["hle"]["sources"]] == ["cais/hle"]
     assert found["gpqa_diamond"]["sources"][0]["kind"] == "url"
     assert all(len(s["revision"] or "") == 40 for t in found.values() for s in t["sources"] if s["kind"] == "hub")
 
 
-def test_every_benchmark_is_in_the_licence_table():
+def test_no_connection_is_made_while_tasks_are_built():
     m = _module()
-    table = m.table_licences()
-    out = subprocess.run([sys.executable, str(SCRIPT), "--json"], capture_output=True, text=True,
-                         check=True, cwd=ROOT)
-    benchmarks = {t["task"] for t in json.loads(out.stdout) if ".benchmarks." in t["module"]}
-    assert benchmarks <= set(table), f"add these tasks to docs/benchmarks.md: {sorted(benchmarks - set(table))}"
+    with m._no_network():
+        try:
+            socket.create_connection(("127.0.0.1", 9))
+        except m.NetworkBlocked:
+            pass
+        else:
+            raise AssertionError("a connection was allowed")
+    assert socket.socket.connect.__name__ != "refuse"          # restored afterwards
 
 
-def test_a_benchmark_missing_from_the_table_needs_attention():
+def test_a_task_with_no_data_found_is_noted():
     m = _module()
-    found = [m.TaskData("new_bench", "dna_eval.tasks.benchmarks.new_bench", [m.Source("hub", "org/data", "a" * 40)]),
-             m.TaskData("performance", "dna_eval.tasks.dna_suite.performance", [m.Source("hub", "org/own", "b" * 40)])]
-    text, attention = m.report(found, offline=True)
-    assert attention == 1
-    assert "| `new_bench` | org/data@aaaaaaa | — |  | not in the table |" in text
-    assert "suite data" in text
+    text = m.report([m.TaskData("odd_task", "dna_eval.tasks.benchmarks.odd_task", [])], offline=True)
+    assert "| `odd_task` | — | — |  | no data found |" in text

@@ -64,7 +64,7 @@ deliberate deviation (0001, 0004–0007). New tasks do not carry this constraint
   record instead of editing it. The only edit an accepted record takes is updating a reference
   to a renamed file or module.
 - **Licences:** data a task downloads, and any prompt or code taken from elsewhere, are checked
-  as "Before you start: licences" in `docs/adding-a-task.md` describes (one script, a comment, a
+  as "Before you start: licences" in `docs/adding-a-task.md` describes (a table row, a comment, a
   line in the pull request). Maintainers decide non-commercial and unlicensed cases. (0018)
 - **Tests:** add or update a test with every behaviour change. Tests never call real model
   endpoints: use `mockllm` or `tests/parity/fake_openai.py`, and bind models by `base_url`, not by

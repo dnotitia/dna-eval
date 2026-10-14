@@ -40,7 +40,8 @@ Gated datasets need an `HF_TOKEN` whose account has accepted the dataset's terms
 
 dna-eval does not include benchmark data; each task downloads it when it runs. Using it is
 governed by the dataset's own licence and, for gated datasets, the terms accepted on the Hub.
-Check them before using a task for anything but non-commercial research.
+Check them before using a task for anything but non-commercial research. A new task adds its
+row here (`python scripts/license_report.py` looks up Hub licences).
 
 | task | dataset licence | conditions to note |
 | --- | --- | --- |

@@ -21,10 +21,10 @@ A task brings in material that is not ours: the data it downloads, and often a p
 from the benchmark's authors. Check both before writing the task; a maintainer decides the
 hard cases, so you only need to find out and say what you found.
 
-1. **Data.** Run `python scripts/license_report.py`. It finds the data every task uses (nothing
-   to declare), looks up each Hub dataset's licence and access terms at the pinned revision, and
-   compares them with the table in `docs/benchmarks.md`. Add your task's row to that table. For
-   data that is not on the Hub, read the licence where the file is published.
+1. **Data.** Find the licence and access terms of every dataset the task downloads, and add
+   the task's row to the "Data licences" table in `docs/benchmarks.md`. For Hub data,
+   `python scripts/license_report.py` looks them up for you at the pinned revision; for a file
+   fetched from a URL, read the licence where it is published.
 2. **Copied text or code.** If you take a prompt, an answer pattern or a function from somewhere
    else, put a one-line comment above it naming the source and its licence, and add an entry to
    `THIRD_PARTY_NOTICES.md`. Text under a licence that does not allow commercial use is wrapped in
@@ -34,8 +34,7 @@ hard cases, so you only need to find out and say what you found.
    licence is. Non-commercial, share-alike, no stated licence, or access terms you are unsure
    of: write them down and leave the decision to the reviewer.
 
-The same report runs on every pull request and is shown in the checks' summary; it does not
-block a merge.
+A reviewer may run the same script to check what a pull request brings in.
 
 ## 1. Dataset
 
