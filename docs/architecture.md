@@ -26,9 +26,9 @@ dataset (Hub, pinned)      solvers                      scorers                 
 A task runs this for every sample and every run (`epochs`).
 
 A folder under `tasks/` groups tasks that share conventions, which its `__init__.py` and
-decision records define: `tasks/dna_suite/` (0001, 0005-0007) and `tasks/benchmarks/` (0016). A
-new task goes in the folder whose conventions it follows; a task that follows neither gets its
-own folder.
+decision records define: `tasks/dna_suite/` (0001, 0005-0007), `tasks/benchmarks/` (0016) and
+`tasks/agentic/` (0020). A new task goes in the folder whose conventions it follows; a task that
+follows none of them gets its own folder. `tasks/README.md` lists every task with its parts.
 
 Standard benchmarks (`tasks/benchmarks/`, 0016) use the same four stages with other parts: the
 dataset is a public one pinned by Hub revision or checksum; the solver is Inspect's `generate()`
@@ -42,15 +42,17 @@ content (`letter_choice`, `math_answer`, `instruction_following`) or asks the ju
 | --- | --- | --- |
 | `tasks/dna_suite/` | the suite's tasks; `__init__.py`: its conventions (generation config, headline) | everything below |
 | `tasks/benchmarks/` | standard benchmarks; `__init__.py`: their generation config (0016) | everything below |
-| `solvers/` | one solver per file, with its own defaults and placeholders | `roles`, `utils`, other solvers |
-| `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark scorers, each with its judge prompt | `rubric_judging`, `roles`, `rubrics`, `metrics`, `vendor`, `utils` |
+| `tasks/agentic/` | agent tasks; `__init__.py`: their conventions (0020) | everything below |
+| `solvers/` | one solver per file, with its own defaults and placeholders | `roles`, `tau2_env`, `utils`, other solvers; the key names metrics define |
+| `scorers/` | `rubric_scorer`: one registered scorer per rubric file (0009); the benchmark and agent scorers, each with its judge prompt | `rubric_judging`, `roles`, `rubrics`, `tau2_env`, `metrics`, `vendor`, `utils` |
 | `metrics/` | one metric per file | `utils`; the key names other metrics define |
 | `rubric_judging.py` | the rubric judge: its prompt (`GEVAL_RESULTS`), judge call, verdict reading, re-judge rounds, `sources` resolution | `roles`, `rubrics`, `utils` |
-| `roles.py` | the model role names (`grader`, `reference`) (0010) | — |
+| `roles.py` | the model role names (`grader`, `reference`, `user`) (0010) | — |
+| `tau2_env.py` | tau-bench's pinned data, tasks, environments and store keys, shared by its task, solver and scorer (0019) | `utils` |
 | `rubrics/` | rubric schema and the rubric YAML files | — |
 | `dataset.py` | Hub loaders for the suite's datasets and the files next to them | — |
 | `utils/` | helpers with no suite logic: JSON, statistics, model output, retries, math answers, cache | — |
-| `vendor/` | third-party checking code, unchanged, with its licence and notice (0017) | — |
+| `vendor/` | third-party code run unchanged as a unit, with its licence and notice (0021) | — |
 | `_registry.py` | the package entry point; imports every module that registers objects | everything |
 
 Dependencies point down the table; solvers and scorers never import each other or `tasks` (0011).
@@ -75,6 +77,12 @@ Parts exchange data through named keys, never through imports:
 | `metadata["context"]` | dataset, or `rubric_scorer(context=...)` | rubrics with `context` in `params` |
 | `metadata["reference_reasoning"]`, `["reference_content"]` | style task, `style_reference` | `style` rubrics |
 | `metadata["category"]` | dataset | `per_run_trimmed(group_by="category")`, grouped benchmark metrics |
+| `state.store["limit_reached"]`, `["turns"]` → `Score.metadata` | agent solvers, copied by agent scorers | `agent_diagnostics` |
+| `state.store["tau_simulation"]`, `["tau_termination"]` | `tau_conversation` | `tau_reward` |
+| `state.store["automationbench_world"]` | `automationbench_agent` | `automationbench_state` |
+| `Score.metadata["partial_credit"]` | `automationbench_state` | `partial_credit` |
+| `state.store["scicode_steps"]` | `scicode_steps` | `scicode_tests` |
+| `Score.metadata["steps_passed"]`, `["steps_total"]` | `scicode_tests` | `sub_step_accuracy` |
 | `Score.metadata["truncated"]`, `["extracted"]` | benchmark scorers | `answer_diagnostics` |
 | `metadata["correct_letter"]` | `shuffled_choices` | `letter_choice(target_key=...)` |
 | `Score.metadata["confidence"]` | `hle_judge` | `calibration_error` |

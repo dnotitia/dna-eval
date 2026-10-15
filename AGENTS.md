@@ -13,7 +13,8 @@ and definition of done; this file only adds what an agent needs on top.
 - **Adding or changing a task:** `docs/adding-a-task.md`, starting with its licence check; for
   the style task, `docs/running-style-task.md`; for a standard benchmark, `docs/benchmarks.md`
   and record 0016.
-- **Touching `src/dna_eval/vendor/`:** record 0017; checking logic stays as upstream wrote it.
+- **Bringing in third-party code, or touching `src/dna_eval/vendor/` or a pinned dependency:**
+  record 0021; checking logic stays as upstream wrote it.
 - **Changing a DNA suite rubric, the judge template, or suite settings:** the matching records
   in `docs/decisions/` (0003–0007) first; these change the suite's scores and its DeepEval
   parity. New tasks outside the ported suite need no DeepEval parity (0001).

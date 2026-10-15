@@ -10,6 +10,9 @@ from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_dia
 from dna_eval.utils.math_answer import (extract_boxed_answer, is_equiv_math_verify, is_equiv_string,
                                         last_boxed, last_integer, parse_integer)
 from dna_eval.utils.model_output import is_truncated
+from dna_eval.utils.optional import require
+
+MATH_INSTALL = 'pip install "dna-eval[math]"'   # math-verify, for mode="expression"
 
 
 @scorer(metrics=[accuracy(), stderr(), answer_diagnostics()])
@@ -33,6 +36,9 @@ def math_answer(mode: Literal["integer", "expression"] = "expression") -> Scorer
     """
     if mode not in ("integer", "expression"):
         raise ValueError(f"mode must be 'integer' or 'expression', got {mode!r}")
+
+    if mode == "expression":
+        require("math_verify", install=MATH_INSTALL)
 
     async def score(state: TaskState, target: Target) -> Score:
         text = state.output.completion

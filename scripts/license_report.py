@@ -43,6 +43,7 @@ class TaskData:
     module: str
     sources: list[Source] = field(default_factory=list)
     error: str = ""
+    missing: str = ""         # an optional package (or Python version) the task needs and lacks
 
 
 class _Stop(Exception):
@@ -124,6 +125,11 @@ def _discover() -> list[TaskData]:
                 obj(**args)
             except _Stop:
                 pass
+            except RuntimeError as e:
+                if str(e).startswith("this task needs"):     # utils.optional.require
+                    data.missing = str(e)
+                else:
+                    data.error = f"{type(e).__name__}: {e}"[:200]
             except Exception as e:  # noqa: BLE001  (reported, not fatal)
                 data.error = f"{type(e).__name__}: {e}"[:200]
             data.sources = list(_seen)
@@ -156,7 +162,7 @@ def report(found: list[TaskData], offline: bool) -> str:
     """Markdown table: one row per task and data source."""
     rows = []
     for d in found:
-        notes = [] if d.sources else ["no data found"]
+        notes = [d.missing] if d.missing else [] if d.sources else ["no data found"]
         for s in d.sources or [Source("none", "—")]:
             looked = hub_licence(s) if not offline and s.kind == "hub" else {"licence": None, "terms": "", "failed": ""}
             if looked.get("failed"):

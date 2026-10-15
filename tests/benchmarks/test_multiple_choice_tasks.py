@@ -4,6 +4,7 @@ The network tests load the real datasets at their pinned revisions; they skip wh
 Hub is unreachable or the dataset is gated and no access is granted.
 """
 import hashlib
+import io
 import itertools
 import json
 import urllib.request
@@ -90,18 +91,8 @@ def test_gpqa_prompt_and_per_epoch_shuffle(gpqa_data, tmp_path):
 
 
 def test_gpqa_rejects_a_file_that_does_not_match_the_checksum(tmp_path, monkeypatch):
-    class Reply:
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-        def read(self):
-            return b"not the pinned file"
-
     monkeypatch.setenv("DNA_EVAL_CACHE_DIR", str(tmp_path / "cache"))
-    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: Reply())
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: io.BytesIO(b"not the pinned file"))
     with pytest.raises(ValueError, match="SHA-256"):
         gpqa_diamond.data_file()
     assert not list((tmp_path / "cache").rglob("*.csv"))                       # nothing is cached

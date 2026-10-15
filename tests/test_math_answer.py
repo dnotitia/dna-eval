@@ -181,3 +181,16 @@ def test_diagnostics_cover_every_run(tmp_path):
                        display="none", log_dir=str(tmp_path))[0]
     metrics = {k: m.value for s in log.results.scores for k, m in s.metrics.items()}
     assert metrics["accuracy"] == 0.5 and metrics["truncated"] == 0.5 and metrics["accuracy_excl_truncated"] == 1.0
+
+
+def test_expression_mode_names_the_math_extra_when_math_verify_is_missing(monkeypatch):
+    import sys
+
+    import pytest
+
+    from dna_eval.scorers.math_answer import math_answer
+
+    monkeypatch.setitem(sys.modules, "math_verify", None)
+    with pytest.raises(RuntimeError, match=r'pip install "dna-eval\[math\]"'):
+        math_answer("expression")
+    math_answer("integer")          # the integer mode needs no math-verify

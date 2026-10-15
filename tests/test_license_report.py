@@ -23,7 +23,11 @@ def test_every_task_is_found_with_its_pinned_data():
                          check=True, cwd=ROOT)
     found = {t["task"]: t for t in json.loads(out.stdout)}
     assert {"performance", "style", "gpqa_diamond", "hle", "kmmlu_pro", "aime2025", "ifbench"} <= set(found)
-    assert all(t["sources"] and not t["error"] for t in found.values())
+    assert not any(t["error"] for t in found.values())
+    # every task finds its data, unless it needs an optional package this environment lacks;
+    # an agent task may also ship its data inside its package (no source to report)
+    assert all(t["sources"] or t["missing"] or ".agentic." in t["module"] for t in found.values())
+    assert all(t["sources"] for t in found.values() if ".agentic." not in t["module"])
     assert [s["name"] for s in found["hle"]["sources"]] == ["cais/hle"]
     assert found["gpqa_diamond"]["sources"][0]["kind"] == "url"
     assert all(len(s["revision"] or "") == 40 for t in found.values() for s in t["sources"] if s["kind"] == "hub")

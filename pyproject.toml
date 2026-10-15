@@ -19,19 +19,23 @@ dependencies = [
   "jinja2>=3",
   "openai>=1",
   "numpy>=1.26",
-  # standard benchmarks: math answer equivalence
-  "math-verify[antlr4_13_2]>=0.8",
-  # standard benchmarks: IFEval / IFBench verifiers (vendor/ifbench)
+  # IFEval / IFBench verifiers (vendor/ifbench, imported by the registry). Pinned where they
+  # decide a verdict (decision record 0021): sentence splitting, language detection, emoji and
+  # syllable counts.
   "absl-py",
-  "emoji",
   "immutabledict",
-  "langdetect",
-  "nltk>=3.9",
-  "syllapy>=0.8",
+  "emoji~=2.16.0",
+  "langdetect==1.0.9",
+  "nltk~=3.10.3",
+  "syllapy~=0.8.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "h5py>=3.8", "scipy", "sympy", "math-verify[antlr4_13_2]~=0.9.0"]
+# math answer equivalence (hrm8k_ksm); pinned, it decides which answers count as equal (0021)
+math = ["math-verify[antlr4_13_2]~=0.9.0"]
+# SciCode reads its 1 GB test-data file on the host
+scicode = ["h5py>=3.8"]
 
 [project.entry-points.inspect_ai]
 dna_eval = "dna_eval._registry"
@@ -40,7 +44,8 @@ dna_eval = "dna_eval._registry"
 where = ["src"]
 
 [tool.setuptools.package-data]
-dna_eval = ["rubrics/*.yaml", "vendor/*/LICENSE", "vendor/*/NOTICE.md"]
+dna_eval = ["rubrics/*.yaml", "vendor/*/LICENSE", "vendor/*/NOTICE.md", "vendor/scicode/*.txt",
+            "tasks/benchmarks/scicode_sandbox/*"]
 
 [tool.pytest.ini_options]
 # src layout: make the package and the tests package importable without `pip install -e .`

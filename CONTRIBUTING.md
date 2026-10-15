@@ -40,7 +40,8 @@ Each one is a decision record; follow the link for the reasoning and the rejecte
   benchmark settings in `src/dna_eval/tasks/benchmarks/__init__.py` (0016).
 - **Official protocol for benchmarks.** A standard benchmark follows its authors' code; every
   departure is listed in the task's docstring (0016). Copied checking code stays unchanged in
-  `src/dna_eval/vendor/` with its licence (0017).
+  `src/dna_eval/vendor/` with its licence. Third-party code is a dependency, a copy where used,
+  or vendored, in that order of preference, and what grades is pinned (0021).
 - **Behaviour, not origin.** Code, docs, names and fixtures describe what a thing does in terms
   a reader of this repository can check, in English. (0014)
 

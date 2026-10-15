@@ -33,8 +33,13 @@ use, and read `truncated` in the results to see how many answers ran out of room
 | `hle` | `cais/hle` text-only (2,158, gated) | the judge reads `Answer:` | `accuracy` | 1 | `grader` |
 | `ifeval` | `google/IFEval` (541) | the whole response | `prompt_level_strict` | 1 | — |
 | `ifbench` | `allenai/IFBench_test` (300) | the whole response | `prompt_level_loose` | 8 | — |
+| `scicode` | `SciCode1/SciCode` test (65 problems, 288 sub-steps) | each sub-step's code, run against its tests in a sandbox | `accuracy` (problems) | 3 | — |
 
-Gated datasets need an `HF_TOKEN` whose account has accepted the dataset's terms.
+Gated datasets need an `HF_TOKEN` whose account has accepted the dataset's terms. `scicode` runs
+each sub-step's tests in a Docker-compatible sandbox (`--sandbox` picks the provider), downloads a
+1 GB test-data file once, and needs `pip install "dna-eval[scicode]"`; `hrm8k_ksm` needs
+`pip install "dna-eval[math]"` (math-verify). Agent tasks are in
+[agentic.md](agentic.md).
 
 ## Data licences
 
@@ -56,6 +61,9 @@ row here (`python scripts/license_report.py` looks up Hub licences).
 | `hle` | MIT | keep questions out of training data (the dataset carries a canary string) |
 | `ifeval` | Apache-2.0 | |
 | `ifbench` | ODC-BY-1.0 | |
+| `scicode` | Apache-2.0 | its 1 GB test-data file comes from a third-party Hub mirror of the authors' file (same SHA-256) |
+| `tau_bench` | MIT | data from the benchmark's GitHub repository at a pinned commit |
+| `automationbench` | MIT | the public split; the official leaderboard uses a private one |
 
 Evaluation logs hold every question and answer. Treat them as copies of the data: in
 particular, do not publish logs of `gpqa_diamond` or `hle`.
@@ -80,5 +88,5 @@ with runs graded by the same judge, which the log records.
 
 The IFEval and IFBench verifiers are vendored from `allenai/IFBench` under Apache-2.0
 (`src/dna_eval/vendor/ifbench/`, with its `LICENSE` and a `NOTICE.md` listing the local
-changes; decision record 0017). They download NLTK data (`punkt_tab`, `stopwords`,
+changes; decision record 0021). They download NLTK data (`punkt_tab`, `stopwords`,
 `averaged_perceptron_tagger_eng`) the first time a response is scored.

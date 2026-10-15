@@ -1,9 +1,12 @@
-# DNA Evaluation Harness
+# DNA-Eval
 
-An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk):
+**Do Not Approximate. Evaluate.**
+
+A reproducible evaluation framework for large language models & agents, built on [Inspect AI](https://inspect.aisi.org.uk):
 the DNA suite of LLM-judged tasks, and standard benchmarks (GPQA-Diamond, MMLU-Pro, HLE, AIME,
-IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench) reproduced from their official
-protocols; see [docs/benchmarks.md](docs/benchmarks.md).
+IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench, SciCode) reproduced from their official
+protocols (see [docs/benchmarks.md](docs/benchmarks.md)), and agent tasks with tools and simulated
+users (tau-bench, AutomationBench; see [docs/agentic.md](docs/agentic.md)).
 
 ## Quickstart
 
@@ -63,9 +66,11 @@ Read in this order as you need them:
 | `CONTRIBUTING.md` | before changing anything: set-up, the project's rules, definition of done |
 | `docs/architecture.md` | before changing structure: how a sample flows, what each module may import, key names |
 | `docs/decisions/` | before changing a rule: why things are the way they are |
+| `src/dna_eval/tasks/README.md` | choosing where a task goes, or looking up what each task uses |
 | `docs/adding-a-task.md` | adding or changing a task |
 | `docs/running-style-task.md` | running the style task, or generating its references |
 | `docs/benchmarks.md` | running a standard benchmark, or reading what it reports |
+| `docs/agentic.md` | running an agent task, or serving a model for one |
 | `docs/configuration.md` | setting endpoints, keys, roles, logs or the cache |
 
 AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
@@ -77,15 +82,17 @@ src/dna_eval/
   dataset.py         shortcut loader for dnotitia/dna_* (revision required)
   rubrics/           rubric schema + the YAML rubrics
   rubric_judging.py  the rubric judge: its prompt, calls, verdict parsing, re-judge rounds
-  roles.py           model role names (grader, reference)
+  roles.py           model role names (grader, reference, user)
+  tau2_env.py        tau-bench's data, tasks and environments, shared by its task, solver and scorer
   solvers/           one @solver per file
   scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
   metrics/           one @metric per file
   utils/             helpers with no suite logic (JSON, statistics, model output, retries, ...)
   vendor/            third-party checking code, with its licence (IFEval/IFBench verifiers)
-  tasks/             one @task per file
+  tasks/             one @task per file; README.md: where a task goes, and every task's parts
     dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
     benchmarks/      standard benchmarks; __init__.py holds their generation config
+    agentic/         agent tasks; __init__.py holds their conventions
 ```
 
 ## How to customize tasks (Simple)

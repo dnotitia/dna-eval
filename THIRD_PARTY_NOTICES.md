@@ -32,6 +32,7 @@ The licence text is in `LICENSE`.
 | [confident-ai/deepeval](https://github.com/confident-ai/deepeval), Copyright 2024 Confident AI Inc. | the GEval results prompt; `trim_and_load_json` | `src/dna_eval/rubric_judging.py` (`GEVAL_RESULTS`), `src/dna_eval/utils/json.py` | prompt as a Jinja template string rendering the same bytes; function ported to Python unchanged in behaviour |
 | [TIGER-AI-Lab/MMLU-Pro](https://github.com/TIGER-AI-Lab/MMLU-Pro) | the instruction, question layout and answer patterns of `evaluate_from_api.py` | `src/dna_eval/tasks/benchmarks/mmlu_pro.py` | 0-shot; the last answer pattern and the random fallback are dropped |
 | [allenai/IFBench](https://github.com/allenai/IFBench), Copyright Allen Institute for AI; Google Research Authors | the instruction verifiers | `src/dna_eval/vendor/ifbench/` | listed in `src/dna_eval/vendor/ifbench/NOTICE.md` |
+| [scicode-bench/SciCode](https://github.com/scicode-bench/SciCode) (the licence names no copyright holder) | the two prompt templates, `extract_python_script`, `extract_function_name`, `get_function_from_code` and the test-script layout; the comparison helpers, HDF5 reader and three gold sub-steps | `src/dna_eval/solvers/scicode_steps.py`, `src/dna_eval/scorers/scicode_tests.py`, `src/dna_eval/vendor/scicode/` | console output removed; listed in `src/dna_eval/vendor/scicode/NOTICE.md` |
 
 ## MIT License
 

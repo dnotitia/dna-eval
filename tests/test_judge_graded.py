@@ -1,5 +1,6 @@
 """The judge-graded benchmarks' pieces: prompts, judgement parsing, calibration error, data fetch."""
 import hashlib
+import io
 import urllib.request
 
 import numpy as np
@@ -170,14 +171,9 @@ def test_fetch_checks_and_caches(tmp_path, monkeypatch):
     monkeypatch.setenv("DNA_EVAL_CACHE_DIR", str(tmp_path))
     calls = []
 
-    class Resp:
-        def __enter__(self): return self
-        def __exit__(self, *a): return False
-        def read(self): return CSV.encode()
-
     def urlopen(url, timeout):
         calls.append(url)
-        return Resp()
+        return io.BytesIO(CSV.encode())
 
     monkeypatch.setattr(urllib.request, "urlopen", urlopen)
     sha = hashlib.sha256(CSV.encode()).hexdigest()

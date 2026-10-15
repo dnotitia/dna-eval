@@ -1,0 +1,11 @@
+# Sandbox of the `scicode` task: no network, nothing mounted; the scorer writes the scripts and
+# the test targets into it. Any provider that takes a Docker Compose file can run it
+# (`inspect eval ... --sandbox docker`, or another provider with its own spec).
+services:
+  default:
+    build:
+      context: .
+    image: dna-eval-scicode:1
+    command: tail -f /dev/null
+    init: true
+    network_mode: none

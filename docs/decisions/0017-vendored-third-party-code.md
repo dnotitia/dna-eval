@@ -1,6 +1,6 @@
 # 0017. Third-party evaluation code is vendored unchanged, with its licence
 
-- Status: accepted
+- Status: superseded by 0021
 - Date: 2026-10-12
 - Scope: code copied from benchmark authors into `src/dna_eval/vendor/`.
 
