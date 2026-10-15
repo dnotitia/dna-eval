@@ -10,7 +10,7 @@ import pytest
 from inspect_ai import eval as inspect_eval
 from inspect_ai.model import ModelOutput, get_model
 
-from dna_eval.tasks.dna_suite import MAX_TOKENS
+from dna_eval.tasks import MAX_TOKENS
 from tests.parity.cases import CASES
 
 JUDGE_JSON = '{"reason": "테스트", "score": 8}'

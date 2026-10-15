@@ -135,7 +135,7 @@ is, then pin the task to the new revision:
 huggingface-cli upload dnotitia/dna_style \
   ~/.cache/dna_eval/style/<revision>/<reference>.<hash>.parquet references/<reference>.parquet \
   --repo-type dataset
-# then set DATASET_REVISION in src/dna_eval/tasks/dna_suite/style.py to the new commit
+# then set DATASET_REVISION in src/dna_eval/tasks/style.py to the new commit
 ```
 
 Check the `.json` provenance first: the reference should have been generated with the

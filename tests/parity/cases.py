@@ -9,12 +9,12 @@ Per task:
   runs        : fixtures/deepeval_runs/<task>.json (DeepEval per-run means/pass counts, per scorer)
   judge_calls : judge calls per sample (one per rubric, whether composed or independent)
 """
-from dna_eval.tasks.dna_suite.degeneration import degeneration
-from dna_eval.tasks.dna_suite.hallucination import hallucination
-from dna_eval.tasks.dna_suite.performance import performance
-from dna_eval.tasks.dna_suite.persona import persona
-from dna_eval.tasks.dna_suite.style import style
-from dna_eval.tasks.dna_suite.uncensorship import uncensorship
+from dna_eval.tasks.degeneration import degeneration
+from dna_eval.tasks.hallucination import hallucination
+from dna_eval.tasks.performance import performance
+from dna_eval.tasks.persona import persona
+from dna_eval.tasks.style import style
+from dna_eval.tasks.uncensorship import uncensorship
 
 PERF_INPUT = dict(input_text="1km에 7분으로 달리면 마라톤 완주에 걸리는 시간은?",
                   actual_output="약 4시간 55분입니다.", expected_output="4시간 55분 20초")

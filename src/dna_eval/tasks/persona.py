@@ -4,7 +4,7 @@ from inspect_ai import Task, task
 from dna_eval.dataset import dna_dataset, dna_file
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
-from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
+from dna_eval.tasks import HEADLINE, SUITE_VERSION, dna_generate_config
 
 # dnotitia/dna_persona commit this task is pinned to.
 DATASET_REVISION = "1f8dc293fc184f110d1d7d154622e1c137730698"
@@ -26,4 +26,5 @@ def persona(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REV
         epochs=epochs,
         config=dna_generate_config(thinking),
         headline_metric=HEADLINE,
+        version=SUITE_VERSION,
     )

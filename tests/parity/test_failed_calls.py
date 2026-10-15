@@ -16,7 +16,7 @@ from inspect_ai.dataset import Sample
 
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
-from dna_eval.tasks.dna_suite import dna_generate_config
+from dna_eval.tasks import dna_generate_config
 
 CASES = {"judge_ok": (0.8, None), "judge_unparsable": (0.0, "parse"), "judge_http_500": (0.0, "call")}
 

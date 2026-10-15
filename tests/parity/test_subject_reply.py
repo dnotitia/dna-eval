@@ -15,11 +15,11 @@ from inspect_ai import Task
 from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import Sample
 
-from dna_eval.prompts import build_prompt
+from dna_eval.rubric_judging import build_prompt
 from dna_eval.rubrics import load_rubric
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import ATTEMPTS, REASONING_KEY, dna_generate
-from dna_eval.tasks.dna_suite import dna_generate_config
+from dna_eval.tasks import dna_generate_config
 
 FIXTURE = json.loads((Path(__file__).parent.parent / "fixtures" / "subject_outputs.json").read_text(encoding="utf-8"))
 EXPECTED = FIXTURE["actual_output"]

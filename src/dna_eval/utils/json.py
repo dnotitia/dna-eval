@@ -1,4 +1,8 @@
-"""Pull a JSON object out of free-form model output."""
+"""Pull a JSON object out of free-form model output.
+
+``extract_json`` is ported from DeepEval (confident-ai/deepeval, Apache-2.0, Copyright 2024
+Confident AI Inc.); see NOTICE.
+"""
 from __future__ import annotations
 
 import json

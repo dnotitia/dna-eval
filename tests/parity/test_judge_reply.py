@@ -17,7 +17,7 @@ FIXTURE = Path(__file__).parent.parent / "fixtures" / "judge_outputs.json"
 CASES = json.loads(FIXTURE.read_text(encoding="utf-8"))["cases"]
 
 
-# Replies DeepEval rejects but this project reads, on purpose (decision record 0015): a single
+# Replies DeepEval rejects but this project reads, on purpose (docs/methodology.md, "Judging"): a single
 # backslash that is not a JSON escape, as in LaTeX quoted inside the reason.
 DEVIATIONS = {
     "latex_invalid_escape": (1.0, "수식($n, \\mid$, \\pi)만 사용됨"),

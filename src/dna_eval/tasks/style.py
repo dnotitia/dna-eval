@@ -14,7 +14,7 @@ from dna_eval.dataset import dna_dataset, dna_files, dna_table
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
 from dna_eval.solvers.style_reference import NO_REFERENCE_ANSWER, NO_REFERENCE_REASONING, style_reference
-from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
+from dna_eval.tasks import HEADLINE, SUITE_VERSION, dna_generate_config
 
 # dnotitia/dna_style commit this task is pinned to.
 DATASET_REVISION = "81e1e21ba8705691c6340598c4aeb140ae901c51"
@@ -79,5 +79,6 @@ def style(reference: str, thinking: bool = True, epochs: int = 15, revision: str
         epochs=epochs,
         config=config,
         headline_metric=HEADLINE,
+        version=SUITE_VERSION,
         metadata={"reference": reference, "reference_source": "hub" if use_hub else "local"},
     )
