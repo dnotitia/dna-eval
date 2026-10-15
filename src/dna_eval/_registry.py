@@ -8,13 +8,17 @@ from dna_eval.metrics import (agent_diagnostics, answer_diagnostics, calibration
                               call_failures, instruction_following, judge_failures, license_pass,
                               partial_credit, pass_hat_k, per_run_trimmed, sub_step_accuracy,
                               weighted_accuracy)
-from dna_eval.scorers import (automationbench_state, hle_judge, imo_answer_grader,  # noqa: F401
-                              letter_choice, math_answer, rubric_scorer, scicode_tests, tau_reward)
+from dna_eval.scorers import (automationbench_state, harbor_reward, hle_judge,  # noqa: F401
+                              imo_answer_grader, letter_choice, math_answer, rubric_scorer,
+                              scicode_tests, tau_reward)
 from dna_eval.scorers import instruction_following as _instruction_following  # noqa: F401
-from dna_eval.solvers import (automationbench_agent, dna_generate, scicode_steps,  # noqa: F401
-                              shuffled_choices, style_reference, tau_conversation)
+from dna_eval.solvers import (agent_scaffold, automationbench_agent, dna_generate,  # noqa: F401
+                              scicode_steps, shuffled_choices, style_reference, tau_conversation)
 from dna_eval.tasks.agentic.automationbench import automationbench  # noqa: F401
+from dna_eval.tasks.agentic.deep_swe import deep_swe  # noqa: F401
+from dna_eval.tasks.agentic.swe_bench import swe_bench  # noqa: F401
 from dna_eval.tasks.agentic.tau_bench import tau_bench  # noqa: F401
+from dna_eval.tasks.agentic.terminal_bench import terminal_bench  # noqa: F401
 from dna_eval.tasks.benchmarks.aime2025 import aime2025  # noqa: F401
 from dna_eval.tasks.benchmarks.aime2026 import aime2026  # noqa: F401
 from dna_eval.tasks.benchmarks.click import click  # noqa: F401

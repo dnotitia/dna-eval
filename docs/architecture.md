@@ -83,6 +83,7 @@ Parts exchange data through named keys, never through imports:
 | `Score.metadata["partial_credit"]` | `automationbench_state` | `partial_credit` |
 | `state.store["scicode_steps"]` | `scicode_steps` | `scicode_tests` |
 | `Score.metadata["steps_passed"]`, `["steps_total"]` | `scicode_tests` | `sub_step_accuracy` |
+| `Score.metadata["dataset"]`, `["scaffold"]` | `harbor_reward` | people, in the viewer |
 | `Score.metadata["truncated"]`, `["extracted"]` | benchmark scorers | `answer_diagnostics` |
 | `metadata["correct_letter"]` | `shuffled_choices` | `letter_choice(target_key=...)` |
 | `Score.metadata["confidence"]` | `hle_judge` | `calibration_error` |

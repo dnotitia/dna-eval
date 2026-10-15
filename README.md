@@ -6,7 +6,8 @@ A reproducible evaluation framework for large language models & agents, built on
 the DNA suite of LLM-judged tasks, and standard benchmarks (GPQA-Diamond, MMLU-Pro, HLE, AIME,
 IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench, SciCode) reproduced from their official
 protocols (see [docs/benchmarks.md](docs/benchmarks.md)), and agent tasks with tools and simulated
-users (tau-bench, AutomationBench; see [docs/agentic.md](docs/agentic.md)).
+users (tau-bench, AutomationBench) or in a sandbox (Terminal-Bench, SWE-bench, DeepSWE); see
+[docs/agentic.md](docs/agentic.md).
 
 ## Quickstart
 

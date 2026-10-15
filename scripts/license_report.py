@@ -73,6 +73,9 @@ def _install_stubs() -> None:
     import dna_eval.utils.cache as cache
     cache.fetch_pinned = lambda url, path, sha256: _record(Source("url", url, sha256))
 
+    import dna_eval.tasks.agentic.harbor as harbor
+    harbor.harbor_task = lambda *, package, digest, **k: _record(Source("harbor", package, digest))
+
 
 class NetworkBlocked(Exception):
     """Raised for any connection attempt while tasks are being built."""

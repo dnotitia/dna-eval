@@ -36,6 +36,11 @@ dev = ["pytest>=8", "h5py>=3.8", "scipy", "sympy", "math-verify[antlr4_13_2]~=0.
 math = ["math-verify[antlr4_13_2]~=0.9.0"]
 # SciCode reads its 1 GB test-data file on the host
 scicode = ["h5py>=3.8"]
+# Harbor-format agent tasks (Terminal-Bench, SWE-bench, DeepSWE) and their agent scaffolds
+agentic = [
+  "inspect-harbor==1.0.0; python_version >= '3.12'",
+  "inspect-swe==0.2.71",
+]
 
 [project.entry-points.inspect_ai]
 dna_eval = "dna_eval._registry"

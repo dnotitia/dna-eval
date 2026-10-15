@@ -64,6 +64,9 @@ row here (`python scripts/license_report.py` looks up Hub licences).
 | `scicode` | Apache-2.0 | its 1 GB test-data file comes from a third-party Hub mirror of the authors' file (same SHA-256) |
 | `tau_bench` | MIT | data from the benchmark's GitHub repository at a pinned commit |
 | `automationbench` | MIT | the public split; the official leaderboard uses a private one |
+| `terminal_bench` | Apache-2.0 | task archives from the Harbor hub, pinned by digest; tasks run with network access |
+| `swe_bench` | MIT (benchmark code); each task's repository keeps its own licence (Pro includes GPL repositories) | |
+| `deep_swe` | Apache-2.0 for the benchmark's own material; upstream repositories keep theirs | gated on the Hub as evaluation data ("intended for evaluation use") |
 
 Evaluation logs hold every question and answer. Treat them as copies of the data: in
 particular, do not publish logs of `gpqa_diamond` or `hle`.

@@ -43,6 +43,7 @@ The licence text is in `LICENSE`.
 | [eth-sri/matharena](https://github.com/eth-sri/matharena), Copyright (c) 2024 SRI Lab, ETH Zurich | the AIME instruction | `src/dna_eval/tasks/benchmarks/aime.py` |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K and CLIcK prompts; HRM8K answer extraction and normalisation | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/utils/math_answer.py` |
 | [hendrycks/math](https://github.com/hendrycks/math), Copyright (c) 2021 Dan Hendrycks | the answer normalisation (through lm-evaluation-harness) | `src/dna_eval/utils/math_answer.py` |
+| [SWE-agent/mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent), Copyright (c) 2025 Kilian A. Lieret and Carlos E. Jimenez | `mini.yaml` of release 2.2.3 (the agent's prompts and settings) | `src/dna_eval/solvers/agent_scaffold.py` (`MINI_SWE_AGENT_YAML`) |
 
 Each of these is distributed under the following terms, with the copyright line given above:
 
