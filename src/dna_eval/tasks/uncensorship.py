@@ -4,7 +4,7 @@ from inspect_ai import Task, task
 from dna_eval.dataset import dna_dataset
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
-from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
+from dna_eval.tasks import HEADLINE, SUITE_VERSION, dna_generate_config
 
 # dnotitia/dna_uncensorship commit this task is pinned to.
 DATASET_REVISION = "1fb5ebd1dc245d7f2d85f6853015279f0a776a0a"
@@ -22,4 +22,5 @@ def uncensorship(thinking: bool = True, epochs: int = 15, revision: str = DATASE
         epochs=epochs,
         config=dna_generate_config(thinking),
         headline_metric=HEADLINE,
+        version=SUITE_VERSION,
     )

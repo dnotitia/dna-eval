@@ -15,7 +15,7 @@ from inspect_ai.scorer import SampleScore, Score
 from dna_eval.metrics.judge_failures import judge_failures
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import EMPTY_ANSWER, NO_ANSWER_KEY, dna_generate
-from dna_eval.tasks.dna_suite import dna_generate_config
+from dna_eval.tasks import dna_generate_config
 from tests.parity.fake_openai import FakeOpenAI
 
 SAMPLES = {   # id: (subject case, judge marker, expected metadata["no_answer"])

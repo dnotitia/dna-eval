@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from dna_eval.prompts import build_prompt
+from dna_eval.rubric_judging import build_prompt
 from dna_eval.rubrics import load_rubric
 from tests.parity.cases import RUBRIC_CASES
 

@@ -1,0 +1,9 @@
+dna-eval
+Copyright 2026 Dnotitia Inc.
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes material ported from DeepEval (https://github.com/confident-ai/deepeval),
+Copyright 2024 Confident AI Inc., licensed under the Apache License, Version 2.0: the GEval
+results prompt (GEVAL_RESULTS in src/dna_eval/rubric_judging.py) and trim_and_load_json
+(extract_json in src/dna_eval/utils/json.py).

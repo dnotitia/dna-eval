@@ -1,39 +1,59 @@
-# DNA Evaluation Harness
+# DNA-Eval
 
-An evaluation framework for the DNA model family, built on [Inspect AI](https://inspect.aisi.org.uk):
-the DNA suite of LLM-judged tasks, and standard benchmarks (GPQA-Diamond, MMLU-Pro, HLE, AIME,
-IFEval, IFBench, KMMLU-Pro, CLIcK, KoBALT, HRM8K, IMO-AnswerBench) reproduced from their official
-protocols; see [docs/benchmarks.md](docs/benchmarks.md).
+**Do Not Approximate. Evaluate.**
+
+The DNA evaluation suite: the LLM-judged tasks used to evaluate the DNA model family, built on
+[Inspect AI](https://inspect.aisi.org.uk). Each answer of the model under evaluation is scored
+by a judge model against a rubric, over 15 runs, and reported as a trimmed mean of the runs.
+How answers are generated, judged and aggregated is described in
+[docs/methodology.md](docs/methodology.md).
+
+## Tasks
+
+| task | data | what it measures | rubrics |
+| --- | --- | --- | --- |
+| `performance` | `dnotitia/dna_performance` (30 prompts) | general Korean QA against reference answers | `performance` |
+| `hallucination` | `dnotitia/dna_hallucination` (100 prompts, 5 categories) | false premises, nonexistent entities, unknowable facts, grounding | `hallucination` (also per category) |
+| `persona` | `dnotitia/dna_persona` (50 questions) | whether the model describes itself and its maker correctly | `persona` |
+| `uncensorship` | `dnotitia/dna_uncensorship` (50 prompts) | whether the model engages with topics other base models refuse | `uncensorship` (`uncensorship_bias` and `uncensorship_quality` combined) |
+| `degeneration` | `dnotitia/dna_confusion` (45 prompts) | whether a right answer breaks down: language confusion, repetition | `language_confusion`, `repetition` |
+| `style` | `dnotitia/dna_style` (50 prompts) | whether the model reasons and answers in the style of a reference model | `reasoning_style`, `content_style` |
+
+Every task runs 15 times by default (`-T epochs=`), needs a judge bound to the `grader` role,
+and records the suite version (`SUITE_VERSION` in `src/dna_eval/tasks/__init__.py`) in its log.
+Scores are comparable only within one suite version.
 
 ## Quickstart
 
 ```bash
 pip install -e .
-export HF_TOKEN=...            # read access to dnotitia/dna_* datasets
+export HF_TOKEN=...            # read access to the dnotitia/dna_* datasets
 
-# subject: any OpenAI-compatible endpoint (vLLM provider shown)
+# model under evaluation: any OpenAI-compatible endpoint (vLLM provider shown)
 export VLLM_BASE_URL=http://localhost:8000/v1  VLLM_API_KEY=EMPTY
-# judge: a second OpenAI-compatible endpoint, bound to the "grader" role via the generic provider
+# judge: a second OpenAI-compatible endpoint, bound to the "grader" role
 export JUDGE_BASE_URL=http://localhost:8001/v1  JUDGE_API_KEY=EMPTY
 
 inspect eval dna_eval/performance \
   --model vllm/<model> \
   --model-role grader=openai-api/judge/gemma-4-31B-it \
   -T thinking=true -T epochs=15
-
 ```
 
-The summary reports `mean` plus the suite's per-run statistics `trimmed_mean`, `trimmed_passed`, `runs`;
-`call_failures`: the share of answers where the model's calls all failed (`answer_failed`) or
-returned no answer (`answer_empty`), and `judge_failures`: the share where the judge still failed
-after its retries (`judge_failed`).
+The summary shows `trimmed_mean` first, then `trimmed_passed` and `runs`, `mean`, and two
+failure rates:
+
+- `call_failures`: the share of answers where every call to the model failed (`answer_failed`)
+  or returned nothing (`answer_empty`)
+- `judge_failures`: the share where the judge still failed after its retries (`judge_failed`)
+
 These samples stay in the averages (a placeholder answer is judged; a failed judgment scores 0),
-so a high rate means a lower score reflects the endpoint, not the model.
-`inspect view` shows every sample, judge prompt, and judge reason.
+so a high rate means a low score reflects the endpoint, not the model. `inspect view` shows
+every sample, judge prompt and judge reason.
 
 Requests to the model have no time limit by default. `--attempt-timeout <seconds>` caps each
 request; a request that runs out is retried and, if every attempt fails, judged as an empty
-answer. (`--timeout` is different: it bounds a call including all its retries.)
+answer.
 
 The `style` task also needs a reference model (`-T reference=...`); see
 [docs/running-style-task.md](docs/running-style-task.md).
@@ -44,202 +64,47 @@ Variables can also go in a `.env` file, which Inspect loads from the working dir
 
 | variable | used for |
 | --- | --- |
-| `HF_TOKEN` | reading the `dnotitia/dna_*` datasets and gated benchmarks (KMMLU-Pro, HLE) |
+| `HF_TOKEN` | reading the `dnotitia/dna_*` datasets |
 | `VLLM_BASE_URL`, `VLLM_API_KEY` | the server of the model under evaluation (`--model vllm/...`); unset, Inspect starts a local vLLM server |
 | `JUDGE_BASE_URL`, `JUDGE_API_KEY` | the judge server, for `--model-role grader=openai-api/judge/...` (the service name in `openai-api/judge/...` picks the variables) |
-| `DNA_EVAL_CACHE_DIR` | where dna-eval keeps generated style references and downloaded benchmark files (default `~/.cache/dna_eval`) |
-| `NLTK_DATA` | where the IFEval / IFBench verifiers find NLTK data (default `~/nltk_data`) |
+| `DNA_EVAL_CACHE_DIR` | where generated style references are kept (default `~/.cache/dna_eval`) |
 
 Defaults, `.env` precedence, model roles and the cache layout:
 [docs/configuration.md](docs/configuration.md).
-
-
-## Documentation
-
-Read in this order as you need them:
-
-| document | read it when |
-| --- | --- |
-| `CONTRIBUTING.md` | before changing anything: set-up, the project's rules, definition of done |
-| `docs/architecture.md` | before changing structure: how a sample flows, what each module may import, key names |
-| `docs/decisions/` | before changing a rule: why things are the way they are |
-| `docs/adding-a-task.md` | adding or changing a task |
-| `docs/running-style-task.md` | running the style task, or generating its references |
-| `docs/benchmarks.md` | running a standard benchmark, or reading what it reports |
-| `docs/configuration.md` | setting endpoints, keys, roles, logs or the cache |
-
-AI coding agents start at `AGENTS.md` (Claude Code: `CLAUDE.md`), which points into the same documents.
 
 ## Layout
 
 ```
 src/dna_eval/
-  dataset.py         shortcut loader for dnotitia/dna_* (revision required)
-  rubrics/           rubric schema + the YAML rubrics
-  prompts/           judge-prompt rendering + Jinja templates (what the judge reads)
-  rubric_judging.py  the rubric judge: calls, verdict parsing, re-judge rounds (what the judge returns)
+  tasks/             one @task per file; __init__.py holds the suite's conventions
+                     (SUITE_VERSION, generation settings, headline metric)
+  rubrics/           the YAML rubrics and their schema
+  rubric_judging.py  the judge prompt, judge calls, verdict reading, re-judge rounds
+  solvers/           dna_generate (calls the model), style_reference (style references)
+  scorers/           rubric_scorer: one registered scorer per rubric
+  metrics/           per_run_trimmed, call_failures, judge_failures
+  dataset.py         loader for dnotitia/dna_* at a pinned revision
   roles.py           model role names (grader, reference)
-  solvers/           one @solver per file
-  scorers/           one @scorer per file; rubric_scorer registers one scorer per rubric
-  metrics/           one @metric per file
-  utils/             helpers with no suite logic (JSON, statistics, model output, retries, ...)
-  vendor/            third-party checking code, with its licence (IFEval/IFBench verifiers)
-  tasks/             one @task per file
-    dna_suite/       the DNA suite; __init__.py holds its conventions (generation, headline)
-    benchmarks/      standard benchmarks; __init__.py holds their generation config
+  utils/             helpers (JSON, model output, retries, statistics, templates, cache)
+tests/
+  parity/            the suite reproduces DeepEval GEval: prompts, verdict reading, failures
 ```
 
-## How to customize tasks (Simple)
-
-To integrate your own dataset into a `dna-eval` task, add a new task file to `src/dna_eval/tasks`.
-
-And then, add the followings if necessary: (1) dataset, (2) solver chain, (3) scorer, (4) run settings 
-
-Each building block of dna-eval is based on Inspect AI; for anything not covered here, please refer to their documentations: [Tasks](https://inspect.aisi.org.uk/tasks.html) ·
-[Datasets](https://inspect.aisi.org.uk/datasets.html) ·
-[Solvers](https://inspect.aisi.org.uk/solvers.html) ·
-[Scorers](https://inspect.aisi.org.uk/scorers.html) ·
-[Metrics](https://inspect.aisi.org.uk/metrics.html) ·
-[Model-graded scoring](https://inspect.aisi.org.uk/model-graded.html) ·
-[Examples](https://inspect.aisi.org.uk/examples/).
-
-Below is a simple example of adding a new task (called `my_task`) to the dna-eval harness: an LLM-judge task
-whose criteria are stored as a YAML rubrics. Full walkthrough: `docs/adding-a-task.md`.
-
-### Add a task
-
-Say `your-org/my_dataset` on the Hugging Face Hub has `question` and `answer` columns, and an
-LLM judge should grade each answer against the reference.
-
-```python
-# src/dna_eval/tasks/my_task.py
-from inspect_ai import Task, task
-from inspect_ai.dataset import FieldSpec, hf_dataset
-
-from dna_eval.scorers.rubric_scorer import rubric_scorer
-from dna_eval.solvers.dna_generate import dna_generate
-from dna_eval.tasks.dna_suite import HEADLINE, dna_generate_config
-
-DATASET_REVISION = "<commit sha>"   # pin the data so a dataset update cannot move your numbers
-
-@task
-def my_task(thinking: bool = True, epochs: int = 15, revision: str = DATASET_REVISION) -> Task:
-    return Task(
-        dataset=hf_dataset("your-org/my_dataset", split="train", revision=revision,
-                           sample_fields=FieldSpec(input="question", target="answer")),
-        solver=dna_generate(),                 # one user turn, no system prompt
-        scorer=rubric_scorer("my_task"),       # rubrics/my_task.yaml
-        epochs=epochs,                         # 15 runs -> per_run_trimmed
-        config=dna_generate_config(thinking),  # generation settings
-        headline_metric=HEADLINE,              # show the per-run trimmed mean first
-    )
-```
-
-A suite dataset (`dnotitia/dna_*`) loads with `dna_dataset("dna_<name>", revision=...)` instead.
-The judge criteria go in one YAML file next to the other rubrics:
-
-```yaml
-# src/dna_eval/rubrics/my_task.yaml
-name: my_task
-params: [input, actual_output, expected_output]   # what the judge is shown
-steps:
-  - Identify the final answer in expected_output.
-  - Check whether actual_output reaches the same answer.
-  - Penalise claims in actual_output that contradict expected_output.
-rubric:
-  - {range: [0, 3],  outcome: Wrong answer or contradicts the reference.}
-  - {range: [4, 6],  outcome: Partly correct; key parts missing.}
-  - {range: [7, 10], outcome: Same answer as the reference.}
-threshold: 0.7                                     # pass line on the 0-1 score
-```
-
-Register the task in `src/dna_eval/_registry.py`, and run it like any other task:
-
-```python
-from dna_eval.tasks.my_task import my_task  # noqa: F401
-```
+## Development
 
 ```bash
-inspect eval dna_eval/my_task --model vllm/<model> --model-role grader=openai-api/judge/<judge-model>
+pip install -e ".[dev]"
+python -m pytest                      # all tests
+python -m pytest -m "not network"     # without Hub downloads
 ```
 
-The three sections below are needed only when `dna_generate()`, `rubric_scorer`, or the default
-metrics are not enough. Each adds one file and changes one line of `my_task.py`.
-
-### Add a solver
-
-Say `my_task` should run with a system prompt. One `@solver` per file in `solvers/`:
-
-```python
-# src/dna_eval/solvers/my_system_prompt.py
-@solver
-def my_system_prompt(text: str) -> Solver:
-    async def solve(state: TaskState, generate: Generate) -> TaskState:
-        state.messages.insert(0, ChatMessageSystem(content=text))
-        return state
-    return solve
-```
-
-```python
-# my_task.py
-solver=[my_system_prompt("Answer in one sentence."), dna_generate()],
-```
-
-A prompt change that only `my_task` needs can stay inline in the task instead (e.g.
-`prompt_template(...)` before `dna_generate()`).
-
-### Add a scorer
-
-Say `my_task` should be checked by string match instead of a judge. One `@scorer` per file in
-`scorers/`:
-
-```python
-# src/dna_eval/scorers/my_scorer.py
-@scorer(metrics=[mean(), per_run_trimmed()])
-def my_scorer() -> Scorer:
-    async def score(state: TaskState, target: Target) -> Score:
-        passed = target.text.strip() in state.output.completion
-        return Score(value=1.0 if passed else 0.0, answer=state.output.completion,
-                     metadata={"passed": passed, "epoch": state.epoch})
-    return score
-```
-
-```python
-# my_task.py
-scorer=my_scorer(),
-```
-
-`per_run_trimmed` reads `epoch` and `passed` from `Score.metadata`; a scorer that wants the
-suite's per-run statistics has to set both.
-
-### Add a metric
-
-Say `my_task` should also report its worst run. One `@metric` per file in `metrics/`;
-`scores="unreduced"` gives the metric every run of every sample instead of one reduced score
-per sample:
-
-```python
-# src/dna_eval/metrics/my_metric.py
-@metric(scores="unreduced")
-def my_metric() -> Metric:
-    def compute(scores: list[SampleScore]) -> Value:
-        by_run = defaultdict(list)
-        for s in scores:
-            by_run[s.score.metadata["epoch"]].append(s.score.as_float())
-        return min(sum(v) / len(v) for v in by_run.values())   # lowest run mean
-    return compute
-```
-
-```python
-# my_task.py (replaces the metrics the scorer declares)
-metrics=[mean(), per_run_trimmed(), my_metric()],
-```
-
-
-## Contributing
-
-See `CONTRIBUTING.md`.
+Tests never call a real model: they use `mockllm` and `tests/parity/fake_openai.py`. A change
+that moves scores (the judge prompt, a rubric, generation settings, a dataset revision) raises
+`SUITE_VERSION` and says so in [docs/methodology.md](docs/methodology.md). Fixtures under
+`tests/fixtures/` are generated by their scripts, never edited by hand.
 
 ## License
 
-MIT.
+Apache License 2.0 (`LICENSE`), copyright Dnotitia Inc. The judge prompt and the JSON reader
+are ported from DeepEval (Apache-2.0); see `NOTICE`. The datasets are downloaded at run time
+under their own terms.
