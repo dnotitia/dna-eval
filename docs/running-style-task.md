@@ -1,168 +1,53 @@
-# Running the style task
+# style 태스크 실행
 
-`style` asks whether a model **reasons and answers in the style of a reference model**: the
-same voice, structure, register, format, length and vocabulary, regardless of whether the
-content is correct. It is usually run to check that fine-tuning kept the style of the base
-model, so the reference is normally the same-size base model the evaluated model came from.
+`style` 태스크는 평가 대상 모델의 추론과 답변이 참조 모델의 스타일(어조, 구조, 형식, 길이, 어휘)을 따르는지 평가합니다. 내용이 맞는지는 보지 않습니다. 주로 fine-tuning 후에도 base 모델의 스타일이 유지되는지 확인할 때 쓰므로, 참조 모델로는 보통 같은 크기의 base 모델을 지정합니다.
 
-The task has more moving parts than the other suite tasks: a second model (the reference),
-references that are either published or generated, and two judges that look at different
-parts of each answer. This guide walks through them.
+judge는 문항을 보지 않고 두 텍스트만 비교합니다. 추론은 `reasoning_style`, 답변은 `content_style` 루브릭으로 각각 따로 채점합니다. 참조 답변은 문항마다 한 번만 만들고 모든 실행에서 같은 것을 씁니다.
 
-## What happens in one run
+## 공개된 참조 답변이 있는 모델
 
-For each of the 50 prompts in `dnotitia/dna_style`, and for each of the `epochs` runs (15 by
-default):
-
-1. **Reference.** The reference model's reasoning and answer for the prompt are attached to the
-   sample, from published references or from the local cache (step-by-step below).
-2. **Answer.** The model under evaluation answers once (`dna_generate`). Its reasoning (from a
-   `reasoning_content` / `reasoning` field or a `<think>` block) is split from the final answer.
-3. **Judging.** Two judges score the same answer independently, each against the reference:
-
-   | scorer | compares | rubric |
-   | --- | --- | --- |
-   | `reasoning_style` | the model's reasoning with the reference's reasoning | `rubrics/reasoning_style.yaml` |
-   | `content_style` | the model's answer with the reference's answer | `rubrics/content_style.yaml` |
-
-   The judge is not shown the prompt, only the two texts: the rubrics say to ignore content
-   and correctness. Each scorer reports its own `trimmed_mean` and `trimmed_passed` over runs;
-   they are not combined.
-
-The reference is the same in every run: it is produced once per prompt, and only the evaluated
-model's answers vary between runs.
-
-## Choosing a reference
-
-`reference` is required and has no default, because a style score only means something against
-the right model. Use the base model of the model under evaluation, at the same size.
-
-References published with the dataset (at the revision the task is pinned to):
+데이터셋에 참조 답변이 공개된 모델은 다음과 같습니다.
 
 ```
 Qwen3.5-0.8B   Qwen3.5-2B   Qwen3.5-4B   Qwen3.5-9B   Qwen3.6-27B   Qwen3.6-35B-A3B   Qwen3.5-122B-A10B
 ```
 
-The 0.8B and 2B references were generated with thinking off, so they have no reasoning; the
-`reasoning_style` judge then sees `[참조 모델 추론 없음]` as the reference and that score is not
-informative for those sizes.
-
-## Case 1: a published reference
+`-T reference=`에 모델 이름만 주면 됩니다. 공개된 점수와 비교하려면 이 방식을 씁니다.
 
 ```bash
-export VLLM_BASE_URL=http://localhost:8000/v1 VLLM_API_KEY=EMPTY
-export JUDGE_BASE_URL=http://localhost:8001/v1 JUDGE_API_KEY=EMPTY
-
-inspect eval dna_eval/style \
-  --model vllm/<model under evaluation> \
-  --model-role grader=openai-api/judge/<judge model> \
-  -T reference=Qwen3.6-27B
+bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.6-27B
 ```
 
-Nothing else is needed: the references are read from the dataset repository at the pinned
-revision, so every run of the suite compares against exactly the same texts. This is the
-setting to use when a number has to be comparable with published ones.
+0.8B와 2B 참조 답변은 thinking을 끄고 생성해서 추론이 없습니다. 이 두 모델로 평가하면 `reasoning_style` 점수는 의미가 없습니다.
 
-## Case 2: a model without published references
+## 공개된 참조 답변이 없는 모델
 
-Bind the reference model to the `reference` role. Its responses are generated on the first run
-and cached locally; later runs reuse the cache.
+참조 모델을 `reference` role에 지정하면 첫 실행에서 참조 답변을 생성해 로컬에 캐시하고, 이후 실행은 캐시를 씁니다. `openai-api/ref/...`는 `REF_BASE_URL`, `REF_API_KEY` 환경 변수를 읽습니다.
 
 ```bash
 inspect eval dna_eval/style \
-  --model vllm/<model under evaluation> \
-  --model-role grader=openai-api/judge/<judge model> \
-  --model-role reference=openai-api/ref/<reference model> \
-  -T reference=<reference model>
+  --model vllm/<model> \
+  --model-role grader=openai-api/judge/<judge-model> \
+  --model-role reference=openai-api/ref/<reference-model> \
+  -T reference=<reference-model>
 ```
 
-`openai-api/ref/...` reads `REF_BASE_URL` / `REF_API_KEY`, like the judge's `JUDGE_*`. Any Inspect
-model spec works for the role.
+- 참조 답변은 평가 대상 모델과 같은 생성 설정과 재시도 규칙으로 생성합니다.
+- 생성에 실패한 문항은 캐시하지 않으며, judge에는 `[참조 모델 응답 없음]`이 전달됩니다.
+- 생성한 참조 답변으로 낸 점수는 공개된 참조 답변으로 낸 점수와 비교할 수 없습니다. 로그에 어느 쪽을 썼는지 기록됩니다.
 
-- **Generated once per prompt.** Runs execute in parallel, so the first run to reach a prompt
-  generates its reference while the others wait for it. A 15-run evaluation therefore makes
-  50 reference calls, not 750.
-- **Same handling as the evaluated model.** Reference calls use the task's generation settings
-  (thinking, `max_tokens`) and the same retry rule and answer/reasoning split as `dna_generate`.
-- **Failures are not cached.** If every attempt fails, the judge sees `[참조 모델 응답 없음]` for
-  that prompt in this evaluation, and the next evaluation tries again.
-- **The role is required.** Without `--model-role reference=...` the evaluation stops with
-  `Model role 'reference' is required`; it never falls back to the evaluated model.
+`-T reference_source`로 참조 답변을 어디서 가져올지 정할 수 있습니다.
 
-`-T reference_source` chooses explicitly:
-
-| value | references used |
+| 값 | 참조 답변 |
 | --- | --- |
-| `auto` (default) | published ones if `reference` has them, otherwise generated with the role |
-| `hub` | published ones only; an unknown `reference` is an error listing the published names |
-| `generate` | always the role and the local cache, even if published references exist |
+| `auto` (기본값) | 공개된 참조 답변이 있으면 사용하고, 없으면 `reference` role로 생성 |
+| `hub` | 공개된 참조 답변만 사용 |
+| `generate` | 공개된 참조 답변이 있어도 `reference` role로 생성 |
 
-With `auto`, a published reference wins: if the `reference` role is also bound, the run logs a
-warning that the role is ignored. Use `reference_source=generate` to compare against a fresh
-generation from a model that also has published references.
+## 캐시
 
-## The local cache
+참조 답변은 `$DNA_EVAL_CACHE_DIR/style/<데이터셋 revision>/<참조 모델>.<설정 hash>.parquet`에 저장되고, 생성 출처를 기록한 `.json` 파일이 함께 저장됩니다. 설정 hash에는 참조 모델과 생성 설정이 들어가므로, 모델이나 `thinking` 설정이 다르면 별도 파일이 만들어집니다.
 
-```
-$DNA_EVAL_CACHE_DIR (default ~/.cache/dna_eval)
-  style/<dataset revision>/<reference>.<settings hash>.parquet
-  style/<dataset revision>/<reference>.<settings hash>.json
-```
+캐시는 모델 이름으로 구분합니다. 같은 이름으로 다른 가중치를 서빙했다면 `-T refresh_reference=true`로 다시 생성하세요.
 
-- The **parquet** file has the published references' schema: `id`, `input`,
-  `reference_reasoning`, `reference_content`.
-- The **json** file records where it came from: the reference name, the model spec the role was
-  bound to, the generation settings, the dataset revision, the row count and the last update.
-- The **settings hash** covers the role's model and the generation settings, so a different
-  model or e.g. `-T thinking=false` gets its own file instead of reusing incompatible
-  references. Connection and retry settings are left out of it.
-
-The cache is keyed by model *name*: if different weights are served under the same name, the
-cache cannot tell. Regenerate with
-
-```bash
-inspect eval dna_eval/style ... -T refresh_reference=true
-```
-
-which ignores the existing file and overwrites it.
-
-### Publishing a cached reference
-
-Because the file already has the published schema, maintainers can add it to the dataset as it
-is, then pin the task to the new revision:
-
-```bash
-huggingface-cli upload dnotitia/dna_style \
-  ~/.cache/dna_eval/style/<revision>/<reference>.<hash>.parquet references/<reference>.parquet \
-  --repo-type dataset
-# then set DATASET_REVISION in src/dna_eval/tasks/style.py to the new commit
-```
-
-Check the `.json` provenance first: the reference should have been generated with the
-settings the suite uses (thinking on, the suite's `max_tokens`).
-
-## Running one judge
-
-```bash
-inspect eval dna_eval/style ... -T reference=Qwen3.6-27B -T judges=content_style
-```
-
-## Reading the results
-
-In `inspect view`:
-
-- The log header shows `reasoning_style` and `content_style` with their per-run statistics.
-- Each sample's **Scoring** tab has both judgments with the judge's reason.
-- The sample **Metadata** holds `reference_reasoning` / `reference_content`, and the sample store
-  has `reasoning` (the evaluated model's reasoning as the judge saw it) and `reference_origin`
-  (`hub`, `cache` or `generated`).
-- The task metadata records `reference` and `reference_source` (`hub` or `local`).
-
-## Comparing with DeepEval-based results
-
-With published references the task reproduces the DeepEval GEval setup it was ported from: the
-judge prompts are byte-identical, the placeholders for missing reasoning or answers are the
-same strings, and the reasoning is split from the answer the same way (covered by
-`tests/parity/`). Generated references are equivalent in procedure (one response per prompt,
-same generation settings) but are new samples from the reference model, so scores against them
-are not directly comparable with scores against published references.
+캐시 파일은 공개 참조 답변과 형식이 같습니다. 그래서 `dnotitia/dna_style`의 `references/<참조 모델>.parquet`로 올리고, `src/dna_eval/tasks/style.py`의 `DATASET_REVISION`을 새 commit으로 바꾸면 공개 참조 답변으로 추가됩니다.
