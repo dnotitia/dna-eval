@@ -6,3 +6,6 @@ __pycache__/
 ref/build/
 ref/
 .env
+# score logs written by scripts/score_per_epoch.py
+score.log
+score.python.list.log
