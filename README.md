@@ -20,10 +20,36 @@
 
 평가 대상 모델(`VLLM_BASE_URL`)과 judge 모델(`JUDGE_BASE_URL`)의 엔드포인트(OpenAI-compatible)를 환경변수로 지정한 뒤 `run.sh`로 태스크를 실행합니다. 환경변수는 `.env` 파일에 넣어두면 실행 시 자동으로 읽힙니다.
 
+1) 환경 설정
+```bash
+# 패키지 의존성 설치
+$ pip install -e .  
+# 환경변수 export (또는 .env에 추가)
+# 1. 평가 대상 모델
+$ export VLLM_BASE_URL=http://localhost:8000/v1
+$ export VLLM_API_KEY=EMPTY       
+# 2. judge 모델
+$ export JUDGE_BASE_URL=http://localhost:8001/v1  
+$ export JUDGE_API_KEY=EMPTY     
+```
+
+2) 실행 방법
+```bash
+# 실행 커맨드 
+$ bash run.sh <task> vllm/<model> openai-api/judge/<judge-model> [<reference-model>]
+
+# 예시1 - Performance 태스크 실행
+$ bash run.sh performance vllm/<model> openai-api/judge/<judge-model>  
+# 예시2 - # Style 태스크 실행
+$ bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B  
+# 예시3 - 전체 태스크를 thinking=false, 동시 요청 16개 제한으로 실행
+$ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false --max-connections 16
+```
+
 - `<task>`: 태스크 이름이나 `all`(전체 태스크)을 줍니다.
   - 태스크 목록: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`, `all`(전체)
-- `<reference-model>`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `all`에서 생략 시 `style` 태스크는 건너뜁니다.
-  - 바로 사용 가능한 참조 모델: `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
+- `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `all`에서 생략 시 `style` 태스크는 건너뜁니다.
+  - 공식 참조 모델 (바로 사용 가능): `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
 - 그 뒤에 추가하는 인자는 `inspect eval`에 그대로 전달됩니다. 별도로 지정하지 않으면 아래 기본값이 들어가며, 별도로 지정하지 않는 것을 추천합니다.
   <details>
   <summary>기본값 목록</summary>
@@ -33,32 +59,15 @@
   -T epochs=15                # 15회 반복 실행
   -T revision=<commit>        # 태스크마다 고정된 데이터셋 commit
   -T judges=<전체 루브릭>      # degeneration: language_confusion, repetition / style: reasoning_style, content_style
-  -T reference_source=auto    # style: 공개된 참조 답변을 우선 사용하고, 없으면 reference role로 생성
+  -T reference_source=auto    # style: 공식 참조 답변을 우선 사용하고, 없으면 reference role로 생성
   --attempt-timeout 없음       # 요청 하나의 시간 제한 없음
   --log-dir ./logs            # 로그 저장 위치
   ```
   </details>
 
-```bash
-# 패키지 의존성 설치
-pip install -e .  
-# 환경변수 export (또는 .env에 추가)
-export VLLM_BASE_URL=http://localhost:8000/v1  VLLM_API_KEY=EMPTY       # 평가 대상 모델
-export JUDGE_BASE_URL=http://localhost:8001/v1  JUDGE_API_KEY=EMPTY     # judge 모델
-
-bash run.sh <task> vllm/<model> openai-api/judge/<judge-model> [<reference-model>]
-
-# 예시
-bash run.sh performance vllm/<model> openai-api/judge/<judge-model>  # Performance 태스크 실행
-bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B  # Style 태스크 실행
-bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false  # 전체 태스크를 thinking=false로 실행
-```
-
-> 🚀 Style 태스크 실행
+> 🚀 아래 공식 참조 모델 목록에 포함되지 않은 참조 모델로 `style`을 평가하려면 참조 모델 답변을 별도로 생성하는 과정이 필요합니다. 자세한 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
 > 
-> 아래 목록에 포함되지 않은 참조 모델로 `style`을 평가하려면 참조 모델 답변을 별도로 생성하는 과정이 필요합니다. 자세한 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
-> 
-> 목록: `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B` 
+> 공식 참조 모델 목록: `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B` 
 
 ### 전체 태스크 목록
 
@@ -99,7 +108,7 @@ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 
 | --- | --- |
 | `VLLM_BASE_URL`, `VLLM_API_KEY` | 평가 대상 모델 서버 (`--model vllm/...`). 지정하지 않으면 Inspect가 로컬에서 vLLM 서버를 띄웁니다 |
 | `JUDGE_BASE_URL`, `JUDGE_API_KEY` | judge 서버 (`--model-role grader=openai-api/judge/...`). `openai-api/judge/...`의 서비스 이름(`judge`)이 변수 이름을 정합니다 |
-| `REF_BASE_URL`, `REF_API_KEY` | style 참조 답변을 생성할 참조 모델 서버 (`--model-role reference=openai-api/ref/...`). 공개된 참조 답변을 쓸 때는 필요 없습니다 |
+| `REF_BASE_URL`, `REF_API_KEY` | style 참조 답변을 생성해야하는 경우 참조 모델 서버 (`--model-role reference=openai-api/ref/...`). 공식 참조 답변을 쓸 때는 필요 없습니다 |
 | `DNA_EVAL_CACHE_DIR` | 생성한 style 참조 답변을 저장하는 위치 (기본값 `~/.cache/dna_eval`) |
 
 
