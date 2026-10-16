@@ -8,7 +8,9 @@
 - (예정) 독파모 평가 데이터 공개
 
 ## DNA Evaluation Suite
-> 🧬 디노티시아 LLM 팀에서 내부적으로 사용하는 LLM-judge 기반 평가 벤치마크입니다. [Inspect AI](https://inspect.aisi.org.uk) 기반 태스크(task)로 구현되어 있습니다. 
+> 🧬 디노티시아 LLM 팀에서 내부적으로 사용하는 LLM-judge 기반 평가 벤치마크입니다. 
+> 
+> [Inspect AI](https://inspect.aisi.org.uk) 기반 태스크(task)로 구현되어 있습니다. 
  
 각 문항에 대해 평가 대상 모델이 답변을 생성하면, judge 모델이 루브릭 기반으로 평가합니다. 수치 안정성을 위해 15회 반복 실행 후 절사평균값을 최종 성능 수치로 보고합니다. 문항별 통과 여부는 각 루브릭 점수를 [0, 1]로 정규화한 후 threshold (0.7) 초과 여부로 판단합니다.
 
@@ -21,6 +23,7 @@
 - `<task>`: 태스크 이름이나 `all`(전체 태스크)을 줍니다.
   - 태스크 목록: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`, `all`(전체)
 - `<reference-model>`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `all`에서 생략 시 `style` 태스크는 건너뜁니다.
+  - 바로 사용 가능한 참조 모델: `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
 - 그 뒤에 추가하는 인자는 `inspect eval`에 그대로 전달됩니다. 별도로 지정하지 않으면 아래 기본값이 들어가며, 별도로 지정하지 않는 것을 추천합니다.
   <details>
   <summary>기본값 목록</summary>
@@ -51,7 +54,11 @@ bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B  # Styl
 bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false  # 전체 태스크를 thinking=false로 실행
 ```
 
-> 🚀 공개된 참조 답변이 없는 모델로 `style`을 평가하는 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
+> 🚀 Style 태스크 실행
+> 
+> 아래 목록에 포함되지 않은 참조 모델로 `style`을 평가하려면 참조 모델 답변을 별도로 생성하는 과정이 필요합니다. 자세한 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
+> 
+> 목록: `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B` 
 
 ### 전체 태스크 목록
 
