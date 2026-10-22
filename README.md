@@ -60,9 +60,12 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thin
   -T revision=<commit>        # 태스크마다 고정된 데이터셋 commit
   -T judges=<전체 루브릭>      # degeneration: language_confusion, repetition / style: reasoning_style, content_style
   -T reference_source=auto    # style: 공식 참조 답변을 우선 사용하고, 없으면 reference role로 생성
+  --max-connections 20        # 모델마다 동시 요청 20개로 고정 (평가 대상 모델과 judge 각각)
   --attempt-timeout 없음       # 요청 하나의 시간 제한 없음
   --log-dir ./logs            # 로그 저장 위치
   ```
+
+  동시 요청 수는 `--max-connections N`으로 바꿀 수 있습니다. `run.sh` 없이 `inspect eval`을 직접 실행하면 Inspect 기본 동작(`--adaptive-connections`)에 따라 동시 요청이 20개에서 시작해 최대 100개까지 자동으로 늘어납니다. 서버가 rate limit 오류(429)를 돌려줄 때만 줄어드므로, 직접 실행할 때도 `--max-connections`를 지정하는 것을 권장합니다.
   </details>
 
 > 🚀 아래 공식 참조 모델 목록에 포함되지 않은 참조 모델로 `style`을 평가하려면 참조 모델 답변을 별도로 생성하는 과정이 필요합니다. 자세한 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
