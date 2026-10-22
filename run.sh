@@ -11,12 +11,18 @@
 #   [options...]       passed to `inspect eval` (e.g. -T thinking=false --log-dir logs/x)
 #
 # Endpoints and keys are read from the environment or a .env file (see README.md).
+# Concurrency is fixed at --max-connections 20 per model unless the options set
+# --max-connections, --adaptive-connections or --batch themselves.
 set -euo pipefail
 
 TASKS=(performance hallucination persona uncensorship degeneration style)
 
+# Without --max-connections, Inspect scales concurrency on its own (up to 100 requests per model)
+# and only scales down on rate-limit errors, which a self-hosted server rarely sends.
+MAX_CONNECTIONS=20
+
 usage() {
-  sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 }
 
@@ -31,10 +37,18 @@ if [[ $# -gt 0 && $1 != -* ]]; then
   shift
 fi
 
+concurrency=(--max-connections "$MAX_CONNECTIONS")
+for arg in "$@"; do
+  case $arg in
+    --max-connections*|--adaptive-connections*|--batch*) concurrency=() ;;
+  esac
+done
+
 run() {   # run <task> [options...]
   local task=$1
   shift
-  inspect eval "dna_eval/$task" --model "$MODEL" --model-role "grader=$JUDGE" "$@"
+  inspect eval "dna_eval/$task" --model "$MODEL" --model-role "grader=$JUDGE" \
+    ${concurrency[@]+"${concurrency[@]}"} "$@"
 }
 
 case $TASK in
@@ -43,7 +57,8 @@ case $TASK in
     for t in "${TASKS[@]}"; do
       [[ $t == style ]] || others+=("dna_eval/$t")
     done
-    inspect eval "${others[@]}" --model "$MODEL" --model-role "grader=$JUDGE" "$@"
+    inspect eval "${others[@]}" --model "$MODEL" --model-role "grader=$JUDGE" \
+      ${concurrency[@]+"${concurrency[@]}"} "$@"
     if [[ -n $REFERENCE ]]; then
       run style -T "reference=$REFERENCE" "$@"
     else
