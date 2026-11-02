@@ -7,3 +7,8 @@ It includes material ported from DeepEval (https://github.com/confident-ai/deepe
 Copyright 2024 Confident AI Inc., licensed under the Apache License, Version 2.0: the GEval
 results prompt (GEVAL_RESULTS in src/dna_eval/rubric_judging.py) and trim_and_load_json
 (extract_json in src/dna_eval/utils/json.py).
+
+Other third-party material it includes is listed, with its licence, in THIRD_PARTY_NOTICES.md.
+The KoBALT prompts in src/dna_eval/tasks/benchmarks/kobalt.py (SYSTEM, PROMPT, ANSWER_PATTERN,
+marked as an SPDX snippet) are licensed under CC-BY-NC-4.0 (non-commercial use only), not under
+the Apache License.

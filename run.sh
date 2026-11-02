@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Run a DNA evaluation suite task against one model.
+# Run a DNA evaluation suite or Korean benchmark task against one model.
 #
 #   bash run.sh <task> <model> <judge-model> [reference-model] [inspect eval options...]
 #
 #   <task>             performance, hallucination, persona, uncensorship, degeneration, style,
+#                      kmmlu_pro, click, kobalt, hrm8k_ksm,
 #                      or all (every task; style only when a reference model is given)
 #   <model>            the model under evaluation, as Inspect names it (e.g. vllm/my-model)
 #   <judge-model>      the judge, bound to the grader role (e.g. openai-api/judge/gemma-4-31B-it)
@@ -15,14 +16,14 @@
 # --max-connections, --adaptive-connections or --batch themselves.
 set -euo pipefail
 
-TASKS=(performance hallucination persona uncensorship degeneration style)
+TASKS=(performance hallucination persona uncensorship degeneration style kmmlu_pro click kobalt hrm8k_ksm)
 
 # Without --max-connections, Inspect scales concurrency on its own (up to 100 requests per model)
 # and only scales down on rate-limit errors, which a self-hosted server rarely sends.
 MAX_CONNECTIONS=20
 
 usage() {
-  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 }
 

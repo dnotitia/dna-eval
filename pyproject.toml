@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dna-eval"
 version = "0.1.0.dev0"
-description = "The DNA evaluation suite: LLM-judged tasks used to evaluate the DNA model family, on Inspect AI"
+description = "The DNA evaluation suite and Korean benchmarks used to evaluate the DNA model family, on Inspect AI"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
@@ -22,7 +22,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "math-verify[antlr4_13_2]~=0.9.0"]
+# math answer equivalence (hrm8k_ksm); pinned, it decides which answers count as equal
+math = ["math-verify[antlr4_13_2]~=0.9.0"]
 
 [project.entry-points.inspect_ai]
 dna_eval = "dna_eval._registry"
