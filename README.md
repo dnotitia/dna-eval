@@ -47,7 +47,7 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thin
 ```
 
 - `<task>`: 태스크 이름이나 `all`(전체 태스크)을 줍니다.
-  - 태스크 목록: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`, `all`(전체)
+  - 태스크 목록: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`, `kmmlu_pro`, `click`, `kobalt`, `hrm8k_ksm`, `all`(전체)
 - `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `all`에서 생략 시 `style` 태스크는 건너뜁니다.
   - 공식 참조 모델 (바로 사용 가능): `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
 - 그 뒤에 추가하는 인자는 `inspect eval`에 그대로 전달됩니다. 별도로 지정하지 않으면 아래 기본값이 들어가며, 별도로 지정하지 않는 것을 추천합니다.
@@ -102,6 +102,22 @@ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 
 
 `hallucination`은 범주별 점수(`<범주>/trimmed_mean`, `<범주>/trimmed_passed`)도 함께 표시합니다. `degeneration`과 `style`은 루브릭마다 scorer가 따로 있어서, 위 지표가 루브릭별로 따로 표시됩니다.
 
+
+## 한국어 벤치마크
+
+DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. 실행 방법은 DNA Evaluation Suite와 같습니다(`bash run.sh <태스크> ...`). judge 모델 인자는 받지만 사용하지 않습니다.
+
+| 태스크 | HF 데이터 | 문항 수 | 평가 항목 | 대표 지표 | 데이터 라이선스 |
+| --- | --- | --- | --- | --- | --- |
+| `kmmlu_pro` | `LGAI-EXAONE/KMMLU-Pro` | 2,822 | 한국 전문 자격시험(14종) 객관식 | `weighted_accuracy` (배점 가중), 자격증별 합격 여부 | CC-BY-NC-ND-4.0, 접근 승인 필요(gated) |
+| `click` | `EunsuKim/CLIcK` | 1,995 | 한국 문화·언어 지식 객관식 | `accuracy` (범주·세부 범주별 포함) | 명시 없음 |
+| `kobalt` | `snunlp/KoBALT-700` | 700 | 한국어 언어학(통사·의미·화용·음운·형태) 10지선다 | `accuracy` (분류·난이도별 포함) | CC-BY-NC-4.0 |
+| `hrm8k_ksm` | `HAERAE-HUB/HRM8K` (KSM) | 1,428 | 한국 수학 경시·대학·임용 수준 문제 | `accuracy` (범주별 포함) | MIT |
+
+- 공통 규약: thinking을 켜고, 샘플링은 서빙 모델의 `generation_config`를 따르며, 출력 길이를 제한하지 않습니다. 답은 reasoning이 아니라 최종 답변에서만 읽고, 잘리거나 답 형식이 없는 응답은 0점으로 처리해 `answer_diagnostics`로 따로 집계합니다.
+- `hrm8k_ksm`은 수식 동치 판정에 `math-verify`가 필요합니다: `pip install -e ".[math]"`
+- 각 태스크가 따르는 공식 코드와 차이점은 태스크 파일(`src/dna_eval/tasks/benchmarks/`)의 docstring에 적혀 있습니다.
+- `kobalt`의 프롬프트는 데이터셋과 같은 CC-BY-NC-4.0이라 비상업적 용도로만 쓸 수 있습니다. 서드파티 코드·프롬프트의 출처와 라이선스는 `THIRD_PARTY_NOTICES.md`에 정리되어 있습니다.
 
 ## 환경 변수
 

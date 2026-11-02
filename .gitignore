@@ -9,3 +9,4 @@ ref/
 # score logs written by scripts/score_per_epoch.py
 score.log
 score.python.list.log
+.venv/
