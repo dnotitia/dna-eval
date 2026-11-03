@@ -105,17 +105,21 @@ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 
 
 ## 한국어 벤치마크
 
-DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. 실행 방법은 DNA Evaluation Suite와 같습니다(`bash run.sh <태스크> ...`). judge 모델 인자는 받지만 사용하지 않습니다.
+DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, 대부분은 judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. `kosimpleqa`만 judge 모델이 답의 정오를 판정합니다. 실행 방법은 DNA Evaluation Suite와 같습니다(`bash run.sh <태스크> ...`). judge를 쓰지 않는 태스크도 judge 모델 인자는 받습니다.
 
 | 태스크 | HF 데이터 | 문항 수 | 평가 항목 | 대표 지표 | 데이터 라이선스 |
 | --- | --- | --- | --- | --- | --- |
 | `kmmlu_pro` | `LGAI-EXAONE/KMMLU-Pro` | 2,822 | 한국 전문 자격시험(14종) 객관식 | `weighted_accuracy` (배점 가중), 자격증별 합격 여부 | CC-BY-NC-ND-4.0, 접근 승인 필요(gated) |
+| `kmmlu_redux` | `LGAI-EXAONE/KMMLU-Redux` | 2,587 | 한국 국가기술자격시험 4지선다 | `accuracy` (분야별 포함) | CC-BY-NC-ND-4.0, 접근 승인 필요(gated) |
 | `click` | `EunsuKim/CLIcK` | 1,995 | 한국 문화·언어 지식 객관식 | `accuracy` (범주·세부 범주별 포함) | 명시 없음 |
 | `kobalt` | `snunlp/KoBALT-700` | 700 | 한국어 언어학(통사·의미·화용·음운·형태) 10지선다 | `accuracy` (분류·난이도별 포함) | CC-BY-NC-4.0 |
 | `hrm8k_ksm` | `HAERAE-HUB/HRM8K` (KSM) | 1,428 | 한국 수학 경시·대학·임용 수준 문제 | `accuracy` (범주별 포함) | MIT |
+| `haerae_bench` | `HAERAE-HUB/HAE_RAE_BENCH_1.1` (객관식 11개 서브셋) | 3,606 | 한국어 어휘·문화·역사·독해·수능 사회탐구 5지선다 | `accuracy` (서브셋별 포함) | CC-BY-NC-ND-4.0 |
+| `kosimpleqa` | [naver-ai/KoSimpleQA](https://github.com/naver-ai/KoSimpleQA) | 1,000 | 한국 문화 지식 단답형 사실성 (judge 채점) | `accuracy` (= correct), correct·incorrect·not_attempted 비율, F-score | CC-BY-4.0 |
 
 - 공통 규약: thinking을 켜고, 샘플링은 서빙 모델의 `generation_config`를 따르며, 출력 길이를 제한하지 않습니다. 답은 reasoning이 아니라 최종 답변에서만 읽고, 잘리거나 답 형식이 없는 응답은 0점으로 처리해 `answer_diagnostics`로 따로 집계합니다.
 - `hrm8k_ksm`은 수식 동치 판정에 `math-verify`가 필요합니다: `pip install -e ".[math]"`
+- `haerae_bench`는 원 논문이 선택지 log-likelihood로 채점하지만, chat API에서는 이 값을 얻을 수 없어 답을 생성하게 하고 정답 문자를 읽어 채점합니다. 공개된 채점 방식이 없는 생성형 서브셋 2개(`lyrics_denoising`, `proverbs_denoising`)는 제외했습니다.
 - 각 태스크가 따르는 공식 코드와 차이점은 태스크 파일(`src/dna_eval/tasks/benchmarks/`)의 docstring에 적혀 있습니다.
 - `kobalt`의 프롬프트는 데이터셋과 같은 CC-BY-NC-4.0이라 비상업적 용도로만 쓸 수 있습니다. 서드파티 코드·프롬프트의 출처와 라이선스는 `THIRD_PARTY_NOTICES.md`에 정리되어 있습니다.
 

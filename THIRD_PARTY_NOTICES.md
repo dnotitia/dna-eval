@@ -37,6 +37,7 @@ The licence text is in `LICENSE`.
 | --- | --- | --- |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K and CLIcK prompts; HRM8K answer extraction and normalisation | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/utils/math_answer.py` |
 | [hendrycks/math](https://github.com/hendrycks/math), Copyright (c) 2021 Dan Hendrycks | the answer normalisation (through lm-evaluation-harness) | `src/dna_eval/utils/math_answer.py` |
+| [openai/simple-evals](https://github.com/openai/simple-evals), Copyright (c) 2024 OpenAI | the SimpleQA grader prompt, its system message and temperature, and how its grade is read | `src/dna_eval/scorers/simpleqa_grade.py` |
 
 Each of these is distributed under the following terms, with the copyright line given above:
 
@@ -64,7 +65,7 @@ SOFTWARE.
 
 | source | material | files |
 | --- | --- | --- |
-| [LG-AI-EXAONE/KMMLU-Pro](https://github.com/LG-AI-EXAONE/KMMLU-Pro), Copyright (c) 2025 the LG AI Research | the prompt and answer pattern; the licence exam structure and pass rules of `print_score.py` | `src/dna_eval/tasks/benchmarks/kmmlu_pro.py`, `src/dna_eval/tasks/benchmarks/click.py` (answer pattern), `src/dna_eval/metrics/license_pass.py` |
+| [LG-AI-EXAONE/KMMLU-Pro](https://github.com/LG-AI-EXAONE/KMMLU-Pro), Copyright (c) 2025 the LG AI Research | the prompt and answer pattern; the licence exam structure and pass rules of `print_score.py` | `src/dna_eval/tasks/benchmarks/kmmlu_pro.py`, `src/dna_eval/tasks/benchmarks/kmmlu_redux.py` (prompt and answer pattern, through `kmmlu_pro.py`), `src/dna_eval/tasks/benchmarks/haerae_bench.py` (answer-format sentence and answer pattern), `src/dna_eval/tasks/benchmarks/click.py` (answer pattern), `src/dna_eval/metrics/license_pass.py` |
 
 ```
 Redistribution and use in source and binary forms, with or without
