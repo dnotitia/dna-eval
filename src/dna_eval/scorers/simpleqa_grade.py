@@ -7,15 +7,13 @@ temperature and the way the letter is read are those of OpenAI's simple-evals
 """
 from __future__ import annotations
 
-import asyncio
-
-from inspect_ai.model import ChatMessageSystem, ChatMessageUser, GenerateConfig, get_model
+from inspect_ai.model import ChatMessageSystem, ChatMessageUser, GenerateConfig
 from inspect_ai.scorer import Metric, SampleScore, Score, Scorer, Target, Value, accuracy, metric, scorer, stderr
 from inspect_ai.solver import TaskState
 
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.metrics.judge_failures import JUDGE_ERROR, judge_failures
-from dna_eval.roles import GRADER_ROLE
+from dna_eval.utils.grader import call_grader
 from dna_eval.utils.model_output import is_truncated
 
 # SPDX-SnippetBegin
@@ -162,17 +160,8 @@ def simpleqa_grade(question_key: str = "question", judge_retries: int = 2) -> Sc
 
         prompt = GRADER_TEMPLATE.format(question=state.metadata[question_key], target=target.text,
                                         predicted_answer=answer)
-        grader = get_model(role=GRADER_ROLE, required=True, config=GenerateConfig(temperature=GRADER_TEMPERATURE))
-        reply, error = "", "call"
-        for attempt in range(1 + judge_retries):
-            try:
-                out = await grader.generate([ChatMessageSystem(content=GRADER_SYSTEM_MESSAGE),
-                                             ChatMessageUser(content=prompt)])
-                reply, error = out.completion, ""
-                break
-            except Exception:  # noqa: BLE001  (any failed call is retried)
-                if attempt < judge_retries:
-                    await asyncio.sleep(2 ** attempt)
+        reply, error = await call_grader([ChatMessageSystem(content=GRADER_SYSTEM_MESSAGE), ChatMessageUser(content=prompt)],
+                                         GenerateConfig(temperature=GRADER_TEMPERATURE), judge_retries)
         letter = read_grade(reply) if not error else None
         if not error and letter is None:
             error = "parse"

@@ -23,6 +23,16 @@ Every file below that holds third-party material says so in a comment and points
 This snippet, and the `kobalt` task that uses it, may be used for non-commercial purposes only.
 The KoBALT dataset has the same licence.
 
+### KMMMU prompts: no licence stated
+
+- Where: `SYSTEM_PROMPT` in `src/dna_eval/tasks/benchmarks/kmmmu.py`; `JUDGE_SYSTEM_PROMPT`, `JUDGE_TEMPERATURE` and
+  `build_prompt` in `src/dna_eval/scorers/answer_judge.py`
+- Source: https://github.com/HAE-RAE/KMMMU, files kmmmu_utils.py and eval_tutorial.ipynb
+- Authors: the KMMMU authors (2026), "KMMMU: Evaluation of Massive Multi-discipline Multimodal Understanding
+  in Korean Language and Context"
+- Licence: the repository states none. The strings are reproduced as published so that scores are
+  comparable with the benchmark's own evaluation; the KMMMU dataset is CC-BY-NC-4.0.
+
 ## Apache License 2.0
 
 The licence text is in `LICENSE`.
@@ -30,6 +40,7 @@ The licence text is in `LICENSE`.
 | source | material | files | changes |
 | --- | --- | --- | --- |
 | [confident-ai/deepeval](https://github.com/confident-ai/deepeval), Copyright 2024 Confident AI Inc. | the GEval results prompt; `trim_and_load_json` | `src/dna_eval/rubric_judging.py` (`GEVAL_RESULTS`), `src/dna_eval/utils/json.py` | prompt as a Jinja template string rendering the same bytes; function ported to Python unchanged in behaviour |
+| [HAE-RAE/HAERAE-VISION](https://github.com/HAE-RAE/HAERAE-VISION), Copyright 2026 HAERAE Team | the system prompt; the checklist judge prompt, how it is assembled, and the score pattern | `src/dna_eval/tasks/benchmarks/haerae_vision.py` (`SYSTEM`), `src/dna_eval/scorers/checklist_grade.py` | none to the strings; `read_score` reimplements `parse_single_score` |
 
 ## MIT License
 
