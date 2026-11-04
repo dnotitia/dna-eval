@@ -42,13 +42,17 @@ $ bash run.sh <task> vllm/<model> openai-api/judge/<judge-model> [<reference-mod
 $ bash run.sh performance vllm/<model> openai-api/judge/<judge-model>  
 # 예시2 - # Style 태스크 실행
 $ bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B  
-# 예시3 - 전체 태스크를 thinking=false, 동시 요청 16개 제한으로 실행
-$ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false --max-connections 16
+# 예시3 - DNA Evaluation Suite 전체를 thinking=false로 실행
+$ bash run.sh dna_eval vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false
+# 예시4 - 전체 태스크(DNA Evaluation Suite + 한국어 벤치마크)를 동시 요청 16개 제한으로 실행
+$ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-connections 16
 ```
 
-- `<task>`: 태스크 이름이나 `all`(전체 태스크)을 줍니다.
-  - 태스크 목록: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`, `kmmlu_pro`, `click`, `kobalt`, `hrm8k_ksm`, `all`(전체)
-- `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `all`에서 생략 시 `style` 태스크는 건너뜁니다.
+- `<task>`: 태스크 이름이나 태스크 묶음 이름을 줍니다.
+  - DNA Evaluation Suite: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`
+  - 한국어 벤치마크: `kmmlu_pro`, `kmmlu_redux`, `click`, `kobalt`, `hrm8k_ksm`, `haerae_bench`, `kosimpleqa`, `haerae_vision`, `kmmmu`
+  - 태스크 묶음: `dna_eval`(DNA Evaluation Suite 전체), `benchmarks`(한국어 벤치마크 전체), `all`(둘 다), `text_only`(`haerae_vision`·`kmmmu`를 뺀 전체), `vision`(`haerae_vision`·`kmmmu`)
+- `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `dna_eval`·`all`·`text_only`에서 생략 시 `style` 태스크는 건너뜁니다.
   - 공식 참조 모델 (바로 사용 가능): `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
 - 그 뒤에 추가하는 인자는 `inspect eval`에 그대로 전달됩니다. 별도로 지정하지 않으면 아래 기본값이 들어가며, 별도로 지정하지 않는 것을 추천합니다.
   <details>
@@ -60,12 +64,11 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thin
   -T revision=<commit>        # 태스크마다 고정된 데이터셋 commit
   -T judges=<전체 루브릭>      # degeneration: language_confusion, repetition / style: reasoning_style, content_style
   -T reference_source=auto    # style: 공식 참조 답변을 우선 사용하고, 없으면 reference role로 생성
-  --max-connections 20        # 모델마다 동시 요청 20개로 고정 (평가 대상 모델과 judge 각각)
   --attempt-timeout 없음       # 요청 하나의 시간 제한 없음
   --log-dir ./logs            # 로그 저장 위치
   ```
 
-  동시 요청 수는 `--max-connections N`으로 바꿀 수 있습니다. `run.sh` 없이 `inspect eval`을 직접 실행하면 Inspect 기본 동작(`--adaptive-connections`)에 따라 동시 요청이 20개에서 시작해 최대 100개까지 자동으로 늘어납니다. 서버가 rate limit 오류(429)를 돌려줄 때만 줄어드므로, 직접 실행할 때도 `--max-connections`를 지정하는 것을 권장합니다.
+  동시 요청 수는 Inspect 기본 동작(`--adaptive-connections`)을 따릅니다. 모델마다 동시 요청이 20개에서 시작해 최대 100개까지 자동으로 늘어나고, 서버가 rate limit 오류(429)를 돌려줄 때만 줄어듭니다. 고정하려면 `--max-connections N`을 지정합니다.
   </details>
 
 > 🚀 아래 공식 참조 모델 목록에 포함되지 않은 참조 모델로 `style`을 평가하려면 참조 모델 답변을 별도로 생성하는 과정이 필요합니다. 자세한 방법은 [docs/running-style-task.md](docs/running-style-task.md)를 참고하세요.
@@ -105,7 +108,7 @@ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 
 
 ## 한국어 벤치마크
 
-DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, 대부분은 judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. `kosimpleqa`, `haerae_vision`, `kmmmu`는 judge 모델이 답을 채점합니다. 실행 방법은 DNA Evaluation Suite와 같습니다(`bash run.sh <태스크> ...`). judge를 쓰지 않는 태스크도 judge 모델 인자는 받습니다.
+DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, 대부분은 judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. `kosimpleqa`, `haerae_vision`, `kmmmu`는 judge 모델이 답을 채점합니다. 실행 방법은 DNA Evaluation Suite와 같고(`bash run.sh <태스크> ...`), `bash run.sh benchmarks ...`로 전체를 한 번에 실행할 수 있습니다. judge를 쓰지 않는 태스크도 judge 모델 인자는 받습니다.
 
 | 태스크 | HF 데이터 | 문항 수 | 평가 항목 | 대표 지표 | 데이터 라이선스 |
 | --- | --- | --- | --- | --- | --- |
@@ -121,7 +124,7 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 
 - 공통 규약: thinking을 켜고, 샘플링은 서빙 모델의 `generation_config`를 따르며, 출력 길이를 제한하지 않습니다. 답은 reasoning이 아니라 최종 답변에서만 읽고, 잘리거나 답 형식이 없는 응답은 0점으로 처리해 `answer_diagnostics`로 따로 집계합니다.
 - `hrm8k_ksm`, `kmmmu`는 답 파싱에 `math-verify`가 필요합니다: `pip install -e ".[math]"`
-- `haerae_vision`, `kmmmu`는 이미지를 입력받는 모델이 필요합니다. vLLM으로 서빙할 때는 `--language-model-only`를 쓰지 말고, 문항당 이미지가 최대 6장(`haerae_vision`)·8장(`kmmmu`)이므로 `--limit-mm-per-prompt`를 그 이상으로 둡니다. `all`에는 포함되지 않으니 태스크 이름으로 실행합니다.
+- `haerae_vision`, `kmmmu`는 이미지를 입력받는 모델이 필요합니다. vLLM으로 서빙할 때는 `--language-model-only`를 쓰지 말고, 문항당 이미지가 최대 6장(`haerae_vision`)·8장(`kmmmu`)이므로 `--limit-mm-per-prompt`를 그 이상으로 둡니다. 텍스트 전용 모델은 `text_only`로, 두 비전 태스크만은 `vision`으로 실행합니다.
 - `haerae_vision`은 질문 유형을 `-T question_type=original`(기본값, 원래의 모호한 질문)과 `-T question_type=explicit`(맥락을 보충한 질문) 중에서 고릅니다.
 - `kmmmu`는 실행할 때 이미지를 URL에서 내려받습니다. 이미지의 약 3분의 2가 Hub 밖(원 출처 시험 사이트)에 있어서, 그 사이트에 접속할 수 있어야 합니다.
 - `haerae_bench`는 원 논문이 선택지 log-likelihood로 채점하지만, chat API에서는 이 값을 얻을 수 없어 답을 생성하게 하고 정답 문자를 읽어 채점합니다. 공개된 채점 방식이 없는 생성형 서브셋 2개(`lyrics_denoising`, `proverbs_denoising`)는 제외했습니다.
