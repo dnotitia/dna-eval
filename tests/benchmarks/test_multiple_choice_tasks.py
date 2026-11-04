@@ -11,7 +11,7 @@ from inspect_ai import eval as inspect_eval
 from inspect_ai.dataset import MemoryDataset
 from inspect_ai.model import ModelOutput, get_model
 
-from dna_eval.tasks.benchmarks import click, kmmlu_pro, kobalt
+from dna_eval.tasks.benchmarks import click, haerae_bench, kmmlu_pro, kmmlu_redux, kobalt
 
 
 def mock(*replies):
@@ -72,6 +72,68 @@ def test_kmmlu_pro_end_to_end_weighted(tmp_path, monkeypatch):
     assert log.results.scores[0].metrics["weighted_accuracy"].value == m["weighted_accuracy"]
     assert log.eval.task_args["revision"] == kmmlu_pro.DATASET_REVISION
     assert log.results.headline.metric == "weighted_accuracy"
+
+
+# --- KMMLU-Redux --------------------------------------------------------------------------------
+
+REDUX_ROWS = [
+    {"question": "1+1은?", "options": ["1", "2", "3", "4"], "solution": "2", "category": "건설", "license_name": "조경기사"},
+    {"question": "2+2는?", "options": ["1", "2", "3", "4"], "solution": "4", "category": "기계", "license_name": "기계기사"},
+]
+
+
+def test_kmmlu_redux_uses_the_kmmlu_pro_prompt():
+    s = kmmlu_redux.record_to_sample(REDUX_ROWS[1], 1)
+    assert s.input == kmmlu_pro.build_prompt("2+2는?", ["1", "2", "3", "4"])
+    assert s.target == "D" and s.metadata == {"category": "기계", "license_name": "기계기사"}
+
+
+def test_kmmlu_redux_end_to_end(tmp_path, monkeypatch):
+    path = tmp_path / "kmmlu_redux.jsonl"
+    path.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in REDUX_ROWS) + "\n", encoding="utf-8")
+    monkeypatch.setattr(kmmlu_redux, "hf_hub_download", lambda *a, **k: str(path))
+    log = run(kmmlu_redux.kmmlu_redux(), tmp_path, "풀이 ...\n정답: B")      # right for the first question only
+    m = metrics(log)
+    assert m["accuracy"] == pytest.approx(1 / 2)
+    assert m["category/건설"] == 1.0 and m["category/기계"] == 0.0
+    assert log.results.headline.metric == "accuracy"
+    assert log.eval.task_args["revision"] == kmmlu_redux.DATASET_REVISION
+
+
+# --- HAE-RAE Bench ------------------------------------------------------------------------------
+
+HAERAE_ROWS = {
+    "history": [{"query": "다음 질문을 읽고 정답으로 가장 알맞은 것을 고르시요.\n### 질문:\nQ\n\n### 선택지:\n"
+                          "(A) a\n(B) b\n(C) c\n(D) d\n(E) e\n\n### 정답:", "options": "['a','b','c','d','e']",
+                 "answer": "(B)"}],
+    "csat_law": [{"query": "다음 사례에 대한 옳은 판단은?\n### 선택지: (A) ㄱ (B) ㄴ (C) ㄷ (D) ㄹ (E) ㅁ",
+                  "options": "ㄱ | ㄴ | ㄷ | ㄹ | ㅁ", "answer": "(E)"}],
+}
+
+
+def test_haerae_prompt_keeps_the_query_and_reads_the_letter():
+    s = haerae_bench.record_to_sample(HAERAE_ROWS["history"][0], "history", 0)
+    assert s.input == haerae_bench.INSTRUCTION + "\n\n" + HAERAE_ROWS["history"][0]["query"]
+    assert s.target == "B" and s.id == "history-0" and s.metadata == {"subset": "history"}
+    with pytest.raises(ValueError):
+        haerae_bench.record_to_sample({"query": "q", "answer": "It's without"}, "lyrics_denoising", 0)
+    with pytest.raises(ValueError):
+        haerae_bench.load_samples(["lyrics_denoising"], haerae_bench.DATASET_REVISION)
+
+
+def test_haerae_end_to_end(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_hf_dataset(repo, name, split, revision, sample_fields):
+        calls.append((repo, name, split, revision))
+        return [sample_fields(r) for r in HAERAE_ROWS[name]]
+
+    monkeypatch.setattr(haerae_bench, "hf_dataset", fake_hf_dataset)
+    log = run(haerae_bench.haerae_bench(subsets=["history", "csat_law"]), tmp_path, "생각해 보면...\n\n정답: (B)")
+    m = metrics(log)
+    assert m["accuracy"] == pytest.approx(1 / 2)
+    assert m["subset/history"] == 1.0 and m["subset/csat_law"] == 0.0
+    assert calls == [(haerae_bench.REPO, n, "test", haerae_bench.DATASET_REVISION) for n in ("history", "csat_law")]
 
 
 # --- CLIcK --------------------------------------------------------------------------------------
@@ -221,3 +283,25 @@ def test_kobalt_data():
     assert {s.target for s in samples} <= set("ABCDEFGHIJ")
     assert {s.metadata["level"] for s in samples} == {1, 2, 3}
     assert len({s.metadata["class"] for s in samples}) == 5
+
+
+@pytest.mark.network
+def test_kmmlu_redux_data():
+    try:
+        samples = kmmlu_redux.load_samples(kmmlu_redux.DATASET_REVISION)
+    except Exception as exc:
+        _skip_if_unreachable(exc)
+    assert len(samples) == 2587
+    assert {s.target for s in samples} == set("ABCD")
+    assert len({s.metadata["category"] for s in samples}) == 14
+
+
+@pytest.mark.network
+def test_haerae_bench_data():
+    try:
+        samples = haerae_bench.load_samples(list(haerae_bench.SUBSETS), haerae_bench.DATASET_REVISION)
+    except Exception as exc:
+        _skip_if_unreachable(exc)
+    assert len(samples) == 3606 and len({s.id for s in samples}) == 3606
+    assert {s.target for s in samples} == set("ABCDE")
+    assert {s.metadata["subset"] for s in samples} == set(haerae_bench.SUBSETS)

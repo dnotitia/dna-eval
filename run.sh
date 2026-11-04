@@ -4,8 +4,10 @@
 #   bash run.sh <task> <model> <judge-model> [reference-model] [inspect eval options...]
 #
 #   <task>             performance, hallucination, persona, uncensorship, degeneration, style,
-#                      kmmlu_pro, click, kobalt, hrm8k_ksm,
-#                      or all (every task; style only when a reference model is given)
+#                      kmmlu_pro, kmmlu_redux, click, kobalt, hrm8k_ksm, haerae_bench, kosimpleqa,
+#                      haerae_vision, kmmmu (these two need a vision-language model),
+#                      or all (every task but the two vision tasks; style only when a reference
+#                      model is given)
 #   <model>            the model under evaluation, as Inspect names it (e.g. vllm/my-model)
 #   <judge-model>      the judge, bound to the grader role (e.g. openai-api/judge/gemma-4-31B-it)
 #   [reference-model]  the style task's reference model: required for style
@@ -16,14 +18,16 @@
 # --max-connections, --adaptive-connections or --batch themselves.
 set -euo pipefail
 
-TASKS=(performance hallucination persona uncensorship degeneration style kmmlu_pro click kobalt hrm8k_ksm)
+TASKS=(performance hallucination persona uncensorship degeneration style kmmlu_pro kmmlu_redux click kobalt hrm8k_ksm
+       haerae_bench kosimpleqa haerae_vision kmmmu)
+VISION_TASKS=(haerae_vision kmmmu)   # left out of `all`: they need a vision-language model
 
 # Without --max-connections, Inspect scales concurrency on its own (up to 100 requests per model)
 # and only scales down on rate-limit errors, which a self-hosted server rarely sends.
 MAX_CONNECTIONS=20
 
 usage() {
-  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 }
 
@@ -56,7 +60,7 @@ case $TASK in
   all)
     others=()
     for t in "${TASKS[@]}"; do
-      [[ $t == style ]] || others+=("dna_eval/$t")
+      [[ $t == style || " ${VISION_TASKS[*]} " == *" $t "* ]] || others+=("dna_eval/$t")
     done
     inspect eval "${others[@]}" --model "$MODEL" --model-role "grader=$JUDGE" \
       ${concurrency[@]+"${concurrency[@]}"} "$@"

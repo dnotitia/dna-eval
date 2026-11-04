@@ -23,6 +23,16 @@ Every file below that holds third-party material says so in a comment and points
 This snippet, and the `kobalt` task that uses it, may be used for non-commercial purposes only.
 The KoBALT dataset has the same licence.
 
+### KMMMU prompts: no licence stated
+
+- Where: `SYSTEM_PROMPT` in `src/dna_eval/tasks/benchmarks/kmmmu.py`; `JUDGE_SYSTEM_PROMPT`, `JUDGE_TEMPERATURE` and
+  `build_prompt` in `src/dna_eval/scorers/answer_judge.py`
+- Source: https://github.com/HAE-RAE/KMMMU, files kmmmu_utils.py and eval_tutorial.ipynb
+- Authors: the KMMMU authors (2026), "KMMMU: Evaluation of Massive Multi-discipline Multimodal Understanding
+  in Korean Language and Context"
+- Licence: the repository states none. The strings are reproduced as published so that scores are
+  comparable with the benchmark's own evaluation; the KMMMU dataset is CC-BY-NC-4.0.
+
 ## Apache License 2.0
 
 The licence text is in `LICENSE`.
@@ -30,6 +40,7 @@ The licence text is in `LICENSE`.
 | source | material | files | changes |
 | --- | --- | --- | --- |
 | [confident-ai/deepeval](https://github.com/confident-ai/deepeval), Copyright 2024 Confident AI Inc. | the GEval results prompt; `trim_and_load_json` | `src/dna_eval/rubric_judging.py` (`GEVAL_RESULTS`), `src/dna_eval/utils/json.py` | prompt as a Jinja template string rendering the same bytes; function ported to Python unchanged in behaviour |
+| [HAE-RAE/HAERAE-VISION](https://github.com/HAE-RAE/HAERAE-VISION), Copyright 2026 HAERAE Team | the system prompt; the checklist judge prompt, how it is assembled, and the score pattern | `src/dna_eval/tasks/benchmarks/haerae_vision.py` (`SYSTEM`), `src/dna_eval/scorers/checklist_grade.py` | none to the strings; `read_score` reimplements `parse_single_score` |
 
 ## MIT License
 
@@ -37,6 +48,7 @@ The licence text is in `LICENSE`.
 | --- | --- | --- |
 | [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K and CLIcK prompts; HRM8K answer extraction and normalisation | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/utils/math_answer.py` |
 | [hendrycks/math](https://github.com/hendrycks/math), Copyright (c) 2021 Dan Hendrycks | the answer normalisation (through lm-evaluation-harness) | `src/dna_eval/utils/math_answer.py` |
+| [openai/simple-evals](https://github.com/openai/simple-evals), Copyright (c) 2024 OpenAI | the SimpleQA grader prompt, its system message and temperature, and how its grade is read | `src/dna_eval/scorers/simpleqa_grade.py` |
 
 Each of these is distributed under the following terms, with the copyright line given above:
 
@@ -64,7 +76,7 @@ SOFTWARE.
 
 | source | material | files |
 | --- | --- | --- |
-| [LG-AI-EXAONE/KMMLU-Pro](https://github.com/LG-AI-EXAONE/KMMLU-Pro), Copyright (c) 2025 the LG AI Research | the prompt and answer pattern; the licence exam structure and pass rules of `print_score.py` | `src/dna_eval/tasks/benchmarks/kmmlu_pro.py`, `src/dna_eval/tasks/benchmarks/click.py` (answer pattern), `src/dna_eval/metrics/license_pass.py` |
+| [LG-AI-EXAONE/KMMLU-Pro](https://github.com/LG-AI-EXAONE/KMMLU-Pro), Copyright (c) 2025 the LG AI Research | the prompt and answer pattern; the licence exam structure and pass rules of `print_score.py` | `src/dna_eval/tasks/benchmarks/kmmlu_pro.py`, `src/dna_eval/tasks/benchmarks/kmmlu_redux.py` (prompt and answer pattern, through `kmmlu_pro.py`), `src/dna_eval/tasks/benchmarks/haerae_bench.py` (answer-format sentence and answer pattern), `src/dna_eval/tasks/benchmarks/click.py` (answer pattern), `src/dna_eval/metrics/license_pass.py` |
 
 ```
 Redistribution and use in source and binary forms, with or without
