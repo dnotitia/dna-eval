@@ -14,6 +14,8 @@
 #                        text_only   every task but haerae_vision and kmmmu
 #                        vision      haerae_vision and kmmmu
 #                      style runs only when a reference model is given; a group skips it otherwise.
+#                      uncensorship (DNA evaluation suite, private dataset) belongs to no group:
+#                      it runs only when named.
 #   <model>            the model under evaluation, as Inspect names it (e.g. vllm/my-model)
 #   <judge-model>      the judge, bound to the grader role (e.g. openai-api/judge/gemma-4-31B-it)
 #   [reference-model]  the style task's reference model: required for style
@@ -26,9 +28,10 @@ SUITE_TASKS=(performance hallucination persona degeneration style)
 BENCHMARK_TASKS=(kmmlu_pro kmmlu_redux kmmlu_hard click kobalt hrm8k_ksm haerae_bench kosimpleqa kormedmcqa kbl
                  haerae_vision kmmmu)
 VISION_TASKS=(haerae_vision kmmmu)   # need a vision-language model
+NAMED_ONLY_TASKS=(uncensorship)      # in no group: run only when named
 
 usage() {
-  sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 }
 
@@ -92,7 +95,7 @@ case $TASK in
     evaluate style -- -T "reference=$REFERENCE" ${OPTIONS[@]+"${OPTIONS[@]}"}
     ;;
   *)
-    [[ " ${SUITE_TASKS[*]} ${BENCHMARK_TASKS[*]} " == *" $TASK "* ]] || { echo "unknown task: $TASK" >&2; usage; }
+    [[ " ${SUITE_TASKS[*]} ${BENCHMARK_TASKS[*]} ${NAMED_ONLY_TASKS[*]} " == *" $TASK "* ]] || { echo "unknown task: $TASK" >&2; usage; }
     [[ -z $REFERENCE ]] || { echo "only style takes a reference model" >&2; usage; }
     evaluate "$TASK" -- ${OPTIONS[@]+"${OPTIONS[@]}"}
     ;;

@@ -49,7 +49,7 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-c
 ```
 
 - `<task>`: 태스크 이름이나 태스크 묶음 이름을 줍니다.
-  - DNA Evaluation Suite: `performance`, `hallucination`, `persona`, `degeneration`, `style`
+  - DNA Evaluation Suite: `performance`, `hallucination`, `persona`, `degeneration`, `style`, `uncensorship`(데이터셋이 비공개라 어느 묶음에도 들어가지 않으며, 이름으로 지정할 때만 실행됩니다)
   - 한국어 벤치마크: `kmmlu_pro`, `kmmlu_redux`, `kmmlu_hard`, `click`, `kobalt`, `hrm8k_ksm`, `haerae_bench`, `kosimpleqa`, `kormedmcqa`, `kbl`, `haerae_vision`, `kmmmu`
   - 태스크 묶음: `dna_eval`(DNA Evaluation Suite 전체), `benchmarks`(한국어 벤치마크 전체), `all`(둘 다), `text_only`(`haerae_vision`·`kmmmu`를 뺀 전체), `vision`(`haerae_vision`·`kmmmu`)
 - `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `dna_eval`·`all`·`text_only`에서 생략 시 `style` 태스크는 건너뜁니다.
@@ -82,6 +82,7 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-c
 | `performance` | `dnotitia/dna_performance` | 30 | 일반 한국어 질의응답. 참조 답변과 비교해 평가 | `performance` |
 | `hallucination` | `dnotitia/dna_hallucination` | 100 | LLM의 환각 여부를 다섯개 범주(잘못된 전제, 올바른 전제, 존재하지 않는 개체, 알 수 없는 사실, 근거 기반 답변)로 나누어 평가 | `hallucination` |
 | `persona` | `dnotitia/dna_persona` | 50 | DNA 모델의 정체성과 디노티시아 관련 정보를 올바르게 설명하는지. | `persona` |
+| `uncensorship` | `dnotitia/dna_uncensorship` (비공개) | 50 | Base 모델이 답변을 거부하는 검열된 주제에 응답하는지 | `uncensorship` (`uncensorship_bias`, `uncensorship_quality` 평균 후 둘다 통과해야 통과) |
 | `degeneration` | `dnotitia/dna_confusion` | 45 | 답변에 외래 문자가 혼입되어 나오거나,반복 생성으로 무너지지 않는지 | `language_confusion`, `repetition` |
 | `style` | `dnotitia/dna_style` | 50 | Reasoning과 최종 답변이 각각 참조 모델의 스타일을 따르는지 | `reasoning_style`, `content_style` |
 

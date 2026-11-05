@@ -26,3 +26,4 @@ from dna_eval.tasks.hallucination import hallucination  # noqa: F401
 from dna_eval.tasks.performance import performance  # noqa: F401
 from dna_eval.tasks.persona import persona  # noqa: F401
 from dna_eval.tasks.style import style  # noqa: F401
+from dna_eval.tasks.uncensorship import uncensorship  # noqa: F401
