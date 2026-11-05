@@ -49,8 +49,8 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-c
 ```
 
 - `<task>`: 태스크 이름이나 태스크 묶음 이름을 줍니다.
-  - DNA Evaluation Suite: `performance`, `hallucination`, `persona`, `uncensorship`, `degeneration`, `style`
-  - 한국어 벤치마크: `kmmlu_pro`, `kmmlu_redux`, `click`, `kobalt`, `hrm8k_ksm`, `haerae_bench`, `kosimpleqa`, `haerae_vision`, `kmmmu`
+  - DNA Evaluation Suite: `performance`, `hallucination`, `persona`, `degeneration`, `style`
+  - 한국어 벤치마크: `kmmlu_pro`, `kmmlu_redux`, `kmmlu_hard`, `click`, `kobalt`, `hrm8k_ksm`, `haerae_bench`, `kosimpleqa`, `kormedmcqa`, `kbl`, `haerae_vision`, `kmmmu`
   - 태스크 묶음: `dna_eval`(DNA Evaluation Suite 전체), `benchmarks`(한국어 벤치마크 전체), `all`(둘 다), `text_only`(`haerae_vision`·`kmmmu`를 뺀 전체), `vision`(`haerae_vision`·`kmmmu`)
 - `[<reference-model>]`: `style` 태스크에서만 사용합니다. 스타일 참조 모델이며, 평가 대상 모델의 base 모델을 사용합니다. `style`에는 필수, 다른 태스크에는 생략 가능; `dna_eval`·`all`·`text_only`에서 생략 시 `style` 태스크는 건너뜁니다.
   - 공식 참조 모델 (바로 사용 가능): `Qwen3.5-0.8B`,   `Qwen3.5-2B`,   `Qwen3.5-4B`,   `Qwen3.5-9B`,   `Qwen3.6-27B`,   `Qwen3.6-35B-A3B`,   `Qwen3.5-122B-A10B`
@@ -82,7 +82,6 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-c
 | `performance` | `dnotitia/dna_performance` | 30 | 일반 한국어 질의응답. 참조 답변과 비교해 평가 | `performance` |
 | `hallucination` | `dnotitia/dna_hallucination` | 100 | LLM의 환각 여부를 다섯개 범주(잘못된 전제, 올바른 전제, 존재하지 않는 개체, 알 수 없는 사실, 근거 기반 답변)로 나누어 평가 | `hallucination` |
 | `persona` | `dnotitia/dna_persona` | 50 | DNA 모델의 정체성과 디노티시아 관련 정보를 올바르게 설명하는지. | `persona` |
-| `uncensorship` | `dnotitia/dna_uncensorship` | 50 | Base 모델이 답변을 거부하는 검열된 주제에 응답하는지 | `uncensorship` (`uncensorship_bias`, `uncensorship_quality` 평균 후 둘다 통과해야 통과) |
 | `degeneration` | `dnotitia/dna_confusion` | 45 | 답변에 외래 문자가 혼입되어 나오거나,반복 생성으로 무너지지 않는지 | `language_confusion`, `repetition` |
 | `style` | `dnotitia/dna_style` | 50 | Reasoning과 최종 답변이 각각 참조 모델의 스타일을 따르는지 | `reasoning_style`, `content_style` |
 
@@ -114,11 +113,14 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 | --- | --- | --- | --- | --- | --- |
 | `kmmlu_pro` | `LGAI-EXAONE/KMMLU-Pro` | 2,822 | 한국 전문 자격시험(14종) 객관식 | `weighted_accuracy` (배점 가중), 자격증별 합격 여부 | CC-BY-NC-ND-4.0, 접근 승인 필요(gated) |
 | `kmmlu_redux` | `LGAI-EXAONE/KMMLU-Redux` | 2,587 | 한국 국가기술자격시험 4지선다 | `accuracy` (분야별 포함) | CC-BY-NC-ND-4.0, 접근 승인 필요(gated) |
+| `kmmlu_hard` | `HAERAE-HUB/KMMLU-HARD` | 4,104 | KMMLU 중 상용 모델이 어려워한 문항, 45개 과목 4지선다 (5-shot) | `macro_accuracy` (과목 평균), 과목별 포함 | CC-BY-ND-4.0 |
 | `click` | `EunsuKim/CLIcK` | 1,995 | 한국 문화·언어 지식 객관식 | `accuracy` (범주·세부 범주별 포함) | 명시 없음 |
 | `kobalt` | `snunlp/KoBALT-700` | 700 | 한국어 언어학(통사·의미·화용·음운·형태) 10지선다 | `accuracy` (분류·난이도별 포함) | CC-BY-NC-4.0 |
 | `hrm8k_ksm` | `HAERAE-HUB/HRM8K` (KSM) | 1,428 | 한국 수학 경시·대학·임용 수준 문제 | `accuracy` (범주별 포함) | MIT |
 | `haerae_bench` | `HAERAE-HUB/HAE_RAE_BENCH_1.1` (객관식 11개 서브셋) | 3,606 | 한국어 어휘·문화·역사·독해·수능 사회탐구 5지선다 | `accuracy` (서브셋별 포함) | CC-BY-NC-ND-4.0 |
 | `kosimpleqa` | [naver-ai/KoSimpleQA](https://github.com/naver-ai/KoSimpleQA) | 1,000 | 한국 문화 지식 단답형 사실성 (judge 채점) | `accuracy` (= correct), correct·incorrect·not_attempted 비율, F-score | CC-BY-4.0 |
+| `kormedmcqa` | `sean0042/KorMedMCQA` | 3,009 | 한국 의사·간호사·약사·치과의사 국가시험 5지선다 (5-shot) | `accuracy` (시험별 포함) | CC-BY-NC-2.0 |
+| `kbl` | `lbox/kbl` | 3,376 | 한국 법률 지식·법률 추론·변호사시험 (65개 과제) | `accuracy` (논문의 지식·추론·2024 변호사시험 평균, 과제별 포함) | CC-BY-NC-4.0 |
 | `haerae_vision` | `HAERAE-HUB/HAERAE-VISION` | 653 | 한국 온라인 커뮤니티의 실제 이미지 질문 (멀티모달, 체크리스트 judge 채점) | `mean` (체크리스트 충족 비율, 카테고리별 포함) | CC-BY-4.0 |
 | `kmmmu` | `HAERAE-HUB/KMMMU` | 3,466 | 한국 공무원·자격·NCS·올림피아드 시험 이미지 문제 (멀티모달, judge 채점) | `accuracy` (문항 유형별 포함) | CC-BY-NC-4.0 |
 

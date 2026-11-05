@@ -55,8 +55,8 @@ def test_unreadable_reply_is_rejudged_twice(run):
 
 
 def _composite_run(judge_replies: list[str], tmp_path):
-    """One sample judged by the ``uncensorship`` composite; the judge answers ``judge_replies``
-    in call order (bias, quality, bias, quality, ...), cycling."""
+    """One sample judged by a composite of ``performance`` and ``persona`` (mean, all must pass);
+    the judge answers ``judge_replies`` in call order (performance, persona, ...), cycling."""
     import itertools
 
     from inspect_ai.model import ModelOutput, get_model
@@ -66,7 +66,10 @@ def _composite_run(judge_replies: list[str], tmp_path):
 
     mk = lambda texts: get_model("mockllm/model", custom_outputs=(  # noqa: E731
         ModelOutput.from_content("mockllm/model", t) for t in itertools.cycle(texts)))
-    task = Task(dataset=[Sample(input="q")], solver=generate(), scorer=rubric_scorer("uncensorship"))
+    composite = tmp_path / "composite.yaml"
+    composite.write_text("name: test_composite\ncompose: [performance, persona]\ncombine: mean\npass: all\n",
+                         encoding="utf-8")
+    task = Task(dataset=[Sample(input="q")], solver=generate(), scorer=rubric_scorer(str(composite)))
     log = inspect_eval(task, model=mk(["답"]), model_roles={"grader": mk(judge_replies)},
                        display="none", log_dir=str(tmp_path))[0]
     sample = log.samples[0]
@@ -82,12 +85,12 @@ def test_composite_rejudges_every_component_when_one_fails(tmp_path):
     assert calls == 4
     assert score.value == pytest.approx((0.9 + 0.7) / 2)
     assert {k: v["value"] for k, v in score.metadata["components"].items()} == {
-        "uncensorship_bias": pytest.approx(0.9), "uncensorship_quality": pytest.approx(0.7)}
+        "performance": pytest.approx(0.9), "persona": pytest.approx(0.7)}
 
 
 def test_composite_component_still_failing_scores_zero(tmp_path):
     score, calls = _composite_run(["not json", '{"score": 8, "reason": "ok"}'], tmp_path)
     assert calls == 6                                   # 3 rounds x 2 components
     comps = score.metadata["components"]
-    assert comps["uncensorship_bias"]["value"] == 0.0 and comps["uncensorship_bias"]["judge_error"] == "parse"
+    assert comps["performance"]["value"] == 0.0 and comps["performance"]["judge_error"] == "parse"
     assert score.value == pytest.approx(0.8 / 2) and score.metadata["passed"] is False

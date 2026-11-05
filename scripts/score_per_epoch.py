@@ -23,7 +23,6 @@ timestamp is the time the run's last sample finished, in local time. Labels per 
 
     performance           <model>                     Performance
     persona               <model> (Pers)              Persona
-    uncensorship          <model> (Unc)               Uncensorship
     hallucination         <model> (Hallu)             Hallucination
       per category        <model> (Hallu:<category>)  Hallucination:<category>
     language_confusion    <model> (Conf)              LanguageConfusion
@@ -49,7 +48,6 @@ from inspect_ai.log import EvalLog, list_eval_logs, read_eval_log
 LABELS = {
     "performance": ("", "Performance"),
     "persona": (" (Pers)", "Persona"),
-    "uncensorship": (" (Unc)", "Uncensorship"),
     "hallucination": (" (Hallu)", "Hallucination"),
     "language_confusion": (" (Conf)", "LanguageConfusion"),
     "repetition": (" (Rep)", "Repetition"),
