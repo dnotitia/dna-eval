@@ -46,7 +46,7 @@ The licence text is in `LICENSE`.
 
 | source | material | files |
 | --- | --- | --- |
-| [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K and CLIcK prompts; HRM8K answer extraction and normalisation | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/utils/math_answer.py` |
+| [EleutherAI/lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness), Copyright (c) 2020 EleutherAI | the HRM8K, CLIcK, KorMedMCQA and KBL prompts; the KBL task set and description; HRM8K answer extraction and normalisation; the KorMedMCQA answer-extraction cascade (also used by KMMLU-HARD) | `src/dna_eval/tasks/benchmarks/hrm8k_ksm.py`, `src/dna_eval/tasks/benchmarks/click.py`, `src/dna_eval/tasks/benchmarks/kormedmcqa.py`, `src/dna_eval/tasks/benchmarks/kmmlu_hard.py`, `src/dna_eval/tasks/benchmarks/kbl.py`, `src/dna_eval/utils/math_answer.py` |
 | [hendrycks/math](https://github.com/hendrycks/math), Copyright (c) 2021 Dan Hendrycks | the answer normalisation (through lm-evaluation-harness) | `src/dna_eval/utils/math_answer.py` |
 | [openai/simple-evals](https://github.com/openai/simple-evals), Copyright (c) 2024 OpenAI | the SimpleQA grader prompt, its system message and temperature, and how its grade is read | `src/dna_eval/scorers/simpleqa_grade.py` |
 

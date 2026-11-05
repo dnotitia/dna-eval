@@ -5,9 +5,10 @@
 #
 #   <task>             a task name, or a group:
 #                        dna_eval    the DNA evaluation suite: performance, hallucination, persona,
-#                                    uncensorship, degeneration, style
-#                        benchmarks  the Korean benchmarks: kmmlu_pro, kmmlu_redux, click, kobalt,
-#                                    hrm8k_ksm, haerae_bench, kosimpleqa, haerae_vision, kmmmu
+#                                    degeneration, style
+#                        benchmarks  the Korean benchmarks: kmmlu_pro, kmmlu_redux, kmmlu_hard, click,
+#                                    kobalt, hrm8k_ksm, haerae_bench, kosimpleqa, kormedmcqa, kbl,
+#                                    haerae_vision, kmmmu
 #                                    (haerae_vision and kmmmu need a vision-language model)
 #                        all         every task of both groups
 #                        text_only   every task but haerae_vision and kmmmu
@@ -21,12 +22,13 @@
 # Endpoints and keys are read from the environment or a .env file (see README.md).
 set -euo pipefail
 
-SUITE_TASKS=(performance hallucination persona uncensorship degeneration style)
-BENCHMARK_TASKS=(kmmlu_pro kmmlu_redux click kobalt hrm8k_ksm haerae_bench kosimpleqa haerae_vision kmmmu)
+SUITE_TASKS=(performance hallucination persona degeneration style)
+BENCHMARK_TASKS=(kmmlu_pro kmmlu_redux kmmlu_hard click kobalt hrm8k_ksm haerae_bench kosimpleqa kormedmcqa kbl
+                 haerae_vision kmmmu)
 VISION_TASKS=(haerae_vision kmmmu)   # need a vision-language model
 
 usage() {
-  sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 }
 

@@ -22,7 +22,7 @@ CANDIDATES = "candidates"      # distinct letters named in the reply (``unique_l
 
 
 def extract_letter(text: str, patterns: Sequence[re.Pattern[str]], letters: str,
-                   unique_letter: bool = False) -> tuple[str | None, list[str]]:
+                   unique_letter: bool = False, uppercase: bool = False) -> tuple[str | None, list[str]]:
     """The answer letter in ``text`` and the distinct candidate letters found.
 
     Default mode: patterns are tried in order; the first one whose *last* match captures a
@@ -32,15 +32,19 @@ def extract_letter(text: str, patterns: Sequence[re.Pattern[str]], letters: str,
     from ``letters`` inside the captured text of all statements are collected, and the answer
     is the letter only if exactly one distinct letter was named. Naming several letters, or
     none, gives no answer.
+
+    ``uppercase`` upper-cases each captured letter before it is checked against ``letters``
+    (for case-insensitive patterns whose benchmark reads ``b`` as ``B``).
     """
     if unique_letter:
         found: list[str] = []
         for pattern in patterns:
             for statement in pattern.findall(text):
+                statement = statement.upper() if uppercase else statement
                 found.extend(c for c in statement if c in letters and c not in found)
         return (found[0] if len(found) == 1 else None), found
     for pattern in patterns:
-        matches = pattern.findall(text)
+        matches = [m.upper() for m in pattern.findall(text)] if uppercase else pattern.findall(text)
         if matches and matches[-1] in letters:
             return matches[-1], [matches[-1]]
     return None, []
@@ -48,7 +52,7 @@ def extract_letter(text: str, patterns: Sequence[re.Pattern[str]], letters: str,
 
 @scorer(metrics=[accuracy(), stderr(), answer_diagnostics()])
 def letter_choice(patterns: Sequence[str], letters: str = "ABCD", unique_letter: bool = False,
-                  strip: Sequence[str] = (), target_key: str | None = None) -> Scorer:
+                  strip: Sequence[str] = (), target_key: str | None = None, uppercase: bool = False) -> Scorer:
     """Score 1.0 if the letter read from the final content is the correct one, else 0.0.
 
     ``patterns`` are regular expressions with one capture group (inline flags such as
@@ -57,7 +61,8 @@ def letter_choice(patterns: Sequence[str], letters: str = "ABCD", unique_letter:
     lists substrings removed from the reply before matching (e.g. markdown bold markers).
 
     With ``unique_letter`` the reply must name exactly one distinct letter across all its
-    answer statements (see ``extract_letter``); a reply that names two is wrong.
+    answer statements (see ``extract_letter``); a reply that names two is wrong. ``uppercase``
+    upper-cases each captured letter first (see ``extract_letter``).
 
     The correct letter is the sample's target, or ``state.metadata[target_key]`` when the
     task decides it per run (shuffled options). A truncated reply scores 0 even if it
@@ -74,7 +79,7 @@ def letter_choice(patterns: Sequence[str], letters: str = "ABCD", unique_letter:
         text = state.output.completion
         for s in strip:
             text = text.replace(s, "")
-        extracted, candidates = extract_letter(text, compiled, letters, unique_letter)
+        extracted, candidates = extract_letter(text, compiled, letters, unique_letter, uppercase)
         expected = str(state.metadata[target_key] if target_key else target.text).strip()
         truncated = is_truncated(state.output)
         correct = extracted is not None and extracted == expected and not truncated

@@ -1,7 +1,7 @@
 """``rubric_scorer``: judge an answer against a rubric, reported under the rubric's name.
 
 Every rubric shipped in ``rubrics/`` is registered with Inspect as a scorer of the same name
-when this module is imported (``dna_eval/performance``, ``dna_eval/uncensorship``, ...). The
+when this module is imported (``dna_eval/performance``, ``dna_eval/persona``, ...). The
 name is what the log viewer shows, and what ``inspect score`` looks up to re-score a log, for
 example with a different judge::
 
