@@ -104,6 +104,11 @@ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 
 
 `hallucination`은 범주별 점수(`<범주>/trimmed_mean`, `<범주>/trimmed_passed`)도 함께 표시합니다. `degeneration`과 `style`은 루브릭마다 scorer가 따로 있어서, 위 지표가 루브릭별로 따로 표시됩니다.
 
+같은 평가를 여러 번 반복했을 때 점수가 얼마나 흔들리는지는 `scripts/repeat_stddev.py`로 계산합니다. 회차마다 로그 디렉토리를 하나씩 넘기면, 태스크별 대표 지표(%)의 회차별 값, 평균, 표본표준편차(n−1로 나눔)와 그중 최댓값을 출력합니다.
+```bash
+$ python scripts/repeat_stddev.py logs/run-1 logs/run-2 logs/run-3 logs/run-4 logs/run-5 --task performance,hallucination,persona
+```
+
 
 ## 한국어 벤치마크
 
