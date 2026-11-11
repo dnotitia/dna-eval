@@ -22,10 +22,11 @@
 
 1) 환경 설정
 ```bash
-# 패키지 의존성 설치
-$ pip install -e .  
+# 패키지 의존성 설치 (.venv를 만들고 dna-eval을 설치합니다)
+$ uv sync
+$ source .venv/bin/activate
 # (선택) 평가 대상·judge 모델을 같은 환경에서 vLLM으로 직접 서빙하려면
-$ pip install -e ".[vllm]"
+$ uv sync --extra vllm
 # 환경변수 export (또는 .env에 추가)
 # 1. 평가 대상 모델
 $ export VLLM_BASE_URL=http://localhost:8000/v1
@@ -35,8 +36,9 @@ $ export JUDGE_BASE_URL=http://localhost:8001/v1
 $ export JUDGE_API_KEY=EMPTY     
 ```
 
+- Python 3.11 이상이 필요합니다. [uv](https://docs.astral.sh/uv/)를 쓰지 않는다면 가상환경을 만든 뒤 `pip install -e .`(vLLM까지는 `pip install -e ".[vllm]"`)으로 설치해도 됩니다.
 - `vllm` extra는 `vllm serve`로 모델을 직접 띄울 때만 필요합니다. 이미 떠 있는 엔드포인트를 평가할 때는 설치하지 않아도 됩니다.
-- vLLM은 특정 torch 버전을 고정하므로 별도 가상환경에 설치하는 것을 권장합니다. 설치되는 vLLM 휠이 요구하는 CUDA 버전과 GPU 드라이버 버전이 맞는지도 확인하세요.
+- vLLM은 특정 torch 버전을 고정하므로 다른 프로젝트와 같은 가상환경에 설치하지 않는 것을 권장합니다. 설치되는 vLLM 휠이 요구하는 CUDA 버전과 GPU 드라이버 버전이 맞는지도 확인하세요.
 - 확인한 조합: Python 3.14, vLLM 0.33.0, torch 2.14.0(CUDA 13.0), inspect-ai 0.3.287
 
 2) 실행 방법
@@ -137,7 +139,7 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 | `kmmmu` | `HAERAE-HUB/KMMMU` | 3,466 | 한국 공무원·자격·NCS·올림피아드 시험 이미지 문제 (멀티모달, judge 채점) | `accuracy` (문항 유형별 포함) | CC-BY-NC-4.0 |
 
 - 공통 규약: thinking을 켜고, 샘플링은 서빙 모델의 `generation_config`를 따르며, 출력 길이를 제한하지 않습니다. 답은 reasoning이 아니라 최종 답변에서만 읽고, 잘리거나 답 형식이 없는 응답은 0점으로 처리해 `answer_diagnostics`로 따로 집계합니다.
-- `hrm8k_ksm`, `kmmmu`는 답 파싱에 `math-verify`가 필요합니다: `pip install -e ".[math]"`
+- `hrm8k_ksm`, `kmmmu`는 답 파싱에 `math-verify`가 필요합니다: `uv sync --extra math` (pip: `pip install -e ".[math]"`)
 - `haerae_vision`, `kmmmu`는 이미지를 입력받는 모델이 필요합니다. vLLM으로 서빙할 때는 `--language-model-only`를 쓰지 말고, 문항당 이미지가 최대 6장(`haerae_vision`)·8장(`kmmmu`)이므로 `--limit-mm-per-prompt`를 그 이상으로 둡니다. 텍스트 전용 모델은 `text_only`로, 두 비전 태스크만은 `vision`으로 실행합니다.
 - `haerae_vision`은 질문 유형을 `-T question_type=original`(기본값, 원래의 모호한 질문)과 `-T question_type=explicit`(맥락을 보충한 질문) 중에서 고릅니다.
 - `kmmmu`는 실행할 때 이미지를 URL에서 내려받습니다. 이미지의 약 3분의 2가 Hub 밖(원 출처 시험 사이트)에 있어서, 그 사이트에 접속할 수 있어야 합니다.
@@ -161,7 +163,7 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 ## 개발 및 테스트
 
 ```bash
-pip install -e ".[dev]"
+uv sync --extra dev
 python -m pytest                      # 전체 테스트
 python -m pytest -m "not network"     # Hub 다운로드 없이
 ```
