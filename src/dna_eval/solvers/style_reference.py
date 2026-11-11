@@ -60,7 +60,9 @@ class ReferenceCache:
         """Bind to ``model`` and load existing references (unless ``refresh``). Idempotent."""
         if self.path is not None:
             return
-        settings = {"model": str(model), "config": self.config.model_dump(exclude=_RUNTIME_FIELDS, exclude_none=True)}
+        # get_model(role=..., config=...) has already merged task defaults with role overrides.
+        # Hash the settings used by model.generate(), including those overrides.
+        settings = {"model": str(model), "config": model.config.model_dump(exclude=_RUNTIME_FIELDS, exclude_none=True)}
         key = hashlib.md5(json.dumps(settings, sort_keys=True, default=str).encode()).hexdigest()[:12]
         self.settings = settings
         self.path = cache_root() / "style" / self.dataset_revision / f"{self.reference}.{key}.parquet"
