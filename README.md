@@ -168,6 +168,20 @@ python -m pytest -m "not network"     # Hub 다운로드 없이
 
 테스트는 실제 모델을 호출하지 않으며 `mockllm`과 `tests/parity/fake_openai.py`를 사용합니다. judge 프롬프트, 루브릭, 생성 설정, 데이터셋 revision처럼 점수를 바꾸는 변경은 `SUITE_VERSION`을 올리고 [docs/methodology.md](docs/methodology.md)의 버전 표에 기록합니다. `tests/fixtures/` 아래 파일은 스크립트로 생성하며, 직접 수정하지 않습니다.
 
+## Acknowledgments
+
+이 프로젝트는 다음 프로젝트 및 기관의 많은 도움을 받아 만들어졌습니다.
+
+- Inspect AI <https://github.com/UKGovernmentBEIS/inspect_ai>
+
+<img width="40%" src="./assets/nipaLogo.png" alt="NIPA 정보통신산업진흥원" />
+
+- NIPA 오픈소스 지원 프로그램 <https://www.nipa.kr>
+
+<img width="40%" src="./assets/ci_01_01.png" alt="NIA 한국지능정보사회진흥원" />
+
+- NIA 한국지능정보사회진흥원 <https://www.nia.or.kr>
+
 ## License
 
 Apache License 2.0 (`LICENSE`), copyright Dnotitia Inc.
