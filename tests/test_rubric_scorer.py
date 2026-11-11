@@ -71,3 +71,18 @@ def test_store_source_reaches_the_judge(tmp_path):
     judge = next(e for e in sample.events if e.event == "model" and e.role == "grader")
     prompt = sample.attachments.get(judge.input[0].text.removeprefix("attachment://"), judge.input[0].text)
     assert f"Actual Output:\n{EMPTY_REASONING} \n" in prompt and "Expected Output:\n참조 생각 \n" in prompt
+
+
+def test_composite_from_a_file_finds_components_next_to_it(tmp_path):
+    """A composite read from a file uses ``<name>.yaml`` beside it, and a shipped rubric otherwise."""
+    from dna_eval.rubrics import CompositeRubric, load_rubric
+
+    (tmp_path / "local_part.yaml").write_text(
+        "name: local_part\nparams: [input, actual_output]\nsteps: [check]\n"
+        "rubric:\n  - {range: [0, 5], outcome: bad}\n  - {range: [6, 10], outcome: good}\nthreshold: 0.5\n",
+        encoding="utf-8")
+    (tmp_path / "combo.yaml").write_text("name: combo\ncompose: [local_part, performance]\n", encoding="utf-8")
+    combo = load_rubric(str(tmp_path / "combo.yaml"))
+    assert isinstance(combo, CompositeRubric)
+    assert [r.name for r in combo.components()] == ["local_part", "performance"]
+    assert combo.components()[0].threshold == 0.5
