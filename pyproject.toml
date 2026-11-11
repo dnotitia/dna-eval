@@ -25,6 +25,8 @@ dependencies = [
 dev = ["pytest>=8", "math-verify[antlr4_13_2]~=0.9.0"]
 # math answer equivalence (hrm8k_ksm); pinned, it decides which answers count as equal
 math = ["math-verify[antlr4_13_2]~=0.9.0"]
+# serving models locally with `vllm serve`; not needed to evaluate an existing endpoint
+vllm = ["vllm>=0.31"]
 
 [project.entry-points.inspect_ai]
 dna_eval = "dna_eval._registry"
