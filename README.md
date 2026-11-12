@@ -23,9 +23,10 @@
 1) 환경 설정
 ```bash
 # 패키지 의존성 설치
-$ pip install -e .  
+$ uv sync
+$ source .venv/bin/activate  
 # (선택) 평가 대상·judge 모델을 같은 환경에서 vLLM으로 직접 서빙하려면
-$ pip install -e ".[vllm]"
+$ uv sync --extra vllm
 # 환경변수 export (또는 .env에 추가)
 # 1. 평가 대상 모델
 $ export VLLM_BASE_URL=http://localhost:8000/v1
@@ -97,7 +98,7 @@ $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-c
 
 평가가 끝나면 아래와 같이 `inspect view`로 샘플별 답변, judge 프롬프트, judge 판단 근거를 확인할 수 있습니다.
 ```bash
-inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 확인
+$ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 로 확인
 ```
 
 표시되는 지표는 다음과 같습니다.
@@ -161,9 +162,10 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 ## 개발 및 테스트
 
 ```bash
-pip install -e ".[dev]"
-python -m pytest                      # 전체 테스트
-python -m pytest -m "not network"     # Hub 다운로드 없이
+$ uv sync --extra dev
+$ source .venv/bin/activate
+$ python -m pytest                      # 전체 테스트
+$ python -m pytest -m "not network"     # Hub 다운로드 없이
 ```
 
 테스트는 실제 모델을 호출하지 않으며 `mockllm`과 `tests/parity/fake_openai.py`를 사용합니다. judge 프롬프트, 루브릭, 생성 설정, 데이터셋 revision처럼 점수를 바꾸는 변경은 `SUITE_VERSION`을 올리고 [docs/methodology.md](docs/methodology.md)의 버전 표에 기록합니다. `tests/fixtures/` 아래 파일은 스크립트로 생성하며, 직접 수정하지 않습니다.
