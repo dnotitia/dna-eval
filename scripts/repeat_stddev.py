@@ -7,7 +7,7 @@
     # (Optional) --task 지정 시 해당 태스크만 계산합니다. 여러 번 지정하거나 쉼표로 이어 쓸 수 있습니다.
     $ python scripts/repeat_stddev.py logs/run-{1..5} --task performance,hallucination,persona
 
-    # (Optional) --metric 지정 시 태스크의 대표 지표 대신 그 지표로 계산합니다.
+    # (Optional) --metric 지정 시 대표 지표와 같은 scorer에서 그 지표로 계산합니다.
     $ python scripts/repeat_stddev.py logs/run-{1..5} --metric mean
 
 How much a task's score moves when the same evaluation is repeated. Each directory is one
@@ -24,9 +24,10 @@ directory is listed as missing and left out of the largest value (exit code 1).
 from __future__ import annotations
 
 import argparse
+import math
 import statistics
 import sys
-from inspect_ai.log import EvalLog, list_eval_logs, read_eval_log
+from inspect_ai.log import EvalLog, headline_metric, list_eval_logs, read_eval_log
 
 
 def task_name(log: EvalLog) -> str:
@@ -47,19 +48,34 @@ def latest_successful(directory: str) -> dict[str, EvalLog]:
 
 
 def score(log: EvalLog, metric: str | None) -> tuple[str, float]:
-    """(metric name, value in %) of ``log``: ``metric``, or the headline metric of the log."""
-    values = {name: m.value for s in log.results.scores for name, m in s.metrics.items()}
-    name = metric or (log.results.headline.metric if log.results.headline else None) or "trimmed_mean"
-    if name not in values:
-        raise KeyError(f"{task_name(log)}: no metric {name!r} (has {sorted(values)})")
-    return name, float(values[name]) * 100
+    """Read the headline score's metric, keeping its scorer, score and reducer identity."""
+    resolved = headline_metric(log)
+    if resolved is None:
+        raise ValueError(f"{task_name(log)}: no headline metric in evaluation results")
+    name = resolved.name if metric is None else metric
+    # The headline score first, then the scorer's other scores (a scorer can report its metrics
+    # under several reducers, e.g. ``mean`` apart from ``trimmed_mean``); never another scorer.
+    same_scorer = [resolved.score] + [s for s in log.results.scores
+                                      if s.scorer == resolved.score.scorer and s is not resolved.score]
+    values = next((s.metrics for s in same_scorer if name in s.metrics), None)
+    if values is None:
+        available = sorted({m for s in same_scorer for m in s.metrics})
+        raise ValueError(f"{task_name(log)}: scorer {resolved.score.scorer!r} has no metric {name!r} "
+                         f"(has {available})")
+    try:
+        value = float(values[name].value) * 100
+    except OverflowError as exc:
+        raise ValueError(f"{task_name(log)}: non-finite percentage for metric {name!r}") from exc
+    if not math.isfinite(value):
+        raise ValueError(f"{task_name(log)}: non-finite percentage for metric {name!r}")
+    return name, value
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("dirs", nargs="+", help="one log directory per repeated evaluation, in order")
     parser.add_argument("--task", action="append", default=[], help="only these tasks; repeatable or comma-separated")
-    parser.add_argument("--metric", help="the metric to use instead of each task's headline metric")
+    parser.add_argument("--metric", help="use this metric of the scorer of each task's headline score")
     args = parser.parse_args()
     if len(args.dirs) < 2:
         parser.error("give at least two directories")
@@ -78,7 +94,12 @@ def main() -> int:
             missing.append(t)
             print(f"{t:16} missing in: " + ", ".join(d for d, r in zip(args.dirs, runs) if t not in r))
             continue
-        scored = [score(r[t], args.metric) for r in runs]
+        scored = []
+        for directory, results in zip(args.dirs, runs):
+            try:
+                scored.append(score(results[t], args.metric))
+            except ValueError as exc:
+                parser.error(f"{directory}: {exc}")
         xs = [x for _, x in scored]
         sds[t] = statistics.stdev(xs)
         print(f"{t:16} {scored[0][0]:18} " + " ".join(f"{x:8.2f}" for x in xs)
