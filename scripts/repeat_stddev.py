@@ -7,7 +7,7 @@
     # (Optional) --task 지정 시 해당 태스크만 계산합니다. 여러 번 지정하거나 쉼표로 이어 쓸 수 있습니다.
     $ python scripts/repeat_stddev.py logs/run-{1..5} --task performance,hallucination,persona
 
-    # (Optional) --metric 지정 시 대표 지표와 같은 채점 항목 안에서 그 지표로 계산합니다.
+    # (Optional) --metric 지정 시 대표 지표와 같은 scorer에서 그 지표로 계산합니다.
     $ python scripts/repeat_stddev.py logs/run-{1..5} --metric mean
 
 How much a task's score moves when the same evaluation is repeated. Each directory is one
@@ -52,13 +52,16 @@ def score(log: EvalLog, metric: str | None) -> tuple[str, float]:
     resolved = headline_metric(log)
     if resolved is None:
         raise ValueError(f"{task_name(log)}: no headline metric in evaluation results")
-    values = resolved.score.metrics
     name = resolved.name if metric is None else metric
-    if name not in values:
-        raise ValueError(
-            f"{task_name(log)}: scorer {resolved.score.scorer!r}, score {resolved.score.name!r}, "
-            f"reducer {resolved.score.reducer!r} has no metric {name!r} (has {sorted(values)})"
-        )
+    # The headline score first, then the scorer's other scores (a scorer can report its metrics
+    # under several reducers, e.g. ``mean`` apart from ``trimmed_mean``); never another scorer.
+    same_scorer = [resolved.score] + [s for s in log.results.scores
+                                      if s.scorer == resolved.score.scorer and s is not resolved.score]
+    values = next((s.metrics for s in same_scorer if name in s.metrics), None)
+    if values is None:
+        available = sorted({m for s in same_scorer for m in s.metrics})
+        raise ValueError(f"{task_name(log)}: scorer {resolved.score.scorer!r} has no metric {name!r} "
+                         f"(has {available})")
     try:
         value = float(values[name].value) * 100
     except OverflowError as exc:
@@ -72,7 +75,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     parser.add_argument("dirs", nargs="+", help="one log directory per repeated evaluation, in order")
     parser.add_argument("--task", action="append", default=[], help="only these tasks; repeatable or comma-separated")
-    parser.add_argument("--metric", help="use this metric within each task's headline score")
+    parser.add_argument("--metric", help="use this metric of the scorer of each task's headline score")
     args = parser.parse_args()
     if len(args.dirs) < 2:
         parser.error("give at least two directories")

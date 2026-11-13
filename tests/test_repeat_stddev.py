@@ -168,3 +168,13 @@ def test_cli_reports_invalid_metric_without_traceback(tmp_path):
     assert out.returncode == 2
     assert "missing" in out.stderr and "error:" in out.stderr
     assert "Traceback" not in out.stderr
+
+
+def test_metric_override_finds_the_scorer_s_other_reducer(base_log):
+    """A scorer reports ``mean`` under its reducer and ``trimmed_mean`` without one (rubric scorers)."""
+    log = with_results(base_log, [result("primary", 0.2, name="primary", reducer="mean", mean=0.75),
+                                  result("primary", 1, name="primary"), result("other", 0.5, mean=0.25)],
+                       HeadlineMetric(scorer="primary", score="primary", metric="trimmed_mean"))
+    log.results.scores[0].metrics.pop("trimmed_mean")
+    assert score(log, "mean") == ("mean", 75.0)
+    assert score(log, None) == ("trimmed_mean", 100.0)
