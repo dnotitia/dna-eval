@@ -169,6 +169,8 @@ $ python -m pytest                      # 전체 테스트
 $ python -m pytest -m "not network"     # Hub 다운로드 없이
 ```
 
+PR과 `main` 푸시마다 GitHub Actions가 Python 3.11과 3.14에서 `python -m pytest -m "not network"`를 자동으로 실행합니다(`.github/workflows/test.yml`). `network` 테스트는 CI에서 돌지 않으므로 필요하면 로컬에서 실행합니다.
+
 테스트는 실제 모델을 호출하지 않으며 `mockllm`과 `tests/parity/fake_openai.py`를 사용합니다. judge 프롬프트, 루브릭, 생성 설정, 데이터셋 revision처럼 점수를 바꾸는 변경은 `SUITE_VERSION`을 올리고 [docs/methodology.md](docs/methodology.md)의 버전 표에 기록합니다. `tests/fixtures/` 아래 파일은 스크립트로 생성하며, 직접 수정하지 않습니다.
 
 ## Acknowledgments
