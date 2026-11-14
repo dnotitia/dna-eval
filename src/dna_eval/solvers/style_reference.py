@@ -21,8 +21,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from inspect_ai.model import ChatMessageUser, GenerateConfig, Model, get_model, model_roles
+from inspect_ai.model import ChatMessageUser, GenerateConfig, Model, ModelOutput, get_model, model_roles
 from inspect_ai.solver import Generate, Solver, TaskState, solver
+from inspect_ai.util import LimitExceededError
 
 from dna_eval.roles import REFERENCE_ROLE
 from dna_eval.solvers.dna_generate import ATTEMPTS
@@ -73,7 +74,20 @@ class ReferenceCache:
         async with lock:
             if sample_id in self._rows:
                 return self._rows[sample_id], "cache"
-            output = await call_with_retries(lambda: model.generate([ChatMessageUser(content=input_text)]), attempts)
+            returned: ModelOutput | None = None
+
+            async def call() -> ModelOutput:
+                nonlocal returned
+                returned = await model.generate([ChatMessageUser(content=input_text)])
+                return returned
+
+            try:
+                output = await call_with_retries(call, attempts)
+            except LimitExceededError:
+                # A token or message limit is treated like exhausted retries (the last output
+                # that came back, or none) and not re-raised: ``dna_generate``, which runs
+                # next, hits the same limit before sending anything and records it.
+                output = returned
             row = {"id": sample_id, "input": input_text,
                    "reference_reasoning": reasoning_text(output) if output else "",
                    "reference_content": output.completion.strip() if output else ""}
@@ -105,6 +119,8 @@ def style_reference(reference: str, dataset_revision: str, config: GenerateConfi
     reference comes from the local cache or is generated once per sample, with the same
     retry and answer/reasoning handling as ``dna_generate`` and with ``config``, by the model
     bound to the ``reference`` role (required). ``refresh`` ignores an existing cache file.
+    A token or message limit reached during generation leaves placeholders, as a failed call
+    does, and is not raised here: the following ``dna_generate`` records it.
     """
     cache = ReferenceCache(reference, dataset_revision, config, refresh)
     warned = False
