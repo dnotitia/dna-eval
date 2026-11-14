@@ -95,7 +95,8 @@ case $TASK in
     evaluate style -- -T "reference=$REFERENCE" ${OPTIONS[@]+"${OPTIONS[@]}"}
     ;;
   *)
-    [[ " ${SUITE_TASKS[*]} ${BENCHMARK_TASKS[*]} ${NAMED_ONLY_TASKS[*]} " == *" $TASK "* ]] || { echo "unknown task: $TASK" >&2; usage; }
+    [[ $TASK != *" "* && " ${SUITE_TASKS[*]} ${BENCHMARK_TASKS[*]} ${NAMED_ONLY_TASKS[*]} " == *" $TASK "* ]] ||
+      { echo "unknown task: $TASK" >&2; usage; }
     [[ -z $REFERENCE ]] || { echo "only style takes a reference model" >&2; usage; }
     evaluate "$TASK" -- ${OPTIONS[@]+"${OPTIONS[@]}"}
     ;;
