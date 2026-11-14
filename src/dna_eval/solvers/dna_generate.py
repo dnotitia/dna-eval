@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from inspect_ai.model import ModelOutput
 from inspect_ai.solver import Generate, Solver, TaskState, solver
+from inspect_ai.util import LimitExceededError
 
 from dna_eval.utils.model_output import reasoning_text
 from dna_eval.utils.retry import call_with_retries
@@ -35,7 +36,9 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
     - the reasoning (from a ``reasoning_content`` / ``reasoning`` field or a ``<think>`` block),
       stripped, is kept in ``state.store["reasoning"]``, or ``EMPTY_REASONING`` if there is none;
     - why there is no answer, ``"failed"`` or ``"empty"``, is kept in ``state.store["no_answer"]``,
-      so the failure rate can be reported (``call_failures``).
+      so the failure rate can be reported (``call_failures``);
+    - an Inspect limit (token, message, working) is not retried: the placeholders above are
+      applied without ``no_answer``, and the error propagates so Inspect records ``sample.limit``.
 
     Only ``state.output.completion`` is rewritten; the assistant message (reasoning included)
     is left as the model returned it.
@@ -50,12 +53,24 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
             state = await generate(state)
             return state.output
 
-        output = await call_with_retries(call, attempts)
-        answer = state.output.completion.strip()
-        if not answer:
+        try:
+            output = await call_with_retries(call, attempts)
+        except LimitExceededError:
+            # Inspect records the limit in ``sample.limit`` and still scores the sample, so the
+            # judge gets the same placeholders; ``no_answer`` stays unset (not a failed call).
+            _finalize(state)
+            raise
+        if not _finalize(state):
             state.store.set(NO_ANSWER_KEY, "failed" if output is None else "empty")
-        state.output.completion = answer or EMPTY_ANSWER
-        state.store.set(REASONING_KEY, reasoning_text(state.output) or EMPTY_REASONING)
         return state
 
     return solve
+
+
+def _finalize(state: TaskState) -> bool:
+    """Strip the answer, substitute the placeholders, and store the reasoning.
+    Returns whether the model gave an answer."""
+    answer = state.output.completion.strip()
+    state.output.completion = answer or EMPTY_ANSWER
+    state.store.set(REASONING_KEY, reasoning_text(state.output) or EMPTY_REASONING)
+    return bool(answer)
