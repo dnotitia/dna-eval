@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from inspect_ai.model import ModelOutput
 from inspect_ai.solver import Generate, Solver, TaskState, solver
+from inspect_ai.util import LimitExceededError
 
 from dna_eval.utils.model_output import reasoning_text
 from dna_eval.utils.retry import call_with_retries
@@ -16,6 +17,8 @@ REASONING_KEY = "reasoning"
 
 # ``state.store`` key recording why the answer is a placeholder: ``"failed"`` (every attempt
 # raised) or ``"empty"`` (the model returned no answer text); absent when there is an answer.
+# A token or message limit is recorded like a call that kept failing: ``"failed"`` if no
+# attempt had returned, ``"empty"`` if an earlier attempt returned without an answer.
 NO_ANSWER_KEY = "no_answer"
 
 ATTEMPTS = 3
@@ -35,7 +38,11 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
     - the reasoning (from a ``reasoning_content`` / ``reasoning`` field or a ``<think>`` block),
       stripped, is kept in ``state.store["reasoning"]``, or ``EMPTY_REASONING`` if there is none;
     - why there is no answer, ``"failed"`` or ``"empty"``, is kept in ``state.store["no_answer"]``,
-      so the failure rate can be reported (``call_failures``).
+      so the failure rate can be reported (``call_failures``);
+    - a token or message limit reached during a model call is not retried (Inspect refuses
+      further calls): the placeholders and ``no_answer`` are the same as for a call that kept
+      failing, using the last output an earlier attempt returned, and the error then propagates
+      so Inspect records ``sample.limit`` (the sample is still scored).
 
     Only ``state.output.completion`` is rewritten; the assistant message (reasoning included)
     is left as the model returned it.
@@ -43,19 +50,34 @@ def dna_generate(attempts: int = ATTEMPTS) -> Solver:
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         messages = list(state.messages)
+        returned: ModelOutput | None = None   # the last output a call returned
 
         async def call() -> ModelOutput:
-            nonlocal state
+            nonlocal state, returned
             state.messages = list(messages)
             state = await generate(state)
-            return state.output
+            returned = state.output
+            return returned
 
-        output = await call_with_retries(call, attempts)
-        answer = state.output.completion.strip()
-        if not answer:
-            state.store.set(NO_ANSWER_KEY, "failed" if output is None else "empty")
-        state.output.completion = answer or EMPTY_ANSWER
-        state.store.set(REASONING_KEY, reasoning_text(state.output) or EMPTY_REASONING)
+        try:
+            output = await call_with_retries(call, attempts)
+        except LimitExceededError:
+            # A call that raised leaves ``state.output`` as the last call that returned set it,
+            # so this is what exhausted retries would have recorded.
+            _finalize(state, returned)
+            raise
+        _finalize(state, output)
         return state
 
     return solve
+
+
+def _finalize(state: TaskState, output: ModelOutput | None) -> None:
+    """Strip the answer, substitute the placeholders, store the reasoning, and record
+    ``no_answer`` when there is no answer. ``output`` is what the retries ended with
+    (``None`` if every attempt raised)."""
+    answer = state.output.completion.strip()
+    if not answer:
+        state.store.set(NO_ANSWER_KEY, "failed" if output is None else "empty")
+    state.output.completion = answer or EMPTY_ANSWER
+    state.store.set(REASONING_KEY, reasoning_text(state.output) or EMPTY_REASONING)
