@@ -118,6 +118,12 @@ $ inspect view --log-dir ./logs    # 브라우저에서 http://localhost:7575 �
 $ python scripts/repeat_stddev.py logs/run-1 logs/run-2 logs/run-3 logs/run-4 logs/run-5 --task performance,hallucination,persona
 ```
 
+실행(run)별 점수는 `scripts/score_per_epoch.py`로 `score.log`에 기록합니다. 로그 파일이나 디렉토리를 넘기면 실행마다 평균 점수와 통과한 문항 수(`passed`)를 한 줄씩 덧붙입니다. DNA Evaluation Suite 로그는 채점 항목별 라벨로, 한국어 벤치마크 로그는 `<모델> (<태스크>)` 라벨로 기록합니다.
+`passed`는 Suite에서는 루브릭 통과 기준을 넘은 문항 수이고, 통과 기준이 없는 한국어 벤치마크에서는 만점(1.0)을 받은 문항 수, 즉 정답 수입니다. 부분 점수가 있는 `haerae_vision`은 체크리스트를 모두 충족한 답변만 셉니다.
+```bash
+$ python scripts/score_per_epoch.py logs/ --task kmmlu_pro,kbl --out-dir results/
+```
+
 
 ## 한국어 벤치마크
 
