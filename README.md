@@ -169,7 +169,7 @@ $ python -m pytest                      # 전체 테스트
 $ python -m pytest -m "not network"     # Hub 다운로드 없이
 ```
 
-테스트는 실제 모델을 호출하지 않으며 `mockllm`과 `tests/parity/fake_openai.py`를 사용합니다. judge 프롬프트, 루브릭, 생성 설정, 데이터셋 revision처럼 점수를 바꾸는 변경은 `SUITE_VERSION`을 올리고 [docs/methodology.md](docs/methodology.md)의 버전 표에 기록합니다. `tests/fixtures/` 아래 파일은 스크립트로 생성하며, 직접 수정하지 않습니다.
+테스트는 실제 모델을 호출하지 않으며 `mockllm`과 `tests/parity/fake_openai.py`를 사용합니다. PR을 열거나 `main`에 푸시하면 GitHub Actions(`.github/workflows/ci.yml`)가 `pytest -m "not network"`를 자동으로 실행합니다. judge 프롬프트, 루브릭, 생성 설정, 데이터셋 revision처럼 점수를 바꾸는 변경은 `SUITE_VERSION`을 올리고 [docs/methodology.md](docs/methodology.md)의 버전 표에 기록합니다. `tests/fixtures/` 아래 파일은 스크립트로 생성하며, 직접 수정하지 않습니다.
 
 ## Acknowledgments
 
