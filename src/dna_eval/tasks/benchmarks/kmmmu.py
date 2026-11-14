@@ -53,7 +53,7 @@ def load_samples(revision: str) -> list[Sample]:
 @task
 def kmmmu(thinking: bool = True, epochs: int = 1, judge_retries: int = 2, revision: str = DATASET_REVISION) -> Task:
     """KMMMU, 3,466 questions x ``epochs`` runs; needs a vision-language model under evaluation,
-    a judge bound to the ``grader`` role, and ``math-verify`` (``pip install -e ".[math]"``).
+    a judge bound to the ``grader`` role, and ``math-verify`` (``uv sync --extra math``).
 
     Follows the authors' evaluation tutorial (github.com/HAE-RAE/KMMMU, ``eval_tutorial.ipynb``
     and ``kmmmu_utils.py``; Lee et al., 2026, arXiv:2604.13058): the system prompt asking for

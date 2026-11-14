@@ -1,5 +1,9 @@
 """Math answer reading and comparison: the helpers in ``utils/math_answer.py`` and the
-``math_answer`` scorer, run end to end against ``mockllm`` on a small in-memory dataset."""
+``math_answer`` scorer, run end to end against ``mockllm`` on a small in-memory dataset, and
+the math-verify install hint that ``math_answer`` and ``answer_judge`` both give."""
+import re
+import sys
+
 import pytest
 from inspect_ai import Task
 from inspect_ai import eval as inspect_eval
@@ -7,9 +11,10 @@ from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.model import ChatCompletionChoice, ChatMessageAssistant, ContentReasoning, ContentText, ModelOutput, get_model
 from inspect_ai.solver import generate
 
+from dna_eval.scorers.answer_judge import answer_judge
 from dna_eval.scorers.math_answer import math_answer
-from dna_eval.utils.math_answer import (extract_boxed_answer, is_equiv_math_verify, is_equiv_string,
-                                        last_boxed, last_integer, parse_integer)
+from dna_eval.utils.math_answer import (MATH_INSTALL, extract_boxed_answer, is_equiv_math_verify,
+                                        is_equiv_string, last_boxed, last_integer, parse_integer)
 
 
 # --- boxed extraction ---------------------------------------------------------------------
@@ -183,14 +188,19 @@ def test_diagnostics_cover_every_run(tmp_path):
     assert metrics["accuracy"] == 0.5 and metrics["truncated"] == 0.5 and metrics["accuracy_excl_truncated"] == 1.0
 
 
-def test_expression_mode_names_the_math_extra_when_math_verify_is_missing(monkeypatch):
-    import sys
+def test_the_math_install_hint_follows_the_readme():
+    assert MATH_INSTALL.startswith("uv sync --extra math")
+    assert 'pip install -e ".[math]"' in MATH_INSTALL
 
-    import pytest
 
-    from dna_eval.scorers.math_answer import math_answer
-
+@pytest.mark.parametrize("make_scorer", [lambda: math_answer("expression"), answer_judge],
+                         ids=["math_answer", "answer_judge"])
+def test_scorers_name_the_math_extra_when_math_verify_is_missing(monkeypatch, make_scorer):
     monkeypatch.setitem(sys.modules, "math_verify", None)
-    with pytest.raises(RuntimeError, match=r'pip install "dna-eval\[math\]"'):
-        math_answer("expression")
-    math_answer("integer")          # the integer mode needs no math-verify
+    with pytest.raises(RuntimeError, match=re.escape(MATH_INSTALL)):
+        make_scorer()
+
+
+def test_integer_mode_needs_no_math_verify(monkeypatch):
+    monkeypatch.setitem(sys.modules, "math_verify", None)
+    math_answer("integer")
