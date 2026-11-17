@@ -46,7 +46,9 @@ inspect eval dna_eval/style \
 
 ## 캐시
 
-참조 답변은 `$DNA_EVAL_CACHE_DIR/style/<데이터셋 revision>/<참조 모델>.<설정 hash>.parquet`에 저장되고, 생성 출처를 기록한 `.json` 파일이 함께 저장됩니다. 설정 hash에는 참조 모델과 생성 설정이 들어가므로, 모델이나 `thinking` 설정이 다르면 별도 파일이 만들어집니다.
+참조 답변은 `$DNA_EVAL_CACHE_DIR/style/<데이터셋 revision>/<참조 모델>.<설정 hash>.parquet`에 저장되고, 생성 출처를 기록한 `.json` 파일이 함께 저장됩니다. 설정 hash와 `.json`에는 태스크 기본값과 `reference` role 설정을 합친 실제 생성 설정이 들어갑니다. 같은 항목을 양쪽에 지정하면 role 설정이 우선하므로, role의 `temperature`·`max_tokens` 등 답변을 바꾸는 설정이 달라지면 별도 파일이 만들어집니다. 동시 요청 수·재시도 횟수·시간 제한처럼 실행 관리 설정만 달라지면 같은 캐시를 사용합니다.
+
+수정 전 `reference` role의 생성 설정을 덮어써 캐시를 만든 적이 있다면, 다시 사용할 설정마다 최초 한 번 `-T refresh_reference=true`로 재생성하세요. 이전 캐시에 실제 role 설정이 기록되지 않아 잘못 저장된 참조 답변을 자동으로 판별할 수 없습니다. 기존 hash에 실제 설정이 이미 모두 포함되어 있던 캐시는 그대로 재사용합니다.
 
 캐시는 모델 이름으로 구분합니다. 같은 이름으로 다른 가중치를 서빙했다면 `-T refresh_reference=true`로 다시 생성하세요.
 
