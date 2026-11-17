@@ -4,6 +4,8 @@ from inspect_ai import Task, task
 from inspect_ai.scorer import mean
 
 from dna_eval.dataset import dna_dataset
+from dna_eval.metrics.call_failures import call_failures
+from dna_eval.metrics.judge_failures import judge_failures
 from dna_eval.metrics.per_run_trimmed import per_run_trimmed
 from dna_eval.scorers.rubric_scorer import rubric_scorer
 from dna_eval.solvers.dna_generate import dna_generate
@@ -26,7 +28,8 @@ def hallucination(thinking: bool = True, epochs: int = 15, revision: str = DATAS
                             metadata=["category", "pair_id", "difficulty", "mode"]),
         solver=dna_generate(),
         scorer=rubric_scorer("hallucination"),
-        metrics=[per_run_trimmed(), per_run_trimmed(group_by="category"), mean()],
+        metrics=[per_run_trimmed(), per_run_trimmed(group_by="category"), mean(),
+                 call_failures(), judge_failures()],
         epochs=epochs,
         config=dna_generate_config(thinking),
         headline_metric=HEADLINE,
