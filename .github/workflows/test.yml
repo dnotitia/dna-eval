@@ -1,0 +1,42 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # a newer push to a PR supersedes its running jobs; every push to main is tested
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pytest:
+    name: pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # minimum supported (requires-python) and the version the README verifies
+        python-version: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+
+      # setup-uv publishes no moving major tag, so it is pinned to a full release.
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      # --locked fails the job if uv.lock is out of date with pyproject.toml.
+      - name: Install dependencies
+        run: uv sync --locked --extra dev
+
+      # Tests marked `network` download Hub datasets and are skipped here.
+      - name: Run tests
+        run: uv run --no-sync python -m pytest -m "not network"
