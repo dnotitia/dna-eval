@@ -7,6 +7,9 @@ so nothing here evaluates a model or reaches an endpoint.
   reference model, and is the only task skipped when no reference model is given.
 - The groups cover the tasks the package registers (``_registry.py``), so a task added to one
   and not the other fails here. ``uncensorship`` is in no group: it runs only when named.
+  The expected tasks come from the registry, and the tasks of one call are compared as a
+  sorted list: adding a task or reordering ``run.sh`` needs no change here. Only the choices
+  the registry cannot tell (``VISION``, ``NAMED_ONLY``) are written out.
 - Model, judge, reference and extra options reach ``inspect eval`` unchanged.
 - A wrong call (unknown task, missing or misplaced reference model) prints the usage, exits 2
   and runs nothing.
@@ -29,16 +32,27 @@ MODEL = "vllm/model-under-test"
 JUDGE = "openai-api/judge/judge-model"
 REFERENCE = "reference-model"
 
-SUITE = ["performance", "hallucination", "persona", "degeneration", "style"]
-BENCHMARKS = ["kmmlu_pro", "kmmlu_redux", "kmmlu_hard", "click", "kobalt", "hrm8k_ksm", "haerae_bench",
-              "kosimpleqa", "kormedmcqa", "kbl", "haerae_vision", "kmmmu"]
-VISION = ["haerae_vision", "kmmmu"]
-NAMED_ONLY = ["uncensorship"]
+
+def _registered_tasks() -> tuple[set[str], set[str]]:
+    """(suite tasks, benchmark tasks) the package registers, read from ``_registry.py``'s imports."""
+    tree = ast.parse((ROOT / "src" / "dna_eval" / "_registry.py").read_text(encoding="utf-8"))
+    suite, benchmarks = set(), set()
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("dna_eval.tasks."):
+            into = benchmarks if node.module.startswith("dna_eval.tasks.benchmarks.") else suite
+            into.update(alias.name for alias in node.names)
+    return suite, benchmarks
+
+
+REGISTERED_SUITE, BENCHMARKS = _registered_tasks()
+VISION = {"haerae_vision", "kmmmu"}           # need a vision-language model: in no text_only run
+NAMED_ONLY = {"uncensorship"}                 # in no group: runs only when named
+SUITE = REGISTERED_SUITE - NAMED_ONLY
 GROUPS = {
     "dna_eval": SUITE,
     "benchmarks": BENCHMARKS,
-    "all": SUITE + BENCHMARKS,
-    "text_only": [t for t in SUITE + BENCHMARKS if t not in VISION],
+    "all": SUITE | BENCHMARKS,
+    "text_only": (SUITE | BENCHMARKS) - VISION,
     "vision": VISION,
 }
 NO_REFERENCE_GROUPS = ["benchmarks", "vision"]      # groups without style: a reference model is an error
@@ -50,15 +64,10 @@ exit "${{FAKE_INSPECT_EXIT:-0}}"
 """
 
 
-def _registered_tasks() -> tuple[set[str], set[str]]:
-    """(suite tasks, benchmark tasks) the package registers, read from ``_registry.py``'s imports."""
-    tree = ast.parse((ROOT / "src" / "dna_eval" / "_registry.py").read_text(encoding="utf-8"))
-    suite, benchmarks = set(), set()
-    for node in tree.body:
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("dna_eval.tasks."):
-            into = benchmarks if node.module.startswith("dna_eval.tasks.benchmarks.") else suite
-            into.update(alias.name for alias in node.names)
-    return suite, benchmarks
+def _sort_tasks(call: list[str]) -> list[str]:
+    """``call`` with the ``dna_eval/<task>`` arguments after ``eval`` sorted: run order is not checked."""
+    end = next((i for i, a in enumerate(call) if i and not a.startswith("dna_eval/")), len(call))
+    return [*call[:1], *sorted(call[1:end]), *call[end:]]
 
 
 @pytest.fixture
@@ -81,13 +90,13 @@ def run(tmp_path):
                               text=True, timeout=30)
         records = log.read_text(encoding="utf-8").split("\x1e")[:-1] if log.exists() else []
         log.unlink(missing_ok=True)
-        return proc, [r.split("\0")[:-1] for r in records]
+        return proc, [_sort_tasks(r.split("\0")[:-1]) for r in records]
 
     return _run
 
 
-def _command(tasks: list[str], *options: str) -> list[str]:
-    return ["eval", *[f"dna_eval/{t}" for t in tasks], "--model", MODEL, "--model-role", f"grader={JUDGE}",
+def _command(tasks, *options: str) -> list[str]:
+    return ["eval", *sorted(f"dna_eval/{t}" for t in tasks), "--model", MODEL, "--model-role", f"grader={JUDGE}",
             *options]
 
 
@@ -121,37 +130,24 @@ def test_group_without_style_rejects_reference(run, group):
     assert calls == []
 
 
-def test_groups_cover_the_registered_tasks(run):
-    """A task registered with Inspect is in its group, and a group names no unregistered task."""
-    suite, benchmarks = _registered_tasks()
-    assert suite and benchmarks
-
-    def tasks_of(group: str) -> set[str]:
-        proc, calls = run(group, MODEL, JUDGE, *([] if group in NO_REFERENCE_GROUPS else [REFERENCE]))
-        assert proc.returncode == 0, proc.stderr
-        names = [a for call in calls for a in call if a.startswith("dna_eval/")]
-        assert len(names) == len(set(names)), f"{group} runs a task twice: {names}"
-        return {n.removeprefix("dna_eval/") for n in names}
-
-    assert tasks_of("dna_eval") == suite - set(NAMED_ONLY)
-    assert tasks_of("benchmarks") == benchmarks
-    assert tasks_of("all") == (suite | benchmarks) - set(NAMED_ONLY)
-    assert tasks_of("vision") == set(VISION) <= benchmarks
-    assert tasks_of("text_only") == (suite | benchmarks) - set(NAMED_ONLY) - set(VISION)
+def test_written_out_tasks_are_registered():
+    """``VISION`` and ``NAMED_ONLY`` name registered tasks: a renamed or removed task fails here."""
+    assert SUITE and BENCHMARKS
+    assert VISION <= BENCHMARKS
+    assert NAMED_ONLY <= REGISTERED_SUITE
 
 
 def test_usage_names_every_registered_task(run):
-    suite, benchmarks = _registered_tasks()
     proc, calls = run()
     assert proc.returncode == 2 and calls == []
-    missing = [t for t in sorted(suite | benchmarks) if t not in proc.stdout]
+    missing = [t for t in sorted(REGISTERED_SUITE | BENCHMARKS) if t not in proc.stdout]
     assert not missing, f"run.sh usage does not mention: {missing}"
     assert not proc.stdout.startswith("#") and "set -euo" not in proc.stdout     # the header comment, only
 
 
 # --- single tasks ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("task", [t for t in SUITE + BENCHMARKS + NAMED_ONLY if t != "style"])
+@pytest.mark.parametrize("task", sorted((SUITE | BENCHMARKS | NAMED_ONLY) - {"style"}))
 def test_single_task(run, task):
     proc, calls = run(task, MODEL, JUDGE)
     assert proc.returncode == 0, proc.stderr
@@ -191,7 +187,11 @@ def test_other_task_rejects_reference(run, task):
 
 # --- wrong calls ----------------------------------------------------------------------------
 
-@pytest.mark.parametrize("task", ["no_such_task", "dna_eval/performance", "Performance", "perf", ""])
+@pytest.mark.parametrize("task", [
+    "no_such_task", "dna_eval/performance", "Performance", "perf", "",
+    # several names in one argument must not pass as one known task
+    "performance hallucination", "style kmmlu_pro", "kmmmu uncensorship",
+])
 def test_unknown_task(run, task):
     proc, calls = run(task, MODEL, JUDGE)
     assert proc.returncode == 2
