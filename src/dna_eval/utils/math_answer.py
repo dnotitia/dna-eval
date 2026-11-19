@@ -148,6 +148,11 @@ def is_equiv_string(answer: str | None, gold: object) -> bool:
 
 # --- symbolic equivalence ------------------------------------------------------------------
 
+# How to install math-verify (the ``math`` extra), as the README gives it; the scorers that
+# need the package name it when it is missing.
+MATH_INSTALL = 'uv sync --extra math (with pip: pip install -e ".[math]")'
+
+
 def is_equiv_math_verify(answer: str | None, gold: object) -> bool:
     """Whether ``math-verify`` finds ``answer`` mathematically equal to ``gold`` (``False`` on any failure).
 

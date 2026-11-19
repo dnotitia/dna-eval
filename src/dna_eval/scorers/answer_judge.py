@@ -16,11 +16,9 @@ from inspect_ai.solver import TaskState
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.metrics.judge_failures import JUDGE_ERROR, judge_failures
 from dna_eval.utils.grader import call_grader
-from dna_eval.utils.math_answer import last_boxed
+from dna_eval.utils.math_answer import MATH_INSTALL, last_boxed
 from dna_eval.utils.model_output import is_truncated
 from dna_eval.utils.optional import require
-
-MATH_INSTALL = 'pip install -e ".[math]"'
 
 # github.com/HAE-RAE/KMMMU (kmmmu_utils.py, eval_tutorial.ipynb), which states no licence;
 # see THIRD_PARTY_NOTICES.md.

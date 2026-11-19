@@ -7,12 +7,10 @@ from inspect_ai.scorer import Score, Scorer, Target, accuracy, scorer, stderr
 from inspect_ai.solver import TaskState
 
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
-from dna_eval.utils.math_answer import (extract_boxed_answer, is_equiv_math_verify, is_equiv_string,
-                                        last_boxed, last_integer, parse_integer)
+from dna_eval.utils.math_answer import (MATH_INSTALL, extract_boxed_answer, is_equiv_math_verify,
+                                        is_equiv_string, last_boxed, last_integer, parse_integer)
 from dna_eval.utils.model_output import is_truncated
 from dna_eval.utils.optional import require
-
-MATH_INSTALL = 'pip install "dna-eval[math]"'   # math-verify, for mode="expression"
 
 
 @scorer(metrics=[accuracy(), stderr(), answer_diagnostics()])
