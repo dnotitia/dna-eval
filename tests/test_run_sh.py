@@ -130,6 +130,13 @@ def test_group_without_style_rejects_reference(run, group):
     assert calls == []
 
 
+@pytest.mark.parametrize("group", [g for g in GROUPS if "_" in g])
+def test_group_accepts_hyphens(run, group):
+    proc, calls = run(group.replace("_", "-"), MODEL, JUDGE)
+    assert proc.returncode == 0, proc.stderr
+    assert calls == [_command([t for t in GROUPS[group] if t != "style"])]
+
+
 def test_written_out_tasks_are_registered():
     """``VISION`` and ``NAMED_ONLY`` name registered tasks: a renamed or removed task fails here."""
     assert SUITE and BENCHMARKS
@@ -153,6 +160,13 @@ def test_single_task(run, task):
     assert proc.returncode == 0, proc.stderr
     assert calls == [_command([task])]
     assert proc.stderr == ""
+
+
+@pytest.mark.parametrize("task", sorted(t for t in REGISTERED_SUITE | BENCHMARKS if "_" in t))
+def test_single_task_accepts_hyphens(run, task):
+    proc, calls = run(task.replace("_", "-"), MODEL, JUDGE)
+    assert proc.returncode == 0, proc.stderr
+    assert calls == [_command([task])]
 
 
 def test_uncensorship_runs_only_when_named(run):
