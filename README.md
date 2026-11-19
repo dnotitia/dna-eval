@@ -41,7 +41,10 @@ $ export VLLM_API_KEY=EMPTY
 
 # 2. judge 모델
 $ export JUDGE_BASE_URL=http://localhost:8001/v1  
-$ export JUDGE_API_KEY=EMPTY     
+$ export JUDGE_API_KEY=EMPTY
+
+# 3. KMMLU-Redux 등 일부 태스크는 huggingface 권한 부여가 필요합니다
+$ export HF_TOKEN=...
 ```
 
 4) 실행 방법
