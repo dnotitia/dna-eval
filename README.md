@@ -24,27 +24,36 @@
 ```bash
 # 패키지 의존성 설치
 $ uv sync
-$ source .venv/bin/activate  
-# (선택) 평가 대상·judge 모델을 같은 환경에서 vLLM으로 직접 서빙하려면
+$ source .venv/bin/activate
+```
+
+2) (선택) 평가 모델 서빙
+평가 대상·judge 모델을 같은 환경에서 vLLM으로 직접 서빙하려면 `--extra vllm` 지정
+```bash
 $ uv sync --extra vllm
-# 환경변수 export (또는 .env에 추가)
+```
+
+3) 환경변수 지정 (export 또는 .env에 추가)
+```bash
 # 1. 평가 대상 모델
 $ export VLLM_BASE_URL=http://localhost:8000/v1
-$ export VLLM_API_KEY=EMPTY       
+$ export VLLM_API_KEY=EMPTY
+
 # 2. judge 모델
 $ export JUDGE_BASE_URL=http://localhost:8001/v1  
 $ export JUDGE_API_KEY=EMPTY     
 ```
 
-- `vllm` extra는 `vllm serve`로 모델을 직접 띄울 때만 필요합니다. 이미 떠 있는 엔드포인트를 평가할 때는 설치하지 않아도 됩니다.
-- vLLM은 특정 torch 버전을 고정하므로 별도 가상환경에 설치하는 것을 권장합니다. 설치되는 vLLM 휠이 요구하는 CUDA 버전과 GPU 드라이버 버전이 맞는지도 확인하세요.
-- 확인한 조합: Python 3.14, vLLM 0.33.0, torch 2.14.0(CUDA 13.0), inspect-ai 0.3.287
-
-2) 실행 방법
+4) 실행 방법
 ```bash
 # 실행 커맨드 
 $ bash run.sh <task> vllm/<model> openai-api/judge/<judge-model> [<reference-model>]
+```
 
+---
+
+### 태스크별 실행 예시 및 세부사항
+```
 # 예시1 - Performance 태스크 실행
 $ bash run.sh performance vllm/<model> openai-api/judge/<judge-model>  
 # 예시2 - # Style 태스크 실행
