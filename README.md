@@ -31,6 +31,8 @@ $ source .venv/bin/activate
 평가 대상·judge 모델을 같은 환경에서 vLLM으로 직접 서빙하려면 `--extra vllm` 지정
 ```bash
 $ uv sync --extra vllm
+$ source .venv/bin/activate
+$ vllm serve <model>
 ```
 
 3) 환경변수 지정 (export 또는 .env에 추가)
