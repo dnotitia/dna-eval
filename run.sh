@@ -3,7 +3,7 @@
 #
 #   bash run.sh <task> <model> <judge-model> [reference-model] [inspect eval options...]
 #
-#   <task>             a task name, or a group:
+#   <task>             a task name, or a group (- and _ are interchangeable):
 #                        dna_eval    the DNA evaluation suite: performance, hallucination, persona,
 #                                    degeneration, style
 #                        benchmarks  the Korean benchmarks: kmmlu_pro, kmmlu_redux, kmmlu_hard, click,
@@ -36,7 +36,7 @@ usage() {
 }
 
 [[ $# -ge 3 ]] || usage
-TASK=$1
+TASK=${1//-/_}
 MODEL=$2
 JUDGE=$3
 shift 3
