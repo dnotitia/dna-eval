@@ -1,8 +1,11 @@
 """KMMLU-HARD: the 4,104 KMMLU questions that proprietary models found hardest, in 45 subjects."""
 from __future__ import annotations
 
+import csv
+
+from huggingface_hub import hf_hub_download
 from inspect_ai import Epochs, Task, task
-from inspect_ai.dataset import MemoryDataset, Sample, hf_dataset
+from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.log import HeadlineMetric
 from inspect_ai.solver import generate
 
@@ -27,23 +30,30 @@ SUBJECTS = (
     "real_estate", "refrigerating_machinery", "social_welfare", "taxation",
     "telecommunications_and_wireless_technology",
 )
+# File of each split of a subject, as the dataset card's ``configs`` maps them.
+DATA_FILES = {"dev": "data/{}-dev.csv", "test": "data/{}-hard-test.csv"}
 LETTERS = "ABCD"
 NUM_FEWSHOT = 5
 
 
+def read_rows(subject: str, split: str, revision: str) -> list[dict]:
+    """The rows of a subject's ``split`` file at ``revision``, every value a string."""
+    path = hf_hub_download(REPO, DATA_FILES[split].format(subject), repo_type="dataset", revision=revision)
+    with open(path, encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))
+
+
 def load_samples(subjects: list[str], num_fewshot: int, revision: str) -> list[Sample]:
     """Every test question of ``subjects``, each with the subject's first ``num_fewshot`` ``dev``
-    examples; ids are ``<subject>-<row number>``."""
+    examples; ids are ``<subject>-<row number>``. The CSV files are read directly at ``revision``
+    instead of through ``datasets.load_dataset``, which is much slower for 90 small files."""
     unknown = sorted(set(subjects) - set(SUBJECTS))
     if unknown:
         raise ValueError(f"unknown KMMLU-HARD subjects {unknown}; choose from {list(SUBJECTS)}")
-    raw = lambda r: Sample(input="", metadata=dict(r))  # noqa: E731
     samples: list[Sample] = []
     for subject in subjects:
-        shots = [s.metadata for s in hf_dataset(REPO, name=subject, split="dev", revision=revision,
-                                                 sample_fields=raw)][:num_fewshot]
-        for i, s in enumerate(hf_dataset(REPO, name=subject, split="test", revision=revision, sample_fields=raw)):
-            r = s.metadata
+        shots = read_rows(subject, "dev", revision)[:num_fewshot]
+        for i, r in enumerate(read_rows(subject, "test", revision)):
             samples.append(Sample(id=f"{subject}-{i}", input=build_prompt(r, shots, LETTERS),
                                   target=LETTERS[int(r["answer"]) - 1], metadata={"subject": subject}))
     return samples
