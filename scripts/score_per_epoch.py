@@ -11,8 +11,8 @@
     # (Optional) --task 지정 시 디렉토리 아래에서 해당 태스크만 찾아서 score.log에 찍히도록 합니다. 여러 개 지정 가능합니다.
     $ python scripts/score_per_epoch.py logs/ --task hallucination --task persona
 
-For every run (epoch) of every DNA suite log given, appends one line per score to two files in
-``--out-dir`` (default: the current directory), in the order the runs were made:
+For every run (epoch) of every DNA suite or Korean benchmark log given, appends one line per
+score to two files in ``--out-dir`` (default: the current directory), in the order the runs were made:
 
     score.log               planets.loc[len(planets)] = ["<label>", <mean score, 2 dp>, <passed>]
     score.python.list.log   ["<YYYYmmddHHMMSS>", "<model>", "<task>", <score sum>, <passed>, <samples>, <mean, 5 dp> ],
@@ -30,6 +30,15 @@ timestamp is the time the run's last sample finished, in local time. Labels per 
     repetition            <model> (Rep)               Repetition
     reasoning_style       <model> (RStyle)            ReasoningStyle
     content_style         <model> (CStyle)            ContentStyle
+
+A Korean benchmark log (``kmmlu_pro``, ``kbl``, ...) gives one line per run, labelled with the
+task's name:
+
+    <benchmark scorer>    <model> (<task>)            <task>
+
+A benchmark is scored by correctness and has no rubric threshold, so its passed counts the
+samples with the full score (1.0): the correct answers, and for the checklist score of
+``haerae_vision`` the answers that met every checklist item. A partial score adds to the mean only.
 
 <model> is the evaluated model's name without its provider prefix (``vllm/my-model`` gives
 ``my-model``), unless ``--model-name`` is given. ``--task`` (repeatable, or comma-separated)
@@ -56,6 +65,10 @@ LABELS = {
     "reasoning_style": (" (RStyle)", "ReasoningStyle"),
     "content_style": (" (CStyle)", "ContentStyle"),
 }
+# Scorers of the Korean benchmark tasks (src/dna_eval/tasks/benchmarks/). Several tasks share one
+# scorer, so their lines are labelled with the log's task name instead of a fixed label.
+BENCHMARK_SCORERS = ("letter_choice", "math_answer", "kbl_answer", "simpleqa_grade", "answer_judge",
+                     "checklist_grade")
 GROUP_BY = {"hallucination": "category"}   # scorers whose scores are also reported per metadata value
 
 
@@ -87,19 +100,22 @@ def run_lines(log: EvalLog, model: str) -> list[tuple[str, str, str, float, int,
         if sample.completed_at and sample.completed_at > finished.get(sample.epoch, ""):
             finished[sample.epoch] = sample.completed_at
         for scorer, score in (sample.scores or {}).items():
-            if scorer not in LABELS:
+            if scorer not in LABELS and scorer not in BENCHMARK_SCORERS:
                 continue
-            entry = (float(score.as_float()), bool((score.metadata or {}).get("passed", False)))
+            value = float(score.as_float())     # Inspect's conversion, as its accuracy() and mean() use
+            passed = (score.metadata or {}).get("passed", False) if scorer in LABELS else value == 1.0
+            entry = (value, bool(passed))
             rows[(sample.epoch, scorer, None)].append(entry)
             if scorer in GROUP_BY:
                 group = (sample.metadata or {}).get(GROUP_BY[scorer])
                 rows[(sample.epoch, scorer, str(group))].append(entry)
 
-    order = list(LABELS)
+    order = [*LABELS, *BENCHMARK_SCORERS]
+    task_name = log.eval.task.split("/")[-1]
     keys = sorted(rows, key=lambda k: (k[0], order.index(k[1]), k[2] is not None, k[2] or ""))
     lines = []
     for epoch, scorer, group in keys:
-        suffix, task = LABELS[scorer]
+        suffix, task = LABELS.get(scorer) or (f" ({task_name})", task_name)
         if group is not None:
             suffix, task = f"{suffix[:-1]}:{group})", f"{task}:{group}"
         scores = rows[(epoch, scorer, group)]
@@ -114,7 +130,8 @@ def main() -> int:
     parser.add_argument("--model-name", help="the model name to write (default: from the log)")
     parser.add_argument("--out-dir", default=".", help="where score.log and score.python.list.log are")
     parser.add_argument("--task", action="append", default=[],
-                        help="only the logs of this task (e.g. hallucination); repeatable or comma-separated")
+                        help="only the logs of this task (e.g. hallucination, kmmlu_pro); repeatable or "
+                             "comma-separated")
     args = parser.parse_args()
     tasks = {t.strip().removeprefix("dna_eval/") for arg in args.task for t in arg.split(",") if t.strip()}
 
@@ -137,7 +154,7 @@ def main() -> int:
         print(f"{path}: {len(lines)} lines ({log.eval.task}, {model})", file=sys.stderr)
         written += len(lines)
     if not written:
-        print("nothing written: no successful DNA suite log matched", file=sys.stderr)
+        print("nothing written: no successful DNA suite or benchmark log matched", file=sys.stderr)
     return 0 if written else 1
 
 
