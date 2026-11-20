@@ -4,7 +4,8 @@
 
 ## News
 - 2026/10/16 **dna-eval** 라이브러리가 공개되었습니다! 🎉
-- (예정) **DNA evaluation suite** huggingface 콜렉션 공개
+- 2026/11/14 **DNA evaluation suite** huggingface 콜렉션 공개
+- 2026/11/20 **v1.0.0** 릴리스 ([릴리스 노트](https://github.com/dnotitia/dna-eval/releases/tag/v1.0.0))
 - (예정) 독파모 평가 데이터 공개
 
 ## DNA Evaluation Suite
