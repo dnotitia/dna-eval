@@ -5,4 +5,4 @@ A task is the combination of four parts: dataset (``dna_eval.dataset``), generat
 Rubrics are data, not code: see ``dna_eval.rubrics``; the judge prompt lives in
 ``dna_eval.rubric_judging``.
 """
-__version__ = "0.1.0.dev0"
+__version__ = "1.0.0"

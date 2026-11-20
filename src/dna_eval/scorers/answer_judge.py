@@ -18,9 +18,6 @@ from dna_eval.metrics.judge_failures import JUDGE_ERROR, judge_failures
 from dna_eval.utils.grader import call_grader
 from dna_eval.utils.math_answer import last_boxed
 from dna_eval.utils.model_output import is_truncated
-from dna_eval.utils.optional import require
-
-MATH_INSTALL = 'pip install -e ".[math]"'
 
 # github.com/HAE-RAE/KMMMU (kmmmu_utils.py, eval_tutorial.ipynb), which states no licence;
 # see THIRD_PARTY_NOTICES.md.
@@ -72,8 +69,6 @@ def answer_judge(question_key: str = "question", judge_retries: int = 2) -> Scor
       ``JUDGE_ERROR = "call"``; any reply that does not start with ``true`` is wrong, as in
       the reference.
     """
-    require("math_verify", install=MATH_INSTALL)
-
     async def score(state: TaskState, target: Target) -> Score:
         answer = state.output.completion.strip()
         truncated = is_truncated(state.output)
