@@ -11,8 +11,12 @@ so nothing here evaluates a model or reaches an endpoint.
   sorted list: adding a task or reordering ``run.sh`` needs no change here. Only the choices
   the registry cannot tell (``VISION``, ``NAMED_ONLY``) are written out.
 - Model, judge, reference and extra options reach ``inspect eval`` unchanged.
-- A wrong call (unknown task, missing or misplaced reference model) prints the usage, exits 2
-  and runs nothing.
+- The judge model may be left out only for the tasks that score without one; which tasks
+  those are is read from the scorers each task module imports (``NO_JUDGE``), so a task that
+  starts or stops using a judge without ``run.sh`` following fails here. Every group has a
+  judge-graded task, so a group always needs the judge.
+- A wrong call (unknown task, missing judge or reference model, misplaced reference model)
+  prints the usage, exits 2 and runs nothing.
 """
 import ast
 import os
@@ -57,6 +61,33 @@ GROUPS = {
 }
 NO_REFERENCE_GROUPS = ["benchmarks", "vision"]      # groups without style: a reference model is an error
 
+
+def _judge_scorer_modules() -> set[str]:
+    """The ``dna_eval.scorers`` modules that call the model bound to the ``grader`` role."""
+    found = set()
+    for path in (ROOT / "src" / "dna_eval" / "scorers").glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        if any(marker in source for marker in ("call_grader", "rubric_judging", "GRADER_ROLE")):
+            found.add(f"dna_eval.scorers.{path.stem}")
+    return found
+
+
+def _tasks_without_judge() -> set[str]:
+    """Registered tasks whose module imports no judge-calling scorer."""
+    judge_scorers = _judge_scorer_modules()
+    tasks = set()
+    for path in (ROOT / "src" / "dna_eval" / "tasks").rglob("*.py"):
+        if path.stem not in REGISTERED_SUITE | BENCHMARKS:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        imported = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)}
+        if not imported & judge_scorers:
+            tasks.add(path.stem)
+    return tasks
+
+
+NO_JUDGE = _tasks_without_judge()             # score without a judge: the judge model may be left out
+
 # Records one invocation as its NUL-separated arguments followed by a record separator.
 FAKE_INSPECT = """#!{bash}
 {{ printf '%s\\0' "$@"; printf '\\036'; }} >> "$FAKE_INSPECT_LOG"
@@ -95,9 +126,9 @@ def run(tmp_path):
     return _run
 
 
-def _command(tasks, *options: str) -> list[str]:
-    return ["eval", *sorted(f"dna_eval/{t}" for t in tasks), "--model", MODEL, "--model-role", f"grader={JUDGE}",
-            *options]
+def _command(tasks, *options: str, judge: str | None = JUDGE) -> list[str]:
+    role = ["--model-role", f"grader={judge}"] if judge else []
+    return ["eval", *sorted(f"dna_eval/{t}" for t in tasks), "--model", MODEL, *role, *options]
 
 
 def _style_command(*options: str) -> list[str]:
@@ -210,15 +241,65 @@ def test_unknown_task(run, task):
     proc, calls = run(task, MODEL, JUDGE)
     assert proc.returncode == 2
     assert f"unknown task: {task}" in proc.stderr
-    assert "bash run.sh <task> <model> <judge-model>" in proc.stdout       # the usage follows
+    assert "bash run.sh <task> <model> [judge-model]" in proc.stdout       # the usage follows
     assert calls == []
 
 
-@pytest.mark.parametrize("args", [[], ["performance"], ["performance", MODEL]], ids=["0", "1", "2"])
+@pytest.mark.parametrize("args", [[], ["performance"], ["kbl"]], ids=["0", "1", "1-no-judge-task"])
 def test_too_few_arguments_print_usage(run, args):
     proc, calls = run(*args)
     assert proc.returncode == 2
-    assert "bash run.sh <task> <model> <judge-model>" in proc.stdout
+    assert "bash run.sh <task> <model> [judge-model]" in proc.stdout
+    assert calls == []
+
+
+# --- judge model ----------------------------------------------------------------------------
+
+def test_no_judge_tasks_are_known():
+    """Guards the derivation of ``NO_JUDGE``: the multiple-choice and math benchmarks score
+    without a judge, and the rubric-graded suite tasks and judge-graded benchmarks do not."""
+    assert {"kmmlu_pro", "kbl", "hrm8k_ksm"} <= NO_JUDGE
+    assert not NO_JUDGE & (REGISTERED_SUITE | {"kosimpleqa", "haerae_vision", "kmmmu"})
+
+
+@pytest.mark.parametrize("task", sorted(NO_JUDGE))
+def test_task_without_judge_runs_without_grader_role(run, task):
+    proc, calls = run(task, MODEL)
+    assert proc.returncode == 0, proc.stderr
+    assert calls == [_command([task], judge=None)]
+    assert proc.stderr == ""
+
+
+def test_task_without_judge_takes_options(run):
+    """An option in the judge's place is an option, not a judge."""
+    proc, calls = run("kbl", MODEL, *OPTIONS)
+    assert proc.returncode == 0, proc.stderr
+    assert calls == [_command(["kbl"], *OPTIONS, judge=None)]
+
+
+def test_task_without_judge_still_passes_a_given_judge(run):
+    proc, calls = run("kmmlu_pro", MODEL, JUDGE)
+    assert proc.returncode == 0, proc.stderr
+    assert calls == [_command(["kmmlu_pro"])]
+
+
+@pytest.mark.parametrize("task", sorted((REGISTERED_SUITE | BENCHMARKS) - NO_JUDGE))
+@pytest.mark.parametrize("options", [[], ["--limit", "5"]], ids=["bare", "options"])
+def test_judged_task_without_judge_is_an_error(run, task, options):
+    proc, calls = run(task, MODEL, *options)
+    assert proc.returncode == 2
+    assert f"{task} needs a judge model" in proc.stderr
+    assert "bash run.sh <task> <model> [judge-model]" in proc.stdout
+    assert calls == []
+
+
+@pytest.mark.parametrize("group", GROUPS)
+def test_group_without_judge_is_an_error(run, group):
+    """Every group has a judge-graded task: none runs part of itself without the judge."""
+    assert GROUPS[group] - NO_JUDGE
+    proc, calls = run(group, MODEL, "--limit", "5")
+    assert proc.returncode == 2
+    assert f"{group} needs a judge model" in proc.stderr
     assert calls == []
 
 

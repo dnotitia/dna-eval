@@ -52,7 +52,7 @@ $ export HF_TOKEN=...
 4) 실행 방법
 ```bash
 # 실행 커맨드 
-$ bash run.sh <task> vllm/<model> openai-api/judge/<judge-model> [<reference-model>]
+$ bash run.sh <task> vllm/<model> [openai-api/judge/<judge-model>] [<reference-model>]
 ```
 
 ---
@@ -67,6 +67,8 @@ $ bash run.sh style vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B
 $ bash run.sh dna_eval vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B -T thinking=false
 # 예시4 - 전체 태스크(DNA Evaluation Suite + 한국어 벤치마크)를 동시 요청 16개 제한으로 실행
 $ bash run.sh all vllm/<model> openai-api/judge/<judge-model> Qwen3.5-9B --max-connections 16
+# 예시5 - judge를 쓰지 않는 벤치마크는 judge 모델 없이 실행
+$ bash run.sh kmmlu-pro vllm/<model>
 ```
 
 - `<task>`: 태스크 이름이나 태스크 묶음 이름을 줍니다.
@@ -135,7 +137,7 @@ $ python scripts/repeat_stddev.py logs/run-1 logs/run-2 logs/run-3 logs/run-4 lo
 
 ## 한국어 벤치마크
 
-DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, 대부분은 judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. `kosimpleqa`, `haerae_vision`, `kmmmu`는 judge 모델이 답을 채점합니다. 실행 방법은 DNA Evaluation Suite와 같고(`bash run.sh <태스크> ...`), `bash run.sh benchmarks ...`로 전체를 한 번에 실행할 수 있습니다. judge를 쓰지 않는 태스크도 judge 모델 인자는 받습니다.
+DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤치마크의 공식 평가 프로토콜을 따르며, 대부분은 judge 없이 모델이 고른 답이나 최종 답을 정답과 비교해 채점합니다. `kosimpleqa`, `haerae_vision`, `kmmmu`는 judge 모델이 답을 채점합니다. 실행 방법은 DNA Evaluation Suite와 같고(`bash run.sh <태스크> ...`), `bash run.sh benchmarks ...`로 전체를 한 번에 실행할 수 있습니다. judge를 쓰지 않는 태스크는 judge 모델 인자를 생략할 수 있습니다.
 
 | 태스크 | HF 데이터 | 문항 수 | 평가 항목 | 대표 지표 | 데이터 라이선스 |
 | --- | --- | --- | --- | --- | --- |
