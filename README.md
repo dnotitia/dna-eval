@@ -22,7 +22,7 @@
 
 1) 환경 설정
 ```bash
-# 패키지 의존성 설치
+# 평가와 테스트에 필요한 패키지를 모두 설치 (math-verify, pytest 포함)
 $ uv sync
 $ source .venv/bin/activate
 ```
@@ -155,7 +155,6 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 | `kmmmu` | `HAERAE-HUB/KMMMU` | 3,466 | 한국 공무원·자격·NCS·올림피아드 시험 이미지 문제 (멀티모달, judge 채점) | `accuracy` (문항 유형별 포함) | CC-BY-NC-4.0 |
 
 - 공통 규약: thinking을 켜고, 샘플링은 서빙 모델의 `generation_config`를 따르며, 출력 길이를 제한하지 않습니다. 답은 reasoning이 아니라 최종 답변에서만 읽고, 잘리거나 답 형식이 없는 응답은 0점으로 처리해 `answer_diagnostics`로 따로 집계합니다.
-- `hrm8k_ksm`, `kmmmu`는 답 파싱에 `math-verify`가 필요합니다: `uv sync --extra math`
 - `haerae_vision`, `kmmmu`는 이미지를 입력받는 모델이 필요합니다. vLLM으로 서빙할 때는 `--language-model-only`를 쓰지 말고, 문항당 이미지가 최대 6장(`haerae_vision`)·8장(`kmmmu`)이므로 `--limit-mm-per-prompt`를 그 이상으로 둡니다. 텍스트 전용 모델은 `text_only`로, 두 비전 태스크만은 `vision`으로 실행합니다.
 - `haerae_vision`은 질문 유형을 `-T question_type=original`(기본값, 원래의 모호한 질문)과 `-T question_type=explicit`(맥락을 보충한 질문) 중에서 고릅니다.
 - `kmmmu`는 실행할 때 이미지를 URL에서 내려받습니다. 이미지의 약 3분의 2가 Hub 밖(원 출처 시험 사이트)에 있어서, 그 사이트에 접속할 수 있어야 합니다.
@@ -179,11 +178,13 @@ DNA 모델 평가에 사용한 공개 한국어 벤치마크입니다. 각 벤�
 ## 개발 및 테스트
 
 ```bash
-$ uv sync --extra dev
+$ uv sync
 $ source .venv/bin/activate
 $ python -m pytest                      # 전체 테스트
 $ python -m pytest -m "not network"     # Hub 다운로드 없이
 ```
+
+pip을 쓴다면 `pip install -e . --group dev`(pip 25.1 이상)로 테스트 의존성을 설치합니다.
 
 PR과 `main` 푸시마다 GitHub Actions가 Python 3.11과 3.14에서 `python -m pytest -m "not network"`를 자동으로 실행합니다(`.github/workflows/ci.yml`). `network` 테스트는 CI에서 돌지 않으므로 필요하면 로컬에서 실행합니다.
 

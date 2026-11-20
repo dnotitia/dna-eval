@@ -122,7 +122,6 @@ def test_kmmmu_samples(tmp_path, monkeypatch):
 
 
 def test_kmmmu_end_to_end(tmp_path, monkeypatch):
-    pytest.importorskip("math_verify")
     monkeypatch.setattr(kmmmu, "hf_hub_download", lambda *a, **k: str(kmmmu_csv(tmp_path)))
     log = run(kmmmu.kmmmu(), tmp_path, mock("$\\boxed{4}$"), mock("true", "false"))
     m = metrics(log)
@@ -133,7 +132,6 @@ def test_kmmmu_end_to_end(tmp_path, monkeypatch):
 
 
 def test_kmmmu_truncated_answer_is_not_judged(tmp_path, monkeypatch):
-    pytest.importorskip("math_verify")
     monkeypatch.setattr(kmmmu, "hf_hub_download", lambda *a, **k: str(kmmmu_csv(tmp_path)))
     log = run(kmmmu.kmmmu(), tmp_path, mock("$\\boxed{4}$", stop_reason="max_tokens"), mock("true"))
     assert metrics(log)["accuracy"] == 0.0 and metrics(log)["truncated"] == 1.0
