@@ -11,6 +11,9 @@
     # (Optional) --task 지정 시 디렉토리 아래에서 해당 태스크만 찾아서 score.log에 찍히도록 합니다. 여러 개 지정 가능합니다.
     $ python scripts/score_per_epoch.py logs/ --task hallucination --task persona
 
+    # DNA Evaluation Suite 로그만 기록합니다. 그 밖의 태스크(한국어 벤치마크 등) 로그는 건너뛰고,
+    # 파일이나 --task로 직접 지정하면 오류(종료 코드 2)로 끝납니다.
+
 For every run (epoch) of every DNA suite log given, appends one line per score to two files in
 ``--out-dir`` (default: the current directory), in the order the runs were made:
 
@@ -34,6 +37,10 @@ timestamp is the time the run's last sample finished, in local time. Labels per 
 <model> is the evaluated model's name without its provider prefix (``vllm/my-model`` gives
 ``my-model``), unless ``--model-name`` is given. ``--task`` (repeatable, or comma-separated)
 keeps only the logs of those tasks.
+
+Only DNA suite logs, scored by one of the scorers above, are reported. A log of another task is
+skipped when found in a directory, and is an error (exit 2, nothing written) when given as a
+file or named with ``--task``.
 """
 from __future__ import annotations
 
@@ -78,6 +85,11 @@ def timestamp(iso: str | None) -> str:
     return datetime.fromisoformat(iso).astimezone().strftime("%Y%m%d%H%M%S") if iso else ""
 
 
+def is_suite_log(log: EvalLog) -> bool:
+    """Whether ``log`` is of a DNA suite task: scored by one of the scorers in ``LABELS``."""
+    return any(s.scorer in LABELS for s in (log.results.scores if log.results else []))
+
+
 def run_lines(log: EvalLog, model: str) -> list[tuple[str, str, str, float, int, int]]:
     """(time, label, task, score sum, passed, samples) for each run and score, in run order."""
     # (epoch, scorer, group) -> [(score, passed)], and each epoch's last finish time
@@ -118,16 +130,29 @@ def main() -> int:
     args = parser.parse_args()
     tasks = {t.strip().removeprefix("dna_eval/") for arg in args.task for t in arg.split(",") if t.strip()}
 
+    named = {t for t in args.logs if not Path(t).is_dir()}
+    selected = []
+    for path in log_paths(args.logs):
+        header = read_eval_log(path, header_only=True)
+        task_name = header.eval.task.split("/")[-1]
+        if tasks and task_name not in tasks:
+            continue
+        if header.status != "success":
+            print(f"skipped {path}: status {header.status}", file=sys.stderr)
+        elif is_suite_log(header):
+            selected.append(path)
+        elif path in named or tasks:
+            print(f"{path}: {task_name} is not a DNA suite task; only DNA suite logs are supported",
+                  file=sys.stderr)
+            return 2
+        else:
+            print(f"skipped {path}: {task_name} is not a DNA suite task", file=sys.stderr)
+
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     written = 0
-    for path in log_paths(args.logs):
-        if tasks and read_eval_log(path, header_only=True).eval.task.split("/")[-1] not in tasks:
-            continue
+    for path in selected:
         log = read_eval_log(path)
-        if log.status != "success":
-            print(f"skipped {path}: status {log.status}", file=sys.stderr)
-            continue
         model = args.model_name or model_name(log)
         lines = run_lines(log, model)
         with open(out / "score.log", "a") as score_log, open(out / "score.python.list.log", "a") as list_log:
