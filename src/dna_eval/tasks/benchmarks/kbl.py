@@ -1,11 +1,9 @@
 """KBL: Korean legal knowledge, legal reasoning and bar exam questions, in 65 tasks."""
 from __future__ import annotations
 
-import json
 import re
 from collections import defaultdict
 
-from huggingface_hub import hf_hub_download
 from inspect_ai import Epochs, Task, task
 from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.scorer import (Metric, SampleScore, Score, Scorer, Target, Value, accuracy, grouped, metric,
@@ -15,6 +13,7 @@ from inspect_ai.solver import TaskState, generate
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.scorers.letter_choice import EXPECTED
 from dna_eval.tasks.benchmarks import HEADLINE, benchmark_generate_config
+from dna_eval.utils.hub import read_config
 from dna_eval.utils.model_output import is_truncated
 from dna_eval.utils.templates import render
 
@@ -113,30 +112,6 @@ TASKS = (
     ('kbl_reasoning_statement_consistency_qa', 'statement_consistency_qa', 'label', 'ABCDE'),
 )
 
-# The file of each task other than the bar exams, as the dataset card's ``configs`` maps them; a
-# bar exam ``bar_exam_<subject>_<year>`` is ``bar_exam/<subject>/<subject><year>.json``.
-DATA_FILES = {
-    'kbl_knowledge_common_legal_mistake_qa': 'knowledge/kbl_legal_common_legal_mistake_qa_v0.1.json',
-    'kbl_knowledge_common_legal_mistake_qa_reasoning': 'knowledge/kbl_legal_common_legal_mistake_qa_reasoning_v0.1.json',
-    'kbl_knowledge_legal_concept_qa': 'knowledge/kbl_legal_concept_qa_v0.1.json',
-    'kbl_knowledge_offense_component_qa': 'knowledge/kbl_offense_component_qa_v0.1.json',
-    'kbl_knowledge_query_and_statute_matching_qa': 'knowledge/kbl_query_and_statute_matching_qa_v0.1.json',
-    'kbl_knowledge_statute_hallucination_qa': 'knowledge/kbl_statute_hallucination_qa_v0.1.json',
-    'kbl_knowledge_statute_number_and_content_matching_qa':
-        'knowledge/kbl_statute_matching_qa_number_and_content_matching_qa_v0.1.json',
-    'kbl_reasoning_case_relevance_qa_p': 'reasoning/kbl_case_relevance_qa_p_v0.1.json',
-    'kbl_reasoning_case_relevance_qa_q': 'reasoning/kbl_case_relevance_qa_q_v0.1.json',
-    'kbl_reasoning_causal_reasoning_qa': 'reasoning/kbl_causal_reasoning_qa_v0.1.json',
-    'kbl_reasoning_statement_consistency_qa': 'reasoning/kbl_logical_contradiction_qa_v0.1.json',
-}
-
-
-def data_file(config: str) -> str:
-    if config.startswith("bar_exam_"):
-        subject, year = config.removeprefix("bar_exam_").rsplit("_", 1)
-        return f"bar_exam/{subject}/{subject}{year}.json"
-    return DATA_FILES[config]
-
 
 FAMILIES = ("knowledge", "reasoning", "bar_exam")
 # The paper's averages (Table 2): the seven knowledge tasks; causal reasoning and statement
@@ -160,17 +135,8 @@ def record_to_sample(record: dict, config: str, template: str, answer_field: str
                   metadata={"task": config, "family": family(config), "letters": letters})
 
 
-def read_rows(config: str, revision: str) -> list[dict]:
-    """The questions of a task: its JSON file (a list of records) at ``revision``."""
-    path = hf_hub_download(REPO, data_file(config), repo_type="dataset", revision=revision)
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
-
-
 def load_samples(families: list[str], revision: str) -> list[Sample]:
-    """Every test question of the tasks in ``families``; ids are ``<config>-<row number>``. The
-    JSON files are read directly at ``revision`` instead of through ``datasets.load_dataset``,
-    which is much slower for 65 small files."""
+    """Every test question of the tasks in ``families``; ids are ``<config>-<row number>``."""
     unknown = sorted(set(families) - set(FAMILIES))
     if unknown:
         raise ValueError(f"unknown KBL families {unknown}; choose from {list(FAMILIES)}")
@@ -178,7 +144,7 @@ def load_samples(families: list[str], revision: str) -> list[Sample]:
     for config, template, answer_field, letters in TASKS:
         if family(config) in families:
             samples += [record_to_sample(r, config, template, answer_field, letters, i)
-                        for i, r in enumerate(read_rows(config, revision))]
+                        for i, r in enumerate(read_config(REPO, config, "test", revision))]
     return samples
 
 

@@ -4,8 +4,6 @@ import itertools
 import re
 
 import pytest
-import yaml
-from huggingface_hub import hf_hub_download
 from inspect_ai import eval as inspect_eval
 from inspect_ai.model import ModelOutput, get_model
 from inspect_ai.scorer import SampleScore, Score
@@ -84,7 +82,7 @@ def test_kmmlu_hard_end_to_end_macro(tmp_path, monkeypatch):
     q = {"question": "문제", "A": "1", "B": "2", "C": "3", "D": "4", "category": "x", "cot": ""}
     rows = {("accounting", "dev"): [dict(q, answer=1)] * 5, ("math", "dev"): [dict(q, answer=1)] * 5,
             ("accounting", "test"): [dict(q, answer=2)] * 3, ("math", "test"): [dict(q, answer=3)]}
-    monkeypatch.setattr(kmmlu_hard, "read_rows", lambda subject, split, revision: rows[(subject, split)])
+    monkeypatch.setattr(kmmlu_hard, "read_config", lambda repo, subject, split, revision: rows[(subject, split)])
     log = run(kmmlu_hard.kmmlu_hard(subjects=["accounting", "math"]), tmp_path, "생각해 보면 정답은 B입니다")
     m = metrics(log)
     assert m["accuracy"] == pytest.approx(3 / 4) and m["macro_accuracy"] == pytest.approx(0.5)
@@ -118,7 +116,7 @@ def test_kbl_end_to_end_with_paper_averages(tmp_path, monkeypatch):
     knowledge = [t for t, *_ in kbl.TASKS if t.startswith("kbl_knowledge_")]
     rows = {(t, "test"): [dict(q, label="A")] for t in knowledge}
     rows[("kbl_knowledge_legal_concept_qa", "test")] = [dict(q, label="B")]
-    monkeypatch.setattr(kbl, "read_rows", lambda config, revision: rows[(config, "test")])
+    monkeypatch.setattr(kbl, "read_config", lambda repo, config, split, revision: rows[(config, split)])
     log = run(kbl.kbl(families=["knowledge"]), tmp_path, "답변: A")
     m = metrics(log)
     assert m["knowledge_avg"] == pytest.approx(6 / 7) and "bar_exam_2024_avg" not in m
@@ -139,13 +137,6 @@ def _digest(samples):
     return h.hexdigest()
 
 
-def _card_files(repo, revision):
-    """``{(config, split): path}`` from the ``configs`` of the dataset card at ``revision``."""
-    with open(hf_hub_download(repo, "README.md", repo_type="dataset", revision=revision), encoding="utf-8") as f:
-        card = yaml.safe_load(f.read().split("---")[1])
-    return {(c["config_name"], d["split"]): d["path"] for c in card["configs"] for d in c["data_files"]}
-
-
 @pytest.mark.network
 def test_kmmlu_hard_data():
     try:
@@ -156,16 +147,6 @@ def test_kmmlu_hard_data():
     assert len({s.metadata["subject"] for s in samples}) == 45
     # As datasets.load_dataset read them before the files were read directly.
     assert _digest(samples) == "865c632ef84b3042bde4d369f8d27ec4b84b9e2a267e5f24722d3c9a2c677225"
-
-
-@pytest.mark.network
-def test_kmmlu_hard_files_match_the_dataset_card():
-    try:
-        files = _card_files(kmmlu_hard.REPO, kmmlu_hard.DATASET_REVISION)
-    except Exception as exc:  # noqa: BLE001
-        _skip(exc)
-    assert files == {(subject, split): f.format(subject) for subject in kmmlu_hard.SUBJECTS
-                     for split, f in kmmlu_hard.DATA_FILES.items()}
 
 
 @pytest.mark.network
@@ -189,13 +170,3 @@ def test_kbl_data():
     assert {s.target for s in samples} == set("ABCDE") | {"정답없음"}
     # As datasets.load_dataset read them before the files were read directly.
     assert _digest(samples) == "d401ca257309554e3ec5ef0c01c2b76464db2712c51e696dcad18ef00791c4ec"
-
-
-@pytest.mark.network
-def test_kbl_files_match_the_dataset_card():
-    try:
-        files = _card_files(kbl.REPO, kbl.DATASET_REVISION)
-    except Exception as exc:  # noqa: BLE001
-        _skip(exc)
-    tasks = [config for config, *_ in kbl.TASKS]
-    assert {c: files[(c, "test")] for c in tasks} == {c: kbl.data_file(c) for c in tasks}

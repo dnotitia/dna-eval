@@ -1,9 +1,6 @@
 """KMMLU-HARD: the 4,104 KMMLU questions that proprietary models found hardest, in 45 subjects."""
 from __future__ import annotations
 
-import csv
-
-from huggingface_hub import hf_hub_download
 from inspect_ai import Epochs, Task, task
 from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.log import HeadlineMetric
@@ -13,6 +10,7 @@ from dna_eval.metrics.macro_accuracy import macro_accuracy
 from dna_eval.scorers.letter_choice import letter_choice
 from dna_eval.tasks.benchmarks import benchmark_generate_config, benchmark_metrics
 from dna_eval.tasks.benchmarks.kormedmcqa import STRIP, build_prompt, choice_patterns
+from dna_eval.utils.hub import read_config
 
 REPO = "HAERAE-HUB/KMMLU-HARD"
 # Commit this task is pinned to.
@@ -30,30 +28,20 @@ SUBJECTS = (
     "real_estate", "refrigerating_machinery", "social_welfare", "taxation",
     "telecommunications_and_wireless_technology",
 )
-# File of each split of a subject, as the dataset card's ``configs`` maps them.
-DATA_FILES = {"dev": "data/{}-dev.csv", "test": "data/{}-hard-test.csv"}
 LETTERS = "ABCD"
 NUM_FEWSHOT = 5
 
 
-def read_rows(subject: str, split: str, revision: str) -> list[dict]:
-    """The rows of a subject's ``split`` file at ``revision``, every value a string."""
-    path = hf_hub_download(REPO, DATA_FILES[split].format(subject), repo_type="dataset", revision=revision)
-    with open(path, encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
-
-
 def load_samples(subjects: list[str], num_fewshot: int, revision: str) -> list[Sample]:
     """Every test question of ``subjects``, each with the subject's first ``num_fewshot`` ``dev``
-    examples; ids are ``<subject>-<row number>``. The CSV files are read directly at ``revision``
-    instead of through ``datasets.load_dataset``, which is much slower for 90 small files."""
+    examples; ids are ``<subject>-<row number>``."""
     unknown = sorted(set(subjects) - set(SUBJECTS))
     if unknown:
         raise ValueError(f"unknown KMMLU-HARD subjects {unknown}; choose from {list(SUBJECTS)}")
     samples: list[Sample] = []
     for subject in subjects:
-        shots = read_rows(subject, "dev", revision)[:num_fewshot]
-        for i, r in enumerate(read_rows(subject, "test", revision)):
+        shots = read_config(REPO, subject, "dev", revision)[:num_fewshot]
+        for i, r in enumerate(read_config(REPO, subject, "test", revision)):
             samples.append(Sample(id=f"{subject}-{i}", input=build_prompt(r, shots, LETTERS),
                                   target=LETTERS[int(r["answer"]) - 1], metadata={"subject": subject}))
     return samples
