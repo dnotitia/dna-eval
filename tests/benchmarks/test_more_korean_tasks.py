@@ -1,4 +1,5 @@
 """KMMLU-HARD, KorMedMCQA and KBL: prompts, answer reading, metrics, and full runs on a mock model."""
+import hashlib
 import itertools
 import re
 
@@ -81,7 +82,7 @@ def test_kmmlu_hard_end_to_end_macro(tmp_path, monkeypatch):
     q = {"question": "문제", "A": "1", "B": "2", "C": "3", "D": "4", "category": "x", "cot": ""}
     rows = {("accounting", "dev"): [dict(q, answer=1)] * 5, ("math", "dev"): [dict(q, answer=1)] * 5,
             ("accounting", "test"): [dict(q, answer=2)] * 3, ("math", "test"): [dict(q, answer=3)]}
-    monkeypatch.setattr(kmmlu_hard, "hf_dataset", fake_hf(rows))
+    monkeypatch.setattr(kmmlu_hard, "read_config", lambda repo, subject, split, revision: rows[(subject, split)])
     log = run(kmmlu_hard.kmmlu_hard(subjects=["accounting", "math"]), tmp_path, "생각해 보면 정답은 B입니다")
     m = metrics(log)
     assert m["accuracy"] == pytest.approx(3 / 4) and m["macro_accuracy"] == pytest.approx(0.5)
@@ -115,7 +116,7 @@ def test_kbl_end_to_end_with_paper_averages(tmp_path, monkeypatch):
     knowledge = [t for t, *_ in kbl.TASKS if t.startswith("kbl_knowledge_")]
     rows = {(t, "test"): [dict(q, label="A")] for t in knowledge}
     rows[("kbl_knowledge_legal_concept_qa", "test")] = [dict(q, label="B")]
-    monkeypatch.setattr(kbl, "hf_dataset", fake_hf(rows))
+    monkeypatch.setattr(kbl, "read_config", lambda repo, config, split, revision: rows[(config, split)])
     log = run(kbl.kbl(families=["knowledge"]), tmp_path, "답변: A")
     m = metrics(log)
     assert m["knowledge_avg"] == pytest.approx(6 / 7) and "bar_exam_2024_avg" not in m
@@ -128,6 +129,14 @@ def _skip(exc):
     pytest.skip(f"dataset not reachable: {str(exc)[:160]}")
 
 
+def _digest(samples):
+    """sha256 of every sample's id, target and input, in order: pins the count, the order and the text."""
+    h = hashlib.sha256()
+    for s in samples:
+        h.update(f"{s.id}\0{s.target}\0{s.input}\0".encode())
+    return h.hexdigest()
+
+
 @pytest.mark.network
 def test_kmmlu_hard_data():
     try:
@@ -136,6 +145,8 @@ def test_kmmlu_hard_data():
         _skip(exc)
     assert len(samples) == 4104 and {s.target for s in samples} == set("ABCD")
     assert len({s.metadata["subject"] for s in samples}) == 45
+    # As datasets.load_dataset read them before the files were read directly.
+    assert _digest(samples) == "865c632ef84b3042bde4d369f8d27ec4b84b9e2a267e5f24722d3c9a2c677225"
 
 
 @pytest.mark.network
@@ -157,3 +168,5 @@ def test_kbl_data():
     counts = {f: sum(s.metadata["family"] == f for s in samples) for f in kbl.FAMILIES}
     assert counts == {"knowledge": 510, "reasoning": 288, "bar_exam": 2578}
     assert {s.target for s in samples} == set("ABCDE") | {"정답없음"}
+    # As datasets.load_dataset read them before the files were read directly.
+    assert _digest(samples) == "d401ca257309554e3ec5ef0c01c2b76464db2712c51e696dcad18ef00791c4ec"

@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 
 from inspect_ai import Epochs, Task, task
-from inspect_ai.dataset import MemoryDataset, Sample, hf_dataset
+from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.scorer import (Metric, SampleScore, Score, Scorer, Target, Value, accuracy, grouped, metric,
                                scorer, stderr)
 from inspect_ai.solver import TaskState, generate
@@ -13,6 +13,7 @@ from inspect_ai.solver import TaskState, generate
 from dna_eval.metrics.answer_diagnostics import EXTRACTED, TRUNCATED, answer_diagnostics
 from dna_eval.scorers.letter_choice import EXPECTED
 from dna_eval.tasks.benchmarks import HEADLINE, benchmark_generate_config
+from dna_eval.utils.hub import read_config
 from dna_eval.utils.model_output import is_truncated
 from dna_eval.utils.templates import render
 
@@ -139,13 +140,11 @@ def load_samples(families: list[str], revision: str) -> list[Sample]:
     unknown = sorted(set(families) - set(FAMILIES))
     if unknown:
         raise ValueError(f"unknown KBL families {unknown}; choose from {list(FAMILIES)}")
-    raw = lambda r: Sample(input="", metadata=dict(r))  # noqa: E731
     samples: list[Sample] = []
     for config, template, answer_field, letters in TASKS:
         if family(config) in families:
-            rows = hf_dataset(REPO, name=config, split="test", revision=revision, sample_fields=raw)
-            samples += [record_to_sample(s.metadata, config, template, answer_field, letters, i)
-                        for i, s in enumerate(rows)]
+            samples += [record_to_sample(r, config, template, answer_field, letters, i)
+                        for i, r in enumerate(read_config(REPO, config, "test", revision))]
     return samples
 
 

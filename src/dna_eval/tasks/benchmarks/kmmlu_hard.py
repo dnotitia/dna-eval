@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from inspect_ai import Epochs, Task, task
-from inspect_ai.dataset import MemoryDataset, Sample, hf_dataset
+from inspect_ai.dataset import MemoryDataset, Sample
 from inspect_ai.log import HeadlineMetric
 from inspect_ai.solver import generate
 
@@ -10,6 +10,7 @@ from dna_eval.metrics.macro_accuracy import macro_accuracy
 from dna_eval.scorers.letter_choice import letter_choice
 from dna_eval.tasks.benchmarks import benchmark_generate_config, benchmark_metrics
 from dna_eval.tasks.benchmarks.kormedmcqa import STRIP, build_prompt, choice_patterns
+from dna_eval.utils.hub import read_config
 
 REPO = "HAERAE-HUB/KMMLU-HARD"
 # Commit this task is pinned to.
@@ -37,13 +38,10 @@ def load_samples(subjects: list[str], num_fewshot: int, revision: str) -> list[S
     unknown = sorted(set(subjects) - set(SUBJECTS))
     if unknown:
         raise ValueError(f"unknown KMMLU-HARD subjects {unknown}; choose from {list(SUBJECTS)}")
-    raw = lambda r: Sample(input="", metadata=dict(r))  # noqa: E731
     samples: list[Sample] = []
     for subject in subjects:
-        shots = [s.metadata for s in hf_dataset(REPO, name=subject, split="dev", revision=revision,
-                                                 sample_fields=raw)][:num_fewshot]
-        for i, s in enumerate(hf_dataset(REPO, name=subject, split="test", revision=revision, sample_fields=raw)):
-            r = s.metadata
+        shots = read_config(REPO, subject, "dev", revision)[:num_fewshot]
+        for i, r in enumerate(read_config(REPO, subject, "test", revision)):
             samples.append(Sample(id=f"{subject}-{i}", input=build_prompt(r, shots, LETTERS),
                                   target=LETTERS[int(r["answer"]) - 1], metadata={"subject": subject}))
     return samples
